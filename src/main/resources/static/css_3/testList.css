@@ -1,0 +1,91 @@
+@charset "UTF-8";
+.filter-button {
+    border: none;
+    background-color: white;
+    color: black;
+    padding: 10px 15px;
+    margin-right: 5px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.filter-button.active {
+    background-color: #f5f5f5;
+    font-weight: bold;
+    color: black;
+}
+
+.filter-button:hover {
+    background-color: #e6e6e6;
+}
+
+/* 빨간 줄 제거*/
+.campland-N12 .tableset .tableset-table>thead.thead-border-top>*>* {
+    border-top: none; /* 빨간 줄 제거 */
+   
+}
+
+/* 표 헤더 배경을 흰색으로 유지하고 글씨를 검정에 가까운 회색으로 설정 */
+.campland-N12 .tableset .tableset-table thead th {
+    background-color: white !important; /* 배경색 흰색 */
+    color: #8a8a8a;/* 검정에 가까운 회색 (#4a4a4a) */
+    border: none; /* 헤더 경계선 제거 */
+}
+
+/* 표 본문 홀수/짝수 스타일 */
+.campland-N12 .tableset .tableset-table tbody tr:nth-child(odd) {
+    background-color: #f9f9f9; /* 회색 */
+}
+
+.campland-N12 .tableset .tableset-table tbody tr:nth-child(even) {
+    background-color: white; /* 흰색 */
+}
+
+/* 본문 텍스트 기본 스타일 */
+.campland-N12 .tableset .tableset-table tbody td {
+    color: #333; /* 본문 텍스트 색상 (검정과 가까운 색) */
+    text-align: center; /* 가운데 정렬 */
+    border: none !important; /* 본문 셀 경계선 제거 */
+}
+
+.contents-container .tabset-list.border-bottom {
+    padding-left: 0 !important; /* 왼쪽 여백 제거 */
+    margin-left: 0 !important;  /* 왼쪽 간격 제거 */
+    border-bottom: 1px solid #e0e0e0; /* 얇은 회색 선 */
+    border-left: none; /* 혹시 있을 왼쪽 테두리 제거 */
+}
+
+.risk-checkbox-container {
+    float: right;
+    margin-right: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.risk-checkbox {
+    width: 16px;
+    height: 16px;
+    accent-color: rgb(43, 102, 240); /* 체크 박스의 색상을 파란색으로 설정 */
+    cursor: pointer;
+}
+
+.risk-checkbox-label {
+    color: rgb(43, 102, 240); /* 텍스트 색상 */
+    font-weight: bold; /* 텍스트 굵게 */
+    cursor: pointer;
+}
+.real-time-section {
+    margin-top: 10px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.contents-container .tabset {
+    margin-bottom: 20px; /* 탭과 실시간 섹션 사이 간격 */
+}
+
+
+
+
+

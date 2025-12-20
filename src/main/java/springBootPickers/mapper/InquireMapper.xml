@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="springBootPickers.mapper.InquireMapper">
+    <sql id="inquireBaseColumns">
+        INQUIRE_NUM, MEM_NUM, INQUIRE_TITLE, INQUIRE_CONTENT, INQUIRE_REGISTER_DATE, INQUIRE_STATUS, 
+         ANSWER_CONTENT,  ANSWER_REGISTER_DATE, EMP_NUM
+    </sql>
+<insert id="inquireInsert" parameterType="inquireDTO">
+     INSERT INTO inquire (
+            inquire_num,
+            mem_num,
+            inquire_title,
+            inquire_content,
+            inquire_register_date,
+            inquire_status
+        ) VALUES (
+            #{inquireNum, jdbcType=VARCHAR},
+            #{memNum, jdbcType=VARCHAR},
+            #{inquireTitle, jdbcType=VARCHAR},
+            #{inquireContent, jdbcType=VARCHAR},
+            sysdate,
+            #{inquireStatus, jdbcType=VARCHAR}
+        )
+    </insert>
+
+
+  <select id="inquireSelectList" resultType="inquireDTO" parameterType="startEndPageDTO">
+    SELECT * FROM (
+        SELECT
+            ROW_NUMBER() OVER(ORDER BY inquire_num desc) AS rn,
+            inquire_num AS inquireNum,
+            mem_num AS memNum,
+            inquire_title AS inquireTitle,
+            inquire_content AS inquireContent,
+            inquire_register_date AS inquireRegisterDate,
+            inquire_status AS inquireStatus
+        FROM inquire
+        <where>
+            <if test="searchWord != null and searchWord != ''">
+                AND (inquire_title LIKE '%' || #{searchWord} || '%'
+                     OR inquire_content LIKE '%' || #{searchWord} || '%')
+            </if>
+        </where>
+    )
+    WHERE rn BETWEEN #{startRow} AND #{endRow}
+</select>
+
+<!-- inquireCount : 직원과 회원에 따라 조건을 다르게 -->
+<select id="inquireCount" resultType="integer">
+    SELECT count(*) 
+    FROM inquire 
+    <where>
+        <if test="grade == 'mem'">
+            AND mem_num = #{memNum}
+        </if>
+    </where>
+</select>
+
+<!-- 회원은 자신의 문의 내역만 조회 -->
+<select id="inquireSelectListForMember" resultType="inquireDTO" parameterType="startEndPageDTO">
+    SELECT * FROM (
+        SELECT ROW_NUMBER() OVER(ORDER BY inquire_num desc) AS rn
+        , inquire_num, mem_num, inquire_title, inquire_content, inquire_register_date
+        , answer_content, answer_register_date,  inquire_status
+        FROM inquire
+        <where>
+            mem_num = #{memNum} <!-- 로그인한 회원의 mem_num만 조회 -->
+            <if test="searchWord != null and searchWord != ''">
+               AND (inquire_title LIKE '%' || #{searchWord} || '%'
+                OR inquire_content LIKE '%' || #{searchWord} || '%'
+                OR inquire_status LIKE '%' || #{searchWord} || '%')
+            </if>
+        </where>
+    )
+    WHERE rn BETWEEN #{startRow} AND #{endRow}
+</select>
+
+
+<select id="inquireSelectOne" parameterType="string" resultType="inquireDTO">
+     SELECT 
+        i.inquire_num AS inquireNum,
+        i.mem_num AS memNum,
+        m.mem_name AS memName, 
+        i.inquire_title AS inquireTitle,
+        i.inquire_content AS inquireContent,
+        i.inquire_register_date AS inquireRegisterDate,
+        i.inquire_status AS inquireStatus,
+        i.answer_num AS answerNum,
+        i.answer_content AS answerContent,
+        i.answer_title AS answerTitle,
+        i.answer_register_date AS answerRegisterDate,
+        i.emp_num AS empNum
+    FROM inquire i
+    LEFT JOIN member m ON i.mem_num = m.mem_num  
+    WHERE i.inquire_num = #{inquireNum, jdbcType=VARCHAR}    
+</select>
+
+
+<select id="getMemberNameByMemNum" parameterType="String" resultType="String">
+    SELECT mem_name 
+    FROM member
+    WHERE mem_num = #{memNum}
+</select>
+
+
+<update id="inquireAnswer" parameterType="inquireDTO">
+    UPDATE inquire
+    SET 
+        answer_content = #{answerContent, jdbcType=VARCHAR},
+        answer_register_date = SYSDATE,
+        inquire_status = '답변완료',
+        emp_num = #{empNum, jdbcType=VARCHAR}
+    WHERE inquire_num = #{inquireNum, jdbcType=VARCHAR}
+</update>
+
+
+
+<delete id="inquireDelete" parameterType="string">
+delete from inquire
+where inquire_num = #{inquireNum} 
+</delete>
+
+<update id="updateInquireStatusToAnswered" parameterType="string">
+    UPDATE inquire
+    SET inquire_status = '답변완료'
+    WHERE inquire_num = #{inquireNum, jdbcType=VARCHAR}
+</update>
+
+
+</mapper>

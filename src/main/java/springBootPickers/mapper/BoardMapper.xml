@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="springBootPickers.mapper.BoardMapper">
+
+<select id="getBoardList" parameterType="map" resultType="boardDTO">
+    SELECT * FROM (
+        SELECT 
+            ROWNUM AS rnum,
+            b.BOARD_NUM AS boardNum,
+            b.MEM_NUM AS memNum,
+            m.MEM_ID AS memId,
+            b.BOARD_TITLE AS boardTitle,
+            b.BOARD_REGISTER_DATE AS boardRegisterDate
+        FROM BOARD b
+        JOIN MEMBER m ON b.MEM_NUM = m.MEM_NUM
+        WHERE b.BOARD_TYPE = #{boardType}
+        ORDER BY b.BOARD_REGISTER_DATE DESC
+    )
+    WHERE rnum BETWEEN #{startRow} AND #{startRow} + #{pageSize} - 1
+</select>
+
+
+
+    <select id="getBoardCount" parameterType="string" resultType="int">
+        SELECT COUNT(*) FROM BOARD WHERE BOARD_TYPE = #{boardType}
+    </select>
+
+
+    <select id="getMemberNumber" parameterType="string" resultType="string">
+        SELECT MEM_NUM
+        FROM MEMBER
+        WHERE MEM_ID = #{userId}
+    </select>
+
+
+    <select id="getMaxBoardNum" resultType="int">
+        SELECT NVL(MAX(TO_NUMBER(SUBSTR(BOARD_NUM, 7))), 0)
+        FROM BOARD
+    </select>
+
+ 
+    <insert id="insertBoard" parameterType="springBootPickers.command.BoardCommand">
+        INSERT INTO BOARD (
+            BOARD_NUM, MEM_NUM, BOARD_TITLE, BOARD_CONTENT, BOARD_TYPE, BOARD_REGISTER_DATE
+        ) VALUES (
+            #{boardNum}, #{memNum}, #{boardTitle}, #{boardContent}, #{boardType}, SYSDATE
+        )
+    </insert>
+
+  
+    <select id="getBoardByNum" parameterType="string" resultType="boardDTO">
+        SELECT * FROM BOARD WHERE BOARD_NUM = #{boardNum}
+    </select>
+
+   
+<select id="isLikedByMember" parameterType="map" resultType="int">
+    SELECT COUNT(*)
+    FROM LIKE_MEMBERS
+    WHERE BOARD_NUM = #{boardNum} AND MEM_NUM = #{memNum}
+</select>
+
+   
+<insert id="addLikeByMember" parameterType="map">
+    INSERT INTO LIKE_MEMBERS (BOARD_NUM, MEM_NUM)
+    VALUES (#{boardNum}, #{memNum})
+</insert>
+
+
+<delete id="removeLikeByMember" parameterType="map">
+    DELETE FROM LIKE_MEMBERS 
+    WHERE BOARD_NUM = #{boardNum} AND MEM_NUM = #{memNum}
+</delete>
+
+<select id="getLikeCount" parameterType="string" resultType="int">
+    SELECT COALESCE(LIKE_COUNT, 0) AS LIKE_COUNT
+    FROM BOARD
+    WHERE BOARD_NUM = #{boardNum}
+</select>
+
+
+<update id="incrementViewCount" parameterType="string">
+    UPDATE BOARD
+    SET VIEW_COUNT = NVL(VIEW_COUNT, 0) + 1
+    WHERE BOARD_NUM = #{boardNum}
+</update>
+
+
+<select id="getPrevBoard" parameterType="map" resultType="boardDTO">
+    SELECT BOARD_NUM, BOARD_TITLE
+    FROM BOARD
+    WHERE TO_NUMBER(SUBSTR(BOARD_NUM, 7)) &lt; TO_NUMBER(SUBSTR(#{boardNum}, 7))
+      AND BOARD_TYPE = #{boardType}
+    ORDER BY TO_NUMBER(SUBSTR(BOARD_NUM, 7)) DESC
+    FETCH FIRST 1 ROWS ONLY
+</select>
+
+<select id="getNextBoard" parameterType="map" resultType="boardDTO">
+    SELECT BOARD_NUM, BOARD_TITLE
+    FROM BOARD
+    WHERE TO_NUMBER(SUBSTR(BOARD_NUM, 7)) > TO_NUMBER(SUBSTR(#{boardNum}, 7))
+      AND BOARD_TYPE = #{boardType}
+    ORDER BY TO_NUMBER(SUBSTR(BOARD_NUM, 7)) ASC
+    FETCH FIRST 1 ROWS ONLY
+</select>
+
+
+<update id="updateBoard" parameterType="springBootPickers.command.BoardCommand">
+    UPDATE BOARD
+    SET 
+        BOARD_TITLE = #{boardTitle},
+        BOARD_CONTENT = #{boardContent}
+    WHERE 
+        BOARD_NUM = #{boardNum} 
+        AND MEM_NUM = #{memNum}
+</update>
+
+  
+    <select id="getWriterMemNum" parameterType="string" resultType="string">
+        SELECT MEM_NUM
+        FROM BOARD
+        WHERE BOARD_NUM = #{boardNum}
+    </select>
+
+  
+    <delete id="deleteBoard" parameterType="string">
+        DELETE FROM BOARD
+        WHERE BOARD_NUM = #{boardNum}
+    </delete>
+
+<update id="incrementLikeCount" parameterType="string">
+    UPDATE BOARD
+    SET LIKE_COUNT = NVL(LIKE_COUNT, 0) + 1
+    WHERE BOARD_NUM = #{boardNum}
+</update>
+
+<update id="decrementLikeCount" parameterType="string">
+    UPDATE BOARD
+    SET LIKE_COUNT = GREATEST(NVL(LIKE_COUNT, 0) - 1, 0)
+    WHERE BOARD_NUM = #{boardNum}
+</update>
+
+</mapper>

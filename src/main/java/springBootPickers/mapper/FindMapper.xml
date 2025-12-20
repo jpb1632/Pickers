@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC 	
+	"-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="springBootPickers.mapper.FindMapper">
+<select id="findId" parameterType="string" resultType="string">
+select mem_id
+from member
+where mem_email = #{_userEmail} 
+and (MEM_PHONE_NUM = #{_userPhone})
+union
+select emp_id
+from employee
+where EMP_PHONE_NUM = #{_userPhone} and emp_email =#{_userEmail}
+</select>
+<select id="userEmail" resultType="auth">
+<!-- 직원이나 회원중 모두 찾는다. -->
+select mem_email userEmail , 'mem' grade
+from member
+where mem_id = #{_userId} and MEM_PHONE_NUM = #{_userPhone} 
+union
+select emp_email  , 'emp'
+from employee 
+where EMP_PHONE_NUM = #{_userPhone} and emp_id = #{_userId} 
+</select>
+<update id="pwUpdate" parameterType="userChangePassword">
+update ${tableName}
+set ${pwColumName}  = #{userPw}
+where ${userIdColumName}  = #{userId} 
+and ${phoneColumn} = #{userPhone}
+</update>
+</mapper>

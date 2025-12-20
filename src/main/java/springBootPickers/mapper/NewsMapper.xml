@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="springBootPickers.mapper.NewsMapper">
+	<resultMap type="newsDTO" id="newsResultMap">
+		<constructor>
+			<idArg column="NEWS_NUM" jdbcType="VARCHAR" javaType="string" />
+			<arg column="NEWS_TITLE" jdbcType="VARCHAR" javaType="string" />
+			<arg column="NEWS_CONTENT" jdbcType="VARCHAR" javaType="string" />
+			<arg column="NEWS_REGISTER_DATE" jdbcType="DATE"
+				javaType="java.util.Date" />
+			<arg column="NEWS_WRITER_DATE" jdbcType="DATE"
+				javaType="java.util.Date" />
+			<arg column="NEWS_WRITER_NAME" jdbcType="VARCHAR"
+				javaType="string" />
+			<arg column="EMP_NUM" jdbcType="VARCHAR" javaType="string" />
+			<arg column="NEWS_MAIN_IMAGE" jdbcType="VARCHAR"
+				javaType="string" />
+			<arg column="NEWS_DETAIL_IMAGE" jdbcType="VARCHAR"
+				javaType="string" />
+			<arg column="NEWS_MAIN_STORE_IMAGE" jdbcType="VARCHAR"
+				javaType="string" />
+			<arg column="NEWS_DETAIL_STORE_IMAGE" jdbcType="VARCHAR"
+				javaType="string" />
+		</constructor>
+	</resultMap>
+
+
+	<select id="newsSelectList" resultType="newsDTO"
+		parameterType="startEndPageDTO">
+		SELECT * FROM (
+		SELECT
+		ROW_NUMBER() OVER (ORDER BY news_num desc) AS rn,
+		news_num AS newsNum,
+		news_title AS newsTitle,
+		news_content AS newsContent,
+		news_writer_date AS newsWriterDate,
+		news_writer_name AS newsWriterName,
+		<!-- emp_num as empNum, -->
+		news_main_image AS newsMainImage,
+		news_detail_image AS newsDetailImage,
+		news_register_date as newsRegisterDate,
+		news_main_store_image AS newsMainStoreImage,
+		news_detail_store_image AS newsDetailStoreImage
+		FROM news
+		<where>
+			<if test="searchWord != null and searchWord != ''">
+				AND (news_title LIKE '%' || #{searchWord} || '%'
+				OR news_content LIKE '%' || #{searchWord} || '%'
+				OR news_writer_name LIKE '%' || #{searchWord} || '%')
+			</if>
+		</where>
+		)
+		WHERE rn BETWEEN #{startRow} AND #{endRow}
+	</select>
+
+	<insert id="newsInsert" parameterType="newsDTO">
+		INSERT INTO news (
+		news_num,
+		news_title,
+		news_content,
+		news_writer_date,
+		news_writer_name,
+		<!-- emp_num, -->
+		news_main_image,
+		news_detail_image,
+		news_register_date,
+		news_main_store_image,
+		news_detail_store_image
+		) VALUES (
+		#{newsNum},
+		#{newsTitle},
+		#{newsContent},
+		#{newsWriterDate},
+		#{newsWriterName},
+		<!-- #{emp_num}, -->
+		#{newsMainImage},
+		#{newsDetailImage},
+		sysdate,
+		#{newsMainStoreImage},
+		#{newsDetailStoreImage}
+		)
+	</insert>
+
+	<select id="newsCount" resultType="integer">
+		select count(*) from news
+	</select>
+
+	<select id="newsSelectOne" parameterType="string"
+		resultType="newsDTO">
+		select
+		news_num AS newsNum,
+		news_title AS newsTitle,
+		news_content AS newsContent,
+		news_writer_date AS newsWriterDate,
+		news_writer_name AS newsWriterName,
+		<!-- emp_num as empNum, -->
+		news_main_image AS newsMainImage,
+		news_detail_image AS newsDetailImage,
+		news_register_date as newsRegisterDate,
+		news_main_store_image AS newsMainStoreImage,
+		news_detail_store_image AS newsDetailStoreImage
+		from news
+		where news_num = #{newsNum}
+	</select>
+
+	<update id="newsUpdate" parameterType="newsDTO">
+		update news
+		<trim prefix="set" suffixOverrides=",">
+			NEWS_TITLE = #{newsTitle},
+			NEWS_CONTENT = #{newsContent},
+			NEWS_REGISTER_DATE = #{newsRegisterDate},
+			NEWS_WRITER_DATE = #{newsWriterDate},
+			NEWS_WRITER_NAME = #{newsWriterName},
+			EMP_NUM = #{empNum},
+			NEWS_MAIN_IMAGE =
+			<choose>
+				<when test="newsMainImage != null">#{newsMainImage}</when>
+				<otherwise>NEWS_MAIN_IMAGE</otherwise>
+			</choose>
+			,
+			NEWS_DETAIL_IMAGE =
+			<choose>
+				<when test="newsDetailImage != null">#{newsDetailImage}</when>
+				<otherwise>NEWS_DETAIL_IMAGE</otherwise>
+			</choose>
+			,
+			NEWS_MAIN_STORE_IMAGE =
+			<choose>
+				<when test="newsMainStoreImage != null">#{newsMainStoreImage}</when>
+				<otherwise>NEWS_MAIN_STORE_IMAGE</otherwise>
+			</choose>
+			,
+			NEWS_DETAIL_STORE_IMAGE =
+			<choose>
+				<when test="newsDetailStoreImage != null">#{newsDetailStoreImage}</when>
+				<otherwise>NEWS_DETAIL_STORE_IMAGE</otherwise>
+			</choose>
+		</trim>
+		where NEWS_NUM = #{newsNum}
+	</update>
+
+
+
+	<delete id="newsDelete" parameterType="string">
+		delete from news
+		where news_num = #{newsNum}
+	</delete>
+</mapper>

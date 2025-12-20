@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="imagetoolbar" content="no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="title" content="웹사이트">
+  <meta name="description" content="웹사이트입니다.">
+  <meta name="keywords" content="키워드,키워드,키워드">
+  <meta property="og:title" content="웹사이트">
+  <meta property="og:description" content="웹사이트입니다">
+  <meta property="og:image" content="https://웹사이트/images/opengraph.png">
+  <meta property="og:url" content="https://웹사이트">
+  <title>1:1문의 관리</title>
+  <link rel="stylesheet" href="/css/setting.css">
+  <link rel="stylesheet" href="/css/plugin.css">
+  <link rel="stylesheet" href="/css/template.css">
+  <link rel="stylesheet" href="/css/common.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.1.min.js"></script>
+   <script type="text/javascript" src="/js/checkbox.js"></script>
+<script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function() {
+            const inquireLink = document.getElementById("inquireLink");
+
+            if (inquireLink) { // 링크가 존재할 경우에만 이벤트 리스너 추가
+                inquireLink.addEventListener("click", function() {
+                    const isLoggedIn = "[[${session.auth != null ? 'true' : 'false'}]]" === "true";
+
+                    if (!isLoggedIn) {
+                        alert("로그인 후 이용할 수 있습니다.");
+                        location.href = "/login/login"; // 로그인 페이지로 리다이렉트
+                    } else {
+                        location.href = "/inquire/inquireWrite"; // 1:1 문의 페이지로 이동
+                    }
+                });
+            }
+        });
+    </script>
+</head>
+
+<body>
+  <!-- [S]tedu-N3 -->
+    <div class="tedu-N3" data-bid="XEm3ZgHi4n">
+        <div class="header-container lightmode">
+            <div class="header-top">
+                <div class="inner">
+                    <div class="header-member">
+                        <th:block th:if="${session.auth == null}">
+                            <a href="/login/login">
+                                <em class="ico">
+                                    <img src="/icons/ico_login.svg" alt="로그인 아이콘">
+                                </em>
+                                <span>로그인</span>
+                            </a>
+                            <a href="/register/membershipAgree">
+                                <em class="ico">
+                                    <img src="/icons/ico_member.svg" alt="회원가입 아이콘">
+                                </em>
+                                <span>회원가입</span>
+                            </a>
+                        </th:block>
+
+                        <th:block th:if="${session.auth != null}">
+                            <a href="/login/logout">
+                                <em class="ico">
+                                    <img src="/icons/ico_login.svg" alt="로그아웃 아이콘">
+                                </em>
+                                <span>로그아웃</span>
+                            </a>
+                            <th:block th:if="${session.auth.grade == 'mem'}">
+                                <a href="/myPage/memMyPage">
+                                    <em class="ico">
+                                        <img src="/icons/ico_member.svg" alt="마이페이지 아이콘">
+                                    </em>
+                                    <span>마이페이지</span>
+                                </a>
+                            </th:block>
+                            <th:block th:if="${session.auth.grade == 'emp'}">
+                                <a href="/myPage/empMyPage">
+                                    <em class="ico">
+                                        <img src="/icons/ico_member.svg" alt="마이페이지 아이콘">
+                                    </em>
+                                    <span>마이페이지</span>
+                                </a>
+                            </th:block>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+            <div class="header-nav">
+                <div class="inner">
+                    <div class="header-logo">
+                        <a href="/">
+                            <img src="/images/pickers_logo_main.png" alt="로고">
+                        </a>
+                    </div>
+                    <div class="header-gnb">
+
+                    </div><br><br><br>
+                    <div class="header-btn">
+                        <a href="javascript:void(0)" class="menu-open">
+                            <em class="ico">
+                                <img src="/icons/ico_menu.svg" alt="메뉴 아이콘">
+                            </em>
+                        </a>
+                        <a href="javascript:void(0)" class="menu-close">
+                            <em class="ico">
+                                <img src="/icons/ico_close.svg" alt="닫기 아이콘">
+                            </em>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+
+            <section class="header-area">
+                <div class="inner">
+                    <div class="menu-wrap">
+                        <div class="menu-box">
+                            <a class="menu-title">강의</a>
+                            <a href="/lecture/lectureList">강의</a>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'mem'}">
+                                <a href="/lecture/mylectureList">my강의</a>
+                                <a href="/item/cartList">장바구니</a>
+                                <a href="/item/wishList">찜</a>
+                            </th:block>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                                <a href="/lecture/emplectureList">강의 관리</a>
+                                <a href="/orders/empOrderList">주문 관리</a>
+                            </th:block>
+                        </div>
+                        <div class="menu-box">
+                            <a class="menu-title">인사이트</a>
+                            <a href="/news/newsListM">뉴스</a>
+                            <a href="/company/companyListM">기업</a>
+                            <a href="/stock/stockListM">주식</a>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                                <a href="/news/newsList">뉴스 관리</a>
+                                <a href="/company/companyList">기업 관리</a>
+                                <a href="/stock/stockList">주식 관리</a>
+                            </th:block>
+                        </div>
+                        <div class="menu-box">
+                            <a class="menu-title">커뮤니티</a>
+                            <a href="/board/boardQueList">질문게시판</a>
+                            <a href="/board/boardFreeList">자유게시판</a>
+                            <a href="/board/boardProfitList">수익인증</a>
+                            <a href="/board/boardTipList">꿀팁공유</a>
+                        </div>
+                        <div class="menu-box">
+                            <a class="menu-title">교육</a>
+                            <a href="/chart/list">교육</a>
+                            <a th:href="@{/word/wordSearch}">용어</a>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                                <a th:href="@{/word/wordList}">용어 관리</a>
+                            </th:block>
+                        </div>
+                        <th:block th:if="${session.auth != null}">
+                            <div class="menu-box">
+                                <a class="menu-title">MY</a>
+                                <th:block th:if="${session.auth.grade == 'mem'}">
+                                    <a href="/inquire/inquireListM">1:1 문의내역</a>
+                                    <a th:href="@{/lectureInquire/lectureInquireListM/{memNum}(memNum=${session.memNum})}">강의 문의내역</a>
+                                    <a href="/orders/orderList">강의 주문내역</a>
+                                </th:block>
+                                <th:block th:if="${session.auth.grade == 'emp'}">
+                                    <a href="/inquire/inquireList">1:1문의 관리</a>
+                                    <a href="/lectureInquire/lectureInquireList">강의질문 관리</a>
+                                </th:block>
+                            </div>
+                        </th:block>
+                        <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                            <div class="menu-box">
+                                <a class="menu-title">유저</a>
+                                <a href="/member/memList">회원 관리</a>
+                                <a href="/employee/empList">직원 관리</a>
+                            </div>
+                        </th:block>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    <!-- [E]tedu-N3 -->
+<br><br>
+  <!-- [E]tedu-N3 -->
+  <main class="th-layout-main ">
+    <!-- [S]tedu-N47 -->
+    <div class="tedu-N47" data-bid="gKM3zgP8b1">
+      <div class="content-inner">
+        <div class="content-container">
+          <section class="myedu-wrap">
+            <div class="title-wrap">
+              <h3 class="cont-title">1:1 문의 관리</h3>
+            </div>
+            
+            <div class="myedu-cont-wrap">
+              <form action="inquireList" method="get">
+           <div class="tableset tableset-receipt tableset-text-top">
+           <span class="search-container">
+            회원 검색 :
+            <input type="search" name="searchWord" th:value="${searchWord}" size=60 class="btnset-tableList-del">
+            <input type="submit" value="검색" class="btnset-tableList-del">
+        </span>
+                  </form>
+            <form action="inquireDelete" method="post" id="frm">
+            <table class="tableset-table table">
+              <colgroup>
+                <col>
+                <col>
+                <col>
+                <col>
+                <col>
+              </colgroup>
+              <thead class="thead-light thead-border-top">
+                <tr>
+                  <th scope="col"><input type="checkbox" id="checkBoxs" checked="checked"/></th>
+                  <th scope="col">번호</th>
+                  <th scope="col">문의번호</th>
+                  <th scope="col">문의제목</th>
+                  <th scope="col">문의상태</th>
+                  <th scope="col">문의등록일</th>
+              <th scope="col">
+                  <button type="submit" class="btnset-tableList-del">선택 삭제</button>
+              </th>
+             </tr>
+              </thead>
+              
+              <tbody>
+              <tr th:each="dto, iterStat : ${list}">
+        <td><input type="checkbox" name="nums" th:value="${dto.inquireNum}" checked="checked" /></td>
+        <!-- 항목 번호 계산 -->
+        <td class="tableset-dark">[[${startNum + iterStat.index}]]</td> <!-- 페이지 번호에 맞는 항목 번호 -->
+
+
+                  <td class="tableset-dark td-border-bottom">
+                    <a th:href="|inquireDetail/${dto.inquireNum}|">[[${dto.inquireNum}]]</a></td>
+                       
+                  <td class="tableset-dark">
+                    <a th:href="|inquireDetail/${dto.inquireNum}|">[[${dto.inquireTitle}]]</a></td>
+                    
+              <!--    <td class="tableset-dark">[[${dto.inquireStatus}]]</td>  -->
+                   <td class="tableset-dark">
+    <span th:if="${dto.inquireStatus == '답변대기'}">답변대기</span>
+    <span th:if="${dto.inquireStatus == '답변완료'}">답변완료</span>
+</td>
+                   
+                       
+                  <td class="tableset-dark">
+                    [[${#dates.format(dto.inquireRegisterDate, 'yyyy-MM-dd')}]]</td>
+                    
+                    <td class="tableset-dark">
+                    <input type="button"  th:attr="onclick=|javascript:location.href='inquireDelete?nums=${dto.inquireNum}'|" value="삭제" class="btnset-tableList-del"/></td>
+            
+                </tr>
+<tr class="pagination-row">
+  <th colspan="7">
+    <nav class="p2 pagiset pagiset-line">
+      <!-- 처음 페이지 -->
+      <div class="pagiset-ctrl">
+        <a th:href="|inquireList?page=1&searchWord=${searchWord}|" 
+           th:if="${page > 1}" 
+           class="pagiset-link pagiset-first">
+          <span class="visually-hidden">처음</span>
+        </a>
+        <span th:if="${page <= 1}" class="pagiset-link pagiset-first disabled">
+          <span class="visually-hidden">처음</span>
+        </span>
+      </div>
+
+      <!-- 이전 페이지 -->
+      <div class="pagiset-ctrl">
+        <a th:href="|inquireList?page=${page - 1}&searchWord=${searchWord}|" 
+           th:if="${page > 1}" 
+           class="pagiset-link pagiset-prev">
+          <span class="visually-hidden">이전</span>
+        </a>
+        <span th:if="${page <= 1}" class="pagiset-link pagiset-prev disabled">
+          <span class="visually-hidden">이전</span>
+        </span>
+      </div>
+
+<!-- 페이지 번호 리스트 -->
+<div class="pagiset-list">
+    <a th:each="i : ${#numbers.sequence(startPageNum, endPageNum)}" 
+       th:href="|inquireList?page=${i}&searchWord=${searchWord}|" 
+       th:classappend="${i == page} ? 'active-line' : ''" 
+       th:if="${startPageNum > 0 and endPageNum > 0}" 
+       class="pagiset-link">
+        [[${i}]]
+    </a>
+  
+    <!-- 상품이 없을 경우 기본 페이지 1 출력 -->
+    <a th:if="${endPageNum == 0}" 
+       th:href="|inquireList?page=1&searchWord=${searchWord}|" 
+       th:classappend="${page == 1} ? 'active-line' : ''" 
+       class="pagiset-link">
+        1
+    </a>
+</div>
+
+
+      <!-- 다음 페이지 -->
+      <div class="pagiset-ctrl">
+        <a th:href="|inquireList?page=${page + 1}&searchWord=${searchWord}|" 
+           th:if="${page < maxPage}" 
+           class="pagiset-link pagiset-next">
+          <span class="visually-hidden">다음</span>
+        </a>
+        <span th:if="${page >= maxPage}" class="pagiset-link pagiset-next disabled">
+          <span class="visually-hidden">다음</span>
+        </span>
+      </div>
+
+      <!-- 마지막 페이지 -->
+      <div class="pagiset-ctrl">
+        <a th:href="|inquireList?page=${maxPage}&searchWord=${searchWord}|" 
+           th:if="${page < maxPage}" 
+           class="pagiset-link pagiset-last">
+          <span class="visually-hidden">마지막</span>
+        </a>
+        <span th:if="${page >= maxPage}" class="pagiset-link pagiset-last disabled">
+          <span class="visually-hidden">마지막</span>
+        </span>
+      </div>
+    </nav>
+  </th>
+</tr>
+
+                
+              </tbody>
+            </table>
+            </form>
+          </div>
+          </div>
+          
+          </section>
+        </div>
+      </div>
+    </div>
+    <!-- [E]tedu-N47 -->
+  </main>
+<!-- [S]tedu-N17 -->
+    <div class="tedu-N17" data-bid="fLM3zgHIUl">
+        <div class="footer-container">
+            <div class="footer-top">
+                <div class="inner">
+                    <div class="footer-menu">
+                        <th:block th:if="${session.auth == null or session.auth.grade == 'emp'}">
+                            <a href="employee/empWrite">직원가입</a>
+                        </th:block>
+
+                        <!--               <th:block th:if="${session.auth != null and session.auth.grade != null and session.auth.grade == 'mem'}"> 
+					<a href="inquire/inquireWrite">1:1문의</a>
+				</th:block> -->
+
+                        <!--               <th:block th:if="${session.auth == null or session.auth.grade == 'mem'}">
+                  <a href="inquire/inquireWrite">1:1문의</a>
+               </th:block> -->
+
+                        <a href="javascript:void(0);" id="inquireLink">1:1 문의</a>
+
+
+                    </div>
+                </div>
+            </div>
+            <div class="footer-area">
+                <div class="inner">
+                    <dif class="footer-info-wrap">
+                        <div class="footer-logo">
+                            <a href="javascript:void(0)">
+                                <img src="/images/pickers_logo_footer.png" alt="로고">
+                            </a>
+                        </div>
+                        <div class="footer-info">
+                            <span>경기도 안양시 만안구 성결대학로 53 성결관 301호</span>
+                            <span>T. 010-1234-5678</span>
+                            <span>E. pickers@official.co.kr</span>
+                            <span class="copy">2022 BY TEMPLATEHOUSE. ALL RIGHTS RESEVED</span>
+                        </div>
+                    </dif>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- [E]tedu-N17 -->
+  <script src="/js/setting.js"></script>
+  <script src="/js/plugin.js"></script>
+  <script src="/js/template.js"></script>
+  <script src="/js/common.js"></script>
+  <script src="/js/script.js"></script>
+</body>

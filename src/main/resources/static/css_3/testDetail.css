@@ -1,0 +1,884 @@
+@charset "UTF-8";
+
+/* 카드에 마우스 가져다댔을때 효과 삭제함*/
+.cardset:hover {
+    transform: none !important;  /* 이동 효과 제거 */
+    box-shadow: none !important;  /* 그림자 효과 제거 */
+    background-color: transparent !important; /* 배경색 효과 제거 */
+    filter: none !important; /* 필터 효과 제거 */
+    transition: none !important; /* 부드러운 전환 효과 제거 */
+}
+
+.basic-N22 {
+    margin-top: 0px !important; /* 간격 제거 */
+    position: static; /* 상대 위치 설정 제거 */
+    z-index: auto; /* z-index 제거 */
+    margin-bottom: 100px !important; /* 푸터와 간격 추가 */
+}
+
+.tabset {
+    position: relative;
+    z-index: 1; /* 클릭 가능 영역 우선순위 높임 */
+    margin-bottom: -150px !important; /* 기존 값보다 줄이기 */
+}
+
+.button-container {
+    gap: 10px; /* 버튼 간 간격 */
+}
+.dropbtn, .timeframe, .indicator, .comparison, .chart-style, .drawing {
+  background-color: transparent;
+  color: black;
+  padding: 5px 10px;
+  margin: 0 5px;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.3s;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+.dropdown-content a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown-content a:hover {background-color: #f1f1f1;}
+.dropdown:hover .dropdown-content {display: block;}
+.timeframe:hover, .indicator:hover, .comparison:hover, .chart-style:hover, .drawing:hover {
+  background-color: #dddddd;
+}
+
+.timeframe.active, .indicator.active, .comparison.active, .chart-style.active, .drawing.active {
+  background-color: #cccccc;
+}
+
+.divider {
+  padding: 0 10px; /* 좌우 패딩 유지 */
+  color: #ccc; /* 옅은 회색으로 변경 */
+  font-size: 16px; /* 글자 크기 유지 */
+  align-self: center; /* 세로 중앙 정렬 */
+}
+
+/* 특정 블럭에만 적용되는 클래스 추가 */
+.daily-market-tit {
+    font-size: 16px !important; /* 폰트 크기 강제 적용 */
+    margin-top: -20px !important; /* 상단 여백 강제 조정 */
+    margin-left: -18px !important; /* 좌측 여백 강제 조정 */
+    align-self: flex-start !important; /* 텍스트 상단 정렬 */
+
+}
+/* 해당 블럭의 컨테이너에 적용 */
+.cardset.daily-market .cardset-cont {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    padding: 0px;
+}
+
+.ordering-tit {
+  font-size: 16px !important; /* 내 주식, 주문 내역과 동일한 크기 */
+  margin: -20px 280px 0px -5px !important; /* 동일한 위치로 조정 */
+  text-align: left !important; /* 왼쪽 정렬 */
+}
+/* 주문하기 블럭 컨테이너 */
+.cardset.ordering .cardset-cont {
+    display: flex;
+    justify-content: start;
+    margin-top: 8px !important; 
+    padding: 10px !important;
+}
+
+/* 내 주식 텍스트 스타일 */
+.my-stocks-tit {
+    font-size: 16px !important; /* 폰트 크기 강제 적용 */
+    margin-top: -8px !important; /* 상단 여백 강제 조정 */
+    margin-left: -5px !important; /* 좌측 여백 강제 조정 */
+    align-self: flex-start !important; /* 텍스트 상단 정렬 */
+}
+
+/* 내 주식 블럭 컨테이너 */
+.cardset.my-stocks .cardset-cont {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    padding: 0px;
+}
+
+/* 주문 내역 텍스트 스타일 */
+.order-history-tit {
+    font-size: 16px !important; /* 폰트 크기 강제 적용 */
+margin-top: -21px !important; /* 상단 여백 강제 조정 */
+    margin-left: -18px !important; /* 좌측 여백 강제 조정 */
+    align-self: flex-start !important; /* 텍스트 상단 정렬 */
+}
+
+/* 주문 내역 블럭 컨테이너 */
+.cardset.order-history .cardset-cont {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    padding: 0px;
+}
+
+.contents-inner {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 10px;
+    justify-content: space-between;
+    align-items: stretch;
+    height: auto; /* 높이 자동 조정 */
+    margin-top: 10px; /* 상단 간격 */
+}
+.cardset-cont > div:first-child {
+    margin-top: -18px; /* 제목의 상단 마진 조정 */
+    margin-left: -9px; /* 제목의 왼쪽 마진 조정 */
+}
+
+/* 왼쪽 열 */
+.col-left {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 3 !important; ; /* 왼쪽 열의 넓이 설정 */
+}
+
+/* 차트 및 일별 실시간 시세 블럭 */
+.cardset {
+    flex-grow: 1; /* 세로 높이를 균등하게 맞춤 */
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+}
+
+/* 중앙 열: 주문하기 블럭 */
+/* 중앙 열 */
+.col-middle {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.cardset.ordering {
+    flex-grow: 1; /* 주문하기 블럭의 높이를 맞춤 */
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+}
+
+/* 오른쪽 열: 내 주식 및 주문 내역 */
+.col-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.cardset.my-stocks, .cardset.order-history {
+    flex: 1; /* 오른쪽 열의 두 블럭을 절반 높이로 설정 */
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+}
+
+/* AAPL 텍스트 정렬 수정 */
+.company-info {
+    display: flex;
+    align-items: center; /* 세로 중앙 정렬 */
+    gap: 10px; /* 텍스트와 버튼 사이 간격 */
+    justify-content: flex-start; /* 왼쪽 정렬 */
+}
+
+/* 버튼 컨테이너 간격 조정 */
+.button-container {
+    display: flex;
+    justify-content: flex-start; /* 버튼 정렬 왼쪽 */
+    gap: 5px; /* 버튼 간 간격 최소화 */
+    margin: 10px 0; /* 상하 간격 */
+}
+/* 버튼 스타일 */
+.custom-button {
+    background-color: transparent;
+    border: none;
+    padding: 5px 10px; /* 버튼 내부 여백 */
+    font-size: 16px;
+    color: black;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+.custom-button:hover {
+    background-color: #f5f5f5; /* 회색 배경 */
+}
+
+.custom-button.active {
+    background-color: #f5f5f5; /* 선택된 버튼 배경 */
+}
+
+/* 기본 컨테이너 간격 */
+.basic-N22 {
+    margin-top: 10px; /* 위와의 간격 */
+}
+
+/* 하단 차트와 버튼 간격 */
+.contents-inner {
+    margin-top: 20px;
+    margin-bottom: -150px !important; /* 블럭과 푸터 간 간격 축소 */
+}
+/* 전체 컨테이너 양쪽 여백 설정 */
+.contents-container {
+    margin-left: auto;
+    margin-right: auto;
+
+    padding-left: 20px;
+    padding-right: 20px; /* 좌우 여백 동일하게 */
+}
+.cardset-tit {
+  white-space: nowrap; /* 줄바꿈 방지 */
+}
+
+
+
+/* 주문하기 텍스트 스타일 */
+.ordering-tit {
+    font-size: 18px; /* 텍스트 크기 */
+    white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+    text-align: left !important; /* 왼쪽 정렬 */
+    margin-bottom: 10px; /* 제목 아래 여백 */
+}
+
+/* 구매/판매/대기 버튼 컨테이너 */
+.order-tabs {
+    display: flex;
+    width: 100%;
+    gap: 10px;
+    font-weight: bold;
+    margin-bottom: 20px; /* 버튼 아래 여백 */
+}
+
+.orderlist-tabs {
+    display: flex;
+    width: 100%;
+    gap: 5px;
+    font-weight: bold;
+    margin-bottom: 20px; /* 버튼 아래 여백 */
+}
+
+
+
+.order-tab.active.buy-tab {
+    background-color: #fff;
+	font-weight: bold;
+    border-color: #ddd;
+}
+.order-tab.active.sell-tab {
+    background-color: #fff;
+    color: #007bff !important;
+    font-weight: bold;
+    border-color: #ddd;
+}
+
+.cardset.ordering .cardset-cont {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* 각 항목 간격 */
+    padding: 15px; /* 블럭 안쪽 여백 */
+}
+
+/* form-group 수정: 텍스트와 입력/버튼을 균일하게 정렬 */
+.form-group {
+    display: flex ;
+    text-align: right !important;
+    justify-content: space-between;
+}
+
+.form-group label {
+    flex: 1;
+    text-align: left !important;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.form-group input{
+    flex: 2 ;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.form-select {
+    width: 50%; /* 가로길이를 기존 90%에서 5% 줄임 */
+    max-width: 300px; /* 필요에 따라 최대 길이 제한 */
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box; /* 패딩 포함 크기 계산 */
+}
+
+/* 입력 필드 및 버튼 스타일 통일 */
+.form-group button {
+    flex: 2 ;
+    padding: 7px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+/* 수량 버튼 스타일 */
+.button-option {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    color: black;
+    cursor: pointer;
+    text-align: center;
+    border-radius: 5px;
+    padding: 8px;
+}
+
+.button-option.active.buy-option {
+    background-color: #fff;
+    color: #ff5e57;
+    border-color: #ddd;
+    font-weight: bold;
+}
+
+.button-option.active.sell-option {
+    background-color: white;
+    color: #007bff;
+    border-color: #007bff;
+}
+
+/* 수량 퍼센트 버튼 정렬 */
+.percentage-buttons {
+    display: flex;
+    justify-content: space-between; /* 버튼 간격 균등 */
+    gap: 10px ; /* 버튼 간격 */
+}
+
+.percentage-buttons button {
+    flex: 1 ; /* 버튼 크기 균일하게 분배 */
+    text-align: center;
+    padding: 5px;
+}
+
+/* 전반적인 블럭 레이아웃 통일 */
+.cardset-cont {
+    display: flex;
+    flex-direction: column; /* 세로로 정렬 */
+    gap: 10px; /* 항목 간 간격 */
+}
+
+
+
+
+
+/* 지정가 버튼 스타일 */
+#price-limit {
+    background-color: #f9f9f9; /* 기본 배경 */
+    border: 1px solid #ddd; /* 기본 테두리 */
+    color: black; /* 기본 텍스트 색상 */
+    cursor: pointer;
+    text-align: center;
+    border-radius: 5px;
+    padding: 8px;
+    flex: 1;
+}
+
+#price-limit.active {
+    background-color: #fff; /* 활성화된 배경 */
+    color: #ff5e57; /* 활성화된 텍스트 색상 */
+    font-weight: bold; /* 활성화된 텍스트 굵기 */
+    border-color: #ddd; /* 테두리 색상 유지 */
+}
+
+#price-limit:not(.active) {
+    background-color: #f9f9f9; /* 비활성화된 배경 */
+    color: #8a8a8a; /* 비활성화된 텍스트 색상 */
+    border: 1px solid #ddd; /* 비활성화된 테두리 */
+}
+
+/* 시장가 버튼 스타일 */
+#market-price {
+    background-color: #f9f9f9; /* 기본 배경 */
+    border: 1px solid #ddd; /* 기본 테두리 */
+    color: black; /* 기본 텍스트 색상 */
+    cursor: pointer;
+    text-align: center;
+    border-radius: 5px;
+    padding: 8px;
+    flex: 1;
+}
+
+#market-price.active {
+    background-color: #fff; /* 활성화된 배경 */
+    color: #ff5e57; /* 활성화된 텍스트 색상 */
+    font-weight: bold; /* 활성화된 텍스트 굵기 */
+    border-color: #ddd; /* 테두리 색상 유지 */
+}
+
+#market-price:not(.active) {
+    background-color: #f9f9f9; /* 비활성화된 배경 */
+    color: #8a8a8a; /* 비활성화된 텍스트 색상 */
+    border: 1px solid #ddd; /* 비활성화된 테두리 */
+}
+
+
+
+
+
+
+
+/* 구매가격 및 수량 입력 필드 */
+.input-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.input-group input {
+    flex: 1;
+    padding: 8px;
+  
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.input-group .button-minus,
+.input-group .button-plus {
+    width: 30px;
+    padding: 5px;
+    text-align: center;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: white;
+    
+    cursor: pointer;
+}
+
+/* 수량 퍼센트 버튼 정렬 */
+.percentage-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.percentage-buttons button {
+    flex: 1;
+    padding: 5px ;
+    text-align: center;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+.percentage-buttons button.active.buy-option {
+    background-color: #ff5e57;
+    color: white;
+    
+    border-color: #ff5e57;
+}
+
+.percentage-buttons button.active.sell-option {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+/* 내 주식 스타일 */
+/* 내 주식 박스 스타일 */
+.my-stocks .stock-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%; /* 전체 너비 채움 */
+  margin: 0; /* 중앙 정렬 방지 */
+}
+
+.stock-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  align-items: center; /* 수직 가운데 정렬 */
+}
+
+.stock-label {
+  text-align: left;
+  flex: 1;
+  font-weight: bold;
+  margin-right: 5px; /* 텍스트 간 여백 */
+}
+
+.stock-value {
+  text-align: right;
+  flex: 1;
+}
+
+/* 내 주식 카드 */
+.cardset.my-stocks {
+  padding: 2px; /* 카드 안쪽 여백 */
+  margin: 0 auto; /* 가로 여백 제거 */
+  width: 100%; /* 부모 컨테이너에 맞춤 */
+}
+
+.profit-amount {
+  color: #ff5e57;
+  font-weight: bold; /* +59원 (59.1%)만 볼드 처리 */
+  margin-left: 5px; /* "총 수익"과 약간의 간격 */
+}
+
+/* 주문 내역 스타일 */
+.order-history .order-tabs {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.order-tab {
+  flex: 1;
+  padding: 8px;
+  color: #8a8a8a; 
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.order-tab.active {
+  background-color: #fff;
+  color: #ff5e57;
+  font-weight: bold;
+  border-color: #ddd;
+}
+
+.orderlist-tab {
+  flex: 1;
+  padding: 5px;
+  background-color: #f9f9f9;
+  color: #8a8a8a; 
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.orderlist-tab.active {
+  background-color: #fff;
+  color: black;
+  font-weight: bold;
+  border-color: #ddd;
+}
+
+
+.order-info {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.no-orders {
+  font-size: 14px;
+  color: #888;
+}
+
+.view-all-orders {
+  margin-top: 10px;
+  padding: 8px 15px;
+  
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+  cursor: pointer;
+}
+
+.order-tab.active.buy-tab {
+    background-color: #fff; /* 선택된 구매 버튼 배경 */
+    color: #ff5e57; /* 구매 버튼 텍스트 빨간색 */
+    border-color: #ddd; /* 테두리 색상 */
+}
+
+.order-tab.active.sell-tab {
+    background-color: #fff; /* 선택된 판매 버튼 배경 */
+    color: #007bff !important; /* 판매 버튼 텍스트 파란색 */
+    border-color: #ddd; /* 테두리 색상 */
+}
+
+/* 구매하기 버튼 스타일 */
+.order-submit {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* 구매하기 버튼 활성화 (빨간색) */
+.order-submit.buy-submit {
+    background-color: #ff5e57;
+    color: white;
+}
+
+/* 판매하기 버튼 활성화 (파란색) */
+.order-submit.sell-submit {
+    background-color: #007bff !important;
+    color: white;
+}
+
+/* 수량 섹션 가로 크기 조정 */
+.quantity-container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 220px; /* 수량 섹션만 가로 크기 조정 */
+    margin-bottom: 15px;
+}
+
+.quantity-input-group {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    gap: 5px;
+}
+
+.quantity-input {
+    width: 160px; /* 입력 필드 가로 크기 */
+    height: 45px; /* 높이 */
+    padding: 0px;
+    color: #8a8a8a;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box; /* 패딩 포함 */
+}
+
+.quantity-button {
+    width: 50px; /* 버튼 가로 크기 */
+    height: 45px; /* 버튼 높이 */
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    text-align: center;
+    
+}
+
+/* 비율 버튼 크기 조정 */
+.percentage-buttons {
+    display: flex;
+    gap: 5px;
+    justify-content: space-between;
+}
+
+.percentage-buttons button {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+
+/* 구매용 수량/소수점 버튼 */
+.button-option.buy-button.active {
+    background-color: #fff; /* 선택된 버튼 */
+    color: #ff5e57; /* 빨간색 텍스트 */
+  
+    font-weight: bold;
+}
+
+.button-option.buy-button:not(.active) {
+    background-color: #f9f9f9; /* 비활성화된 버튼 배경 */
+    color: #8a8a8a; /* 비활성화된 텍스트 */
+    border: 1px solid #ddd; /* 회색 테두리 */
+}
+
+/* 구매용 지정가/시장가 버튼 */
+.price-type-button.buy-button.active {
+    background-color: #fff; /* 선택된 버튼 */
+    color: #ff5e57; /* 빨간색 텍스트 */
+ 
+    font-weight: bold;
+}
+
+.price-type-button.buy-button:not(.active) {
+    background-color: #f9f9f9; /* 비활성화된 버튼 배경 */
+    color: #8a8a8a; /* 비활성화된 텍스트 */
+    border: 1px solid #ddd; /* 회색 테두리 */
+}
+
+/* 판매용 수량/소수점 버튼 */
+.button-option.sell-button.active {
+    background-color: #fff; /* 선택된 버튼 */
+    color: #007bff; /* 파란색 텍스트 */
+
+    font-weight: bold;
+}
+
+.button-option.sell-button:not(.active) {
+    background-color: #f9f9f9; /* 비활성화된 버튼 배경 */
+    color: #8a8a8a;  /* 비활성화된 텍스트 */
+    border: 1px solid #ddd; /* 회색 테두리 */
+}
+
+/* 판매용 지정가/시장가 버튼 */
+.sell-price-type-button.sell-button.active {
+    background-color: #fff; /* 선택된 버튼 */
+    color: #007bff; /* 파란색 텍스트 */
+  
+    font-weight: bold;
+}
+
+.sell-price-type-button.sell-button:not(.active) {
+    background-color: #f9f9f9; /* 비활성화된 버튼 배경 */
+    color: #8a8a8a;  /* 비활성화된 텍스트 */
+    border: 1px solid #ddd; /* 회색 테두리 */
+}
+/* 판매용 지정가/시장가 버튼 */
+.sell-market-type-button.sell-button.active {
+    background-color: #fff; /* 선택된 버튼 */
+    color: #007bff; /* 파란색 텍스트 */
+  
+    font-weight: bold;
+}
+
+.sell-market-type-button.sell-button:not(.active) {
+    background-color: #f9f9f9; /* 비활성화된 버튼 배경 */
+    color: #8a8a8a;  /* 비활성화된 텍스트 */
+    border: 1px solid #ddd; /* 회색 테두리 */
+}
+/* 내 주식 카드 */
+.my-stocks {
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #fff;
+  margin-bottom: 20px;
+}
+
+/* 내 주식 타이틀 */
+.my-stocks-tit {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+/* 내 주식 정보 섹션 */
+.stock-info {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 개별 행 스타일 */
+.stock-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  margin-bottom: -3px;
+}
+
+/* 라벨과 값 스타일 */
+.stock-label {
+  flex: 1;
+  text-align: left;
+  font-weight: bold; /* 텍스트 볼드 처리 */
+}
+
+.stock-value {
+  flex: 1;
+  text-align: right;
+}
+
+/* 총 수익 스타일 */
+.profit-amount {
+  margin-right: 90px !important; /* 총 수익과 수수료 사이 간격 */
+  font-weight: bold; /* +59원 (59.1%) 볼드 처리 */
+  white-space: nowrap !important; /* 줄바꿈 방지 */
+  display: inline-block !important; /* 텍스트가 한 줄로 유지되도록 설정 */
+}
+
+.stock-row:first-child {
+  white-space: nowrap; /* 첫 번째 행(총 수익 행) 줄바꿈 방지 */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 체크박스 스타일 */
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.checkbox-label {
+  font-weight: normal;
+  font-size: 14px;
+}
+
+/* 주문 내역 체크박스 컨테이너 */
+.order-history-checkbox-container {
+  position: absolute; /* 강제 위치 지정 */
+  left: 35px; 
+  display: flex;
+  align-items: center;
+  gap : 5px;
+  margin-top: 60px; /* "대기" 버튼 아래 간격 */
+}
+
+.order-info {
+  margin-top: 120px; /* 체크박스 아래로 간격 띄우기 */
+}
+
+/* 주문 내역 체크박스 레이블 */
+.order-history-checkbox-label {
+  font-size: 14px;
+  color: #8a8a8a;
+  cursor: pointer;
+}
+
+
+
+
+
+/* 구매 버튼 활성화 */
+.order-tab.active#buy-tab {
+    background-color: #fff; /* 활성화된 구매 버튼 배경 */
+    color: #ff5e57; /* 활성화된 구매 버튼 텍스트 빨강 */
+    font-weight: bold;
+    border-color: #ddd;
+}
+
+/* 판매 버튼 활성화 */
+.order-tab.active#sell-tab {
+    background-color: #fff; /* 활성화된 판매 버튼 배경 */
+    color: #007bff !important; /* 활성화된 판매 버튼 텍스트 파랑 */
+    font-weight: bold;
+    border-color: #ddd;
+}
+
+/* 비활성화된 버튼 */
+.order-tab:not(.active) {
+    background-color: #f9f9f9;
+    color: #8a8a8a;
+    border-color: #ddd;
+}

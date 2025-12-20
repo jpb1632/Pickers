@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="orderRepositorySql">
+<sql id="ordersBaseColumn">
+ORDER_NUM, ORDER_DATE, ORDER_PRICE, PAY_STATUS, MEM_NUM, ORDER_TITLE, ORDER_NAME, ORDER_PHONE_NUM
+</sql>
+
+<select id="selectOrderNum" resultType="string">
+select concat(to_char(sysdate, 'yyyyMMdd'), lpad(order_num_seq.nextval, 4, '0'))
+from dual
+</select>
+
+<insert id="orderInsert" parameterType="orders">
+insert into orders(<include refid="ordersBaseColumn"/>)
+values(#{orderNum}, sysdate, #{orderPrice}, '입금대기중', #{memNum}, #{orderTitle}, #{orderName}, #{orderPhoneNum})
+</insert>
+
+<insert id="orderListInsert" parameterType="hashmap">
+insert into order_list(LECTURE_NUM, ORDER_NUM, ORDER_QUANTITY, LECTURE_TOTAL_PRICE)
+select c.lecture_num, #{orderNum}, cart_qty, cart_qty * lecture_price
+from cart c join lecture l
+on c.lecture_num = l.lecture_num
+where mem_num = #{memNum}
+and c.lecture_num in 
+<foreach collection="lectureNums" item="lectureNum" close=")" open="("
+index="index" separator=",">
+#{lectureNum}
+</foreach>
+</insert>
+
+<resultMap id="orderListResultMap" type="purchaseList" >
+    <association property="ordersDTO" javaType="orders">
+        <constructor>
+            <idArg column="ORDER_NUM" javaType="string" />
+            <arg column="ORDER_DATE" javaType="java.util.Date" />
+            <arg column="ORDER_PRICE" javaType="integer" />
+            <arg column="PAY_STATUS" javaType="string" />
+            <arg column="MEM_NUM" javaType="string" />
+            <arg column="ORDER_TITLE" javaType="string" />
+            <arg column="ORDER_NAME" javaType="string" />
+            <arg column="ORDER_PHONE_NUM" javaType="string" />
+        </constructor>
+    </association>
+    <association property="paymentDTO" javaType="payment">
+    	<id column="ORDER_NUM" jdbcType="VARCHAR" property="orderNum"/>
+    	<result column="CONFIRMNUM" jdbcType="VARCHAR" property="confirmNum"/>
+    	<result column="CARDNUM" jdbcType="VARCHAR" property="cardNum"/>
+    	<result column="applDate" jdbcType="VARCHAR" property="applDate"/>
+    	<result column="applTime" jdbcType="VARCHAR" property="applTime"/>
+    </association>
+    <collection property="ordersListLectureDTOs" ofType="ordersListLectures">
+        <association property="ordersListDTO" javaType="ordersList">
+            <result column="LECTURE_NUM" jdbcType="VARCHAR" property="lectureNum" />
+            <result column="ORDER_QUANTITY" jdbcType="BIGINT" property="orderQuantity" />
+            <result column="LECTURE_TOTAL_PRICE" jdbcType="BIGINT" property="lectureTotalPrice" />
+        </association>
+        <association property="lectureDTO" javaType="lecture">
+            <id column="LECTURE_NUM" jdbcType="VARCHAR" property="lectureNum" />
+            <result column="LECTURE_TITLE" jdbcType="VARCHAR" property="lectureTitle" />
+            <result column="LECTURE_MAIN_STORE_IMAGE" jdbcType="VARCHAR" property="lectureMainStoreImage" />
+        </association>
+    </collection>
+</resultMap>
+
+
+<select id="orderList" parameterType="hashmap" resultMap="orderListResultMap">
+select l.lecture_num, LECTURE_TITLE, LECTURE_MAIN_STORE_IMAGE, LECTURE_TOTAL_PRICE, ORDER_QUANTITY
+, o.ORDER_NUM, ORDER_DATE, ORDER_PRICE, PAY_STATUS, o.MEM_NUM, ORDER_TITLE, ORDER_NAME, ORDER_PHONE_NUM
+,CONFIRMNUM, CARDNUM, applDate, applTime
+from lecture l join order_list ol
+on l.lecture_num = ol.lecture_num join orders o
+on ol.ORDER_NUM = o.ORDER_NUM left outer join payment pm
+on o.ORDER_NUM = pm.ORDER_NUM 
+<trim prefix="where" prefixOverrides="AND | OR">
+	<if test="memNum != null">
+		o.mem_num = #{memNum}
+	</if>
+	<if test="orderNum != null">
+		and o.ORDER_NUM = #{orderNum}
+	</if>
+</trim>
+</select>
+
+<select id="orderSelectOne" parameterType="string" resultType="orders">
+select <include refid="ordersBaseColumn"/>
+from orders
+where order_num = #{orderNum}
+</select>
+
+<insert id="paymentInsert" parameterType="payment">
+insert into payment(ORDER_NUM, CONFIRMNUM, CARDNUM, TID
+,TOTALPRICE, RESULTMESSAGE, PAYMETHOD, applDate, applTime)
+values(#{orderNum}, #{confirmNum}, #{cardNum}, #{tid}
+, #{totalPrice}, #{resultMessage}, #{payMethod}, #{applDate}, #{applTime})
+</insert>
+
+<delete id="paymentDel" parameterType="string">
+delete from payment
+where order_num = #{orderNum}
+</delete>
+
+<update id="updatePayStatus">
+    update orders
+    set pay_status = '결제완료'
+    where order_num = #{orderNum}
+</update>
+
+<update id="resetPayStatus">
+    update orders
+    set pay_status = '입금대기중'
+    where order_num = #{orderNum}
+</update>
+
+<select id="getPayment" parameterType="string" resultType="springBootPickers.domain.PaymentDTO">
+    SELECT ORDER_NUM as orderNum,
+           APPLDATE as applDate,
+           APPLTIME as applTime,
+           CARDNUM as cardNum,
+           CONFIRMNUM as confirmNum,
+           PAYMETHOD as payMethod,
+           TID as tid,
+           TOTALPRICE as totalPrice,
+           RESULTMESSAGE as resultMessage
+    FROM PAYMENT
+    WHERE ORDER_NUM = #{orderNum}
+</select>
+
+</mapper>

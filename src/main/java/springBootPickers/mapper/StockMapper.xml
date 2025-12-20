@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="springBootPickers.mapper.StockMapper">
+    
+    <!-- 주식 정보 추가 -->
+    <insert id="stockInsert" parameterType="stockDTO">
+        INSERT INTO stock (
+            stock_num, 
+            company_num, 
+            emp_num, 
+            current_price, 
+            opening_price, 
+            high_price, 
+            low_price, 
+            previous_price, 
+            price_change_rate, 
+            trading_amount, 
+            market_cap
+        ) VALUES (
+            #{stockNum},
+            #{companyNum},
+            #{empNum},
+            #{currentPrice},
+            #{openingPrice},
+            #{highPrice},
+            #{lowPrice},
+            #{previousPrice},
+            #{priceChangeRate},
+            #{tradingAmount},
+            #{marketCap}
+        )
+    </insert>
+    
+    <!-- 주식 목록 조회 -->
+<select id="stockSelectList" resultType="stockDTO" parameterType="startEndPageDTO">
+    SELECT * FROM (
+        SELECT 
+            ROW_NUMBER() OVER(ORDER BY s.stock_num) AS rn,
+            s.stock_num AS stockNum,
+            s.company_num AS companyNum,
+            s.emp_num AS empNum,
+            s.current_price AS currentPrice,
+            s.opening_price AS openingPrice,
+            s.high_price AS highPrice,
+            s.low_price AS lowPrice,
+            s.previous_price AS previousPrice,
+            s.price_change_rate AS priceChangeRate,
+            s.trading_amount AS tradingAmount,
+            s.market_cap AS marketCap,
+            c.company_name AS companyName 
+        FROM stock s
+        LEFT JOIN company c ON s.company_num = c.company_num
+        <where>
+            <if test="searchWord != null and searchWord != ''">
+                c.company_name LIKE '%' || #{searchWord} || '%' OR
+                s.stock_num LIKE '%' || #{searchWord} || '%' OR
+                s.company_num LIKE '%' || #{searchWord} || '%'
+            </if>
+        </where>
+    )
+    WHERE rn BETWEEN #{startRow} AND #{endRow}
+</select>
+
+    
+    <!-- 주식 목록 갯수 조회 -->
+    <select id="stockCount" resultType="integer">
+        SELECT COUNT(*) FROM stock
+    </select>
+
+   <!-- 특정 주식 조회 -->
+<select id="stockSelectOne" resultType="stockDTO" parameterType="string">
+    SELECT
+        s.stock_num AS stockNum,
+        s.company_num AS companyNum,
+        s.emp_num AS empNum,
+        s.current_price AS currentPrice,
+        s.opening_price AS openingPrice,
+        s.high_price AS highPrice,
+        s.low_price AS lowPrice,
+        s.previous_price AS previousPrice,
+        s.price_change_rate AS priceChangeRate,
+        s.trading_amount AS tradingAmount,
+        s.market_cap AS marketCap,
+        c.company_name AS companyName 
+    FROM stock s
+    LEFT JOIN company c ON s.company_num = c.company_num
+    WHERE s.stock_num = #{stockNum}
+</select>
+
+
+    <!-- 주식 정보 업데이트 -->
+    <update id="stockUpdate" parameterType="stockDTO">
+        UPDATE stock
+        <trim prefix="set" suffixOverrides=",">
+            current_price = #{currentPrice},
+            opening_price = #{openingPrice},
+            high_price = #{highPrice},
+            low_price = #{lowPrice},
+            previous_price = #{previousPrice},
+            price_change_rate = #{priceChangeRate},
+            trading_amount = #{tradingAmount},
+            market_cap = #{marketCap},
+            emp_num = #{empNum}
+            
+        </trim>
+        WHERE stock_num = #{stockNum}
+    </update>
+
+    <!-- 주식 삭제 -->
+    <delete id="stockDelete" parameterType="string">
+        DELETE FROM stock 
+        WHERE stock_num = #{stockNum}
+    </delete>
+    
+    <!-- 여러 주식 삭제 -->
+    <delete id="stocksDelete" parameterType="java.util.List">
+        DELETE FROM stock 
+        WHERE stock_num IN 
+        <foreach collection="list" item="stockNum" open="(" separator="," close=")">
+            #{stockNum}
+        </foreach>
+    </delete>
+	
+<select id="stockSelectForChart" resultType="stockDTO">
+    SELECT 
+        s.stock_num AS stockNum,
+        s.company_num AS companyNum,
+        s.current_price AS currentPrice,
+        s.price_change_rate AS priceChangeRate,
+        s.market_cap AS marketCap,
+        s.trading_amount AS tradingAmount,
+        c.company_name AS companyName
+    FROM stock s
+    LEFT JOIN company c ON s.company_num = c.company_num
+    ORDER BY ${sortField} ${sortOrder}
+    OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
+</select>
+
+	
+</mapper>

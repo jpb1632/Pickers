@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="springBootPickers.mapper.MemberInfoMapper">
+<select id="memberSelectOne" parameterType="string" resultType="memberDTO">
+select 	mem_num as memNum, mem_name as memName, mem_id as memId, mem_pw as memPw
+		, mem_addr as memAddr, mem_detail_addr as memDetailAddr, mem_post as memPost
+		, mem_phone_num as memPhoneNum, GENDER as gender, mem_register_date as memRegisterDate
+		, mem_email as memEmail, mem_birth as memBirth
+from member
+where mem_id = #{memId}
+</select>
+
+ <update id="memberUpdate" parameterType="memberDTO">
+update member
+set
+	  mem_name=#{memName}
+	,MEM_ADDR = #{memAddr}
+		,MEM_DETAIL_ADDR = #{memDetailAddr}
+		,MEM_POST = #{memPost}
+		,GENDER = #{gender}
+		,MEM_PHONE_NUM = #{memPhoneNum}
+		,MEM_EMAIL = #{memEmail}
+		,MEM_BIRTH = #{memBirth}
+	where MEM_ID = #{memId}
+</update> 
+
+<update id="memberPwUpdate">
+update member
+set mem_pw = #{_newPw}
+where mem_id = #{_memId}
+</update>
+
+<delete id="memberDelete">
+delete from member where mem_id=#{memId}
+</delete>
+</mapper>

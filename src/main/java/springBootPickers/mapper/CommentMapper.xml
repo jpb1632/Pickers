@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="springBootPickers.mapper.CommentMapper">
+
+ <insert id="insertComment">
+    INSERT INTO COMMENTS (COMMENTS_NUM, COMMENTS_CONTENT, COMMENTS_REGISTER_DATE, BOARD_NUM, MEM_NUM)
+    VALUES (#{commentNum}, #{commentContent}, SYSDATE, #{boardNum}, #{memNum})
+</insert>
+
+<select id="selectCommentsByBoardNum" resultType="commentDTO">
+    SELECT 
+        c.COMMENTS_NUM AS commentNum,
+        c.COMMENTS_CONTENT AS commentContent,
+        c.COMMENTS_REGISTER_DATE AS commentRegisterDate,
+        c.BOARD_NUM AS boardNum,
+        c.MEM_NUM AS memNum,
+        m.MEM_ID AS memId <!-- 회원 아이디 추가 -->
+    FROM COMMENTS c
+    JOIN MEMBER m ON c.MEM_NUM = m.MEM_NUM <!-- MEMBER 테이블과 조인 -->
+    WHERE c.BOARD_NUM = #{boardNum}
+    ORDER BY c.COMMENTS_REGISTER_DATE DESC
+</select>
+
+<select id="selectCommentByCommentNum" resultType="commentDTO">
+    SELECT 
+        c.COMMENTS_NUM AS commentNum,
+        c.COMMENTS_CONTENT AS commentContent,
+        c.COMMENTS_REGISTER_DATE AS commentRegisterDate,
+        c.BOARD_NUM AS boardNum,
+        c.MEM_NUM AS memNum,
+        m.MEM_ID AS memId <!-- 회원 아이디 추가 -->
+    FROM COMMENTS c
+    JOIN MEMBER m ON c.MEM_NUM = m.MEM_NUM <!-- MEMBER 테이블과 조인 -->
+    WHERE c.COMMENTS_NUM = #{commentNum}
+</select>
+
+
+<update id="updateComment">
+    UPDATE COMMENTS
+    SET COMMENTS_CONTENT = #{commentContent}, COMMENTS_REGISTER_DATE = SYSDATE
+    WHERE COMMENTS_NUM = #{commentNum}
+</update>
+
+<delete id="deleteComment">
+    DELETE FROM COMMENTS
+    WHERE COMMENTS_NUM = #{commentNum}
+</delete>
+
+<delete id="deleteCommentsByBoardNum">
+    DELETE FROM COMMENTS
+    WHERE BOARD_NUM = #{boardNum}
+</delete>
+
+</mapper>
+
+

@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="imagetoolbar" content="no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="title" content="웹사이트">
+  <meta name="description" content="웹사이트입니다.">
+  <meta name="keywords" content="키워드,키워드,키워드">
+  <meta property="og:title" content="웹사이트">
+  <meta property="og:description" content="웹사이트입니다">
+  <meta property="og:image" content="https://웹사이트/images/opengraph.png">
+  <meta property="og:url" content="https://웹사이트">
+  <title>장바구니</title>
+  <link rel="stylesheet" href="/css/setting.css">
+  <link rel="stylesheet" href="/css/plugin.css">
+  <link rel="stylesheet" href="/css/template.css">
+  <link rel="stylesheet" href="/css/common.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.1.min.js"></script>
+   <script type="text/javascript" src="/js/checkbox.js"></script>
+   <script type="text/javascript" src="/static/js/money.js"></script>
+<script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function() {
+            const inquireLink = document.getElementById("inquireLink");
+
+            if (inquireLink) { // 링크가 존재할 경우에만 이벤트 리스너 추가
+                inquireLink.addEventListener("click", function() {
+                    const isLoggedIn = "[[${session.auth != null ? 'true' : 'false'}]]" === "true";
+
+                    if (!isLoggedIn) {
+                        alert("로그인 후 이용할 수 있습니다.");
+                        location.href = "/login/login"; // 로그인 페이지로 리다이렉트
+                    } else {
+                        location.href = "/inquire/inquireWrite"; // 1:1 문의 페이지로 이동
+                    }
+                });
+            }
+        });
+    </script>
+<script type="text/javascript">
+function cartAdd(lectureNum) {
+    var formData = JSON.stringify({
+        lectureNum: lectureNum,
+        qty: 1 // 수량은 항상 1로 고정
+    });
+
+    $.ajax({
+        type: "post",
+        url: "/item/cartAdd",
+        contentType: "application/json",
+        data: formData,
+        success: function (result) {
+            if (result === "200") {
+                alert("상품이 장바구니에 추가되었습니다.");
+                location.reload(); // 페이지 새로고침
+            } else if (result === "409") { // 중복 발생
+                alert("이미 장바구니에 담긴 상품입니다.");
+            } else {
+                alert("오류가 발생했습니다.");
+            }
+        },
+        error: function () {
+            alert("오류 발생");
+        }
+    });
+}
+
+
+function del1() {
+    var chk_arr = [];
+    $("input:checkbox[name='nums']:checked").each(function () {
+        chk_arr.push($(this).val());
+    });
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "cartDels", true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    var formData = JSON.stringify(chk_arr);
+    xhr.onload = function () {
+        if (xhr.status == 200) {
+            var result = xhr.responseText;
+            if (result === "200") location.reload(); // 페이지 새로고침
+            else alert("삭제되지 않았습니다.");
+        } else {
+            alert("삭제되지 않았습니다.");
+        }
+    };
+    xhr.send(formData);
+}
+//총 수량과 전체 합계를 업데이트하는 함수
+function updateCartSummary() {
+    let totalQty = 0; // 총 수량
+    let totalPrice = 0; // 전체 합계
+
+    // 체크된 상품의 수량과 가격 합산
+    $("input:checkbox[name='nums']:checked").each(function () {
+        const row = $(this).closest('tr'); // 체크된 행 가져오기
+        const qty = parseInt(row.find(".cartQty").text().trim()); // 강의 수량 가져오기
+        const priceText = row.find(".totalPrice").text().replace(/[^0-9]/g, ''); // 금액에서 숫자만 추출
+        const price = parseInt(priceText);
+
+        if (!isNaN(qty)) totalQty += qty; // 숫자가 아닌 값이 있을 경우 제외
+        if (!isNaN(price)) totalPrice += price;
+    });
+
+    // DOM에 총 수량과 합계 업데이트
+    $("#totQty").text(`총 수량 : ${totalQty}개`);
+    $("#totalPrice").text(`전체 합계 : ${totalPrice.toLocaleString()}원`);
+}
+
+// 체크박스 이벤트 핸들러 등록
+$(document).ready(function () {
+    $("input:checkbox[name='nums']").on("change", function () {
+        updateCartSummary(); // 체크 상태 변경 시 호출
+    });
+    // 전체 체크박스 이벤트 등록
+    $("#checkBoxs").on("change", function () {
+        const isChecked = $(this).is(":checked");
+        $("input:checkbox[name='nums']").prop("checked", isChecked); // 전체 선택 또는 해제
+        updateCartSummary(); // 전체 체크 상태 변경 시 합계 업데이트
+    });
+    // 페이지 로드 시 초기 상태 업데이트
+    updateCartSummary();
+});
+
+
+</script>
+</head>
+
+<body>
+ <!-- [S]tedu-N3 -->
+    <div class="tedu-N3" data-bid="XEm3ZgHi4n">
+        <div class="header-container lightmode">
+            <div class="header-top">
+                <div class="inner">
+                    <div class="header-member">
+                        <th:block th:if="${session.auth == null}">
+                            <a href="/login/login">
+                                <em class="ico">
+                                    <img src="/icons/ico_login.svg" alt="로그인 아이콘">
+                                </em>
+                                <span>로그인</span>
+                            </a>
+                            <a href="/register/membershipAgree">
+                                <em class="ico">
+                                    <img src="/icons/ico_member.svg" alt="회원가입 아이콘">
+                                </em>
+                                <span>회원가입</span>
+                            </a>
+                        </th:block>
+
+                        <th:block th:if="${session.auth != null}">
+                            <a href="/login/logout">
+                                <em class="ico">
+                                    <img src="/icons/ico_login.svg" alt="로그아웃 아이콘">
+                                </em>
+                                <span>로그아웃</span>
+                            </a>
+                            <th:block th:if="${session.auth.grade == 'mem'}">
+                                <a href="/myPage/memMyPage">
+                                    <em class="ico">
+                                        <img src="/icons/ico_member.svg" alt="마이페이지 아이콘">
+                                    </em>
+                                    <span>마이페이지</span>
+                                </a>
+                            </th:block>
+                            <th:block th:if="${session.auth.grade == 'emp'}">
+                                <a href="/myPage/empMyPage">
+                                    <em class="ico">
+                                        <img src="/icons/ico_member.svg" alt="마이페이지 아이콘">
+                                    </em>
+                                    <span>마이페이지</span>
+                                </a>
+                            </th:block>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+            <div class="header-nav">
+                <div class="inner">
+                    <div class="header-logo">
+                        <a href="/">
+                            <img src="/images/pickers_logo_main.png" alt="로고">
+                        </a>
+                    </div>
+                    <div class="header-gnb">
+
+                    </div><br><br><br>
+                    <div class="header-btn">
+                        <a href="javascript:void(0)" class="menu-open">
+                            <em class="ico">
+                                <img src="/icons/ico_menu.svg" alt="메뉴 아이콘">
+                            </em>
+                        </a>
+                        <a href="javascript:void(0)" class="menu-close">
+                            <em class="ico">
+                                <img src="/icons/ico_close.svg" alt="닫기 아이콘">
+                            </em>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+
+            <section class="header-area">
+                <div class="inner">
+                    <div class="menu-wrap">
+                        <div class="menu-box">
+                            <a class="menu-title">강의</a>
+                            <a href="/lecture/lectureList">강의</a>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'mem'}">
+                                <a href="/lecture/mylectureList">my강의</a>
+                                <a href="/item/cartList">장바구니</a>
+                                <a href="/item/wishList">찜</a>
+                            </th:block>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                                <a href="/lecture/emplectureList">강의 관리</a>
+                                <a href="/orders/empOrderList">주문 관리</a>
+                            </th:block>
+                        </div>
+                        <div class="menu-box">
+                            <a class="menu-title">인사이트</a>
+                            <a href="/news/newsListM">뉴스</a>
+                            <a href="/company/companyListM">기업</a>
+                            <a href="/stock/stockListM">주식</a>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                                <a href="/news/newsList">뉴스 관리</a>
+                                <a href="/company/companyList">기업 관리</a>
+                                <a href="/stock/stockList">주식 관리</a>
+                            </th:block>
+                        </div>
+                        <div class="menu-box">
+                            <a class="menu-title">커뮤니티</a>
+                            <a href="/board/boardQueList">질문게시판</a>
+                            <a href="/board/boardFreeList">자유게시판</a>
+                            <a href="/board/boardProfitList">수익인증</a>
+                            <a href="/board/boardTipList">꿀팁공유</a>
+                        </div>
+                        <div class="menu-box">
+                            <a class="menu-title">교육</a>
+                            <a href="/chart/list">교육</a>
+                            <a th:href="@{/word/wordSearch}">용어</a>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                                <a th:href="@{/word/wordList}">용어 관리</a>
+                            </th:block>
+                        </div>
+                        <th:block th:if="${session.auth != null}">
+                            <div class="menu-box">
+                                <a class="menu-title">MY</a>
+                                <th:block th:if="${session.auth.grade == 'mem'}">
+                                    <a href="/inquire/inquireListM">1:1 문의내역</a>
+                                    <a th:href="@{/lectureInquire/lectureInquireListM/{memNum}(memNum=${session.memNum})}">강의 문의내역</a>
+                                    <a href="/orders/orderList">강의 주문내역</a>
+                                </th:block>
+                                <th:block th:if="${session.auth.grade == 'emp'}">
+                                    <a href="/inquire/inquireList">1:1문의 관리</a>
+                                    <a href="/lectureInquire/lectureInquireList">강의질문 관리</a>
+                                </th:block>
+                            </div>
+                        </th:block>
+                        <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                            <div class="menu-box">
+                                <a class="menu-title">유저</a>
+                                <a href="/member/memList">회원 관리</a>
+                                <a href="/employee/empList">직원 관리</a>
+                            </div>
+                        </th:block>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    <!-- [E]tedu-N3 -->
+  <main class="th-layout-main ">
+    <!-- [S]tedu-N47 -->
+    <div class="tedu-N47" data-bid="gKM3zgP8b1">
+      <div class="content-inner">
+        <div class="content-container">
+          <section class="myedu-wrap">
+            <div class="title-wrap">
+              <h3 class="cont-title">장바구니</h3>
+            </div>
+            
+            <div class="myedu-cont-wrap">
+           <div class="tableset tableset-receipt tableset-text-top">
+           
+            <form action="/orders/goodsBuy" method="post">
+            <table class="tableset-table table">
+              <colgroup>
+                <col>
+                <col>
+                <col>
+                <col>
+                <col>
+              </colgroup>
+              <thead class="thead-light thead-border-top">
+                <tr>
+                  <th scope="col"><input type="checkbox" id="checkBoxs" checked="checked"/></th>
+                  <th scope="col">강의정보</th>
+                  <th scope="col">강의수량</th>
+                  <th scope="col">금액</th>
+              <th scope="col">
+                  <button type="button" onclick="del1();" class="btnset-tableList-del">선택 삭제</button>
+              </th>
+             </tr>
+              </thead>
+              
+              <tbody>
+    <tr th:each="dto, idx : ${list}">
+        <td><br><br>
+            <input type="checkbox" name="nums" th:value="${dto.lectureDTO.lectureNum}" checked="checked" />
+        </td>
+        <td class="tableset-dark td-border-bottom">
+            <img th:src="|/upload/${dto.lectureDTO.lectureMainStoreImage}|" width="150" height="100">
+            <br><span class="text-truncate">[[${dto.lectureDTO.lectureTitle}]]</span>
+        </td>
+        <td class="tableset-dark"><br><br>
+            <span id="q_${dto.lectureDTO.lectureNum}" class="cartQty">1</span>
+        </td>
+        <td class="tableset-dark"><br><br>
+            <span id="t_${dto.lectureDTO.lectureNum}" class="totalPrice">
+                [[${#numbers.formatCurrency(dto.lectureDTO.lecturePrice)}]]원
+            </span>
+        </td>
+        <td class="tableset-dark"><br><br>
+            <input type="button" th:attr="onclick=|javascript:location.href='cartDel?lectureNums=${dto.lectureDTO.lectureNum}'|" 
+                   value="삭제" class="btnset-tableList-del" />
+        </td>
+    </tr>
+</tbody>
+<tr class="pagination-row">
+    <td colspan="5">
+        <div class="contents-bottom"><br><br>
+            <div class="contents-line">
+                <span id="prodCnt">상품 수 : [[${#numbers.formatInteger(list.size(), 1, 'COMMA')}]]개</span>
+            </div>
+            <div class="contents-line">
+                <span id="totQty">총 수량 : [[${#numbers.formatInteger(totQty, 1, 'COMMA')}]]개</span>
+            </div>
+            <div class="contents-line">
+                <span id="totalPrice">전체 합계 : [[${#numbers.formatCurrency(totPri)}]]원</span>
+            </div>
+        </div>
+    </td>
+</tr>
+
+
+
+                
+              </tbody>
+            </table>
+            <input class="tedu-btn tedu-btn-light btn-link" type="submit" value="구매하기">
+            
+            </form>
+          </div>
+          </div>
+          
+          </section>
+        </div>
+      </div>
+    </div>
+    <!-- [E]tedu-N47 -->
+  </main>
+<!-- [S]tedu-N17 -->
+    <div class="tedu-N17" data-bid="fLM3zgHIUl">
+        <div class="footer-container">
+            <div class="footer-top">
+                <div class="inner">
+                    <div class="footer-menu">
+                        <th:block th:if="${session.auth == null or session.auth.grade == 'emp'}">
+                            <a th:href="@{/employee/empWrite}">직원가입</a>
+                        </th:block>
+                        <th:block th:if="${session.auth == null or session.auth.grade != 'emp'}">
+                            <a href="javascript:void(0);" id="inquireLink">1:1 문의</a>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-area">
+                <div class="inner">
+                    <dif class="footer-info-wrap">
+                        <div class="footer-logo">
+                            <a href="javascript:void(0)">
+                                <img src="/images/pickers_logo_footer.png" alt="로고">
+                            </a>
+                        </div>
+                        <div class="footer-info">
+                            <span>경기도 안양시 만안구 성결대학로 53 성결관 301호</span>
+                            <span>T. 010-1234-5678</span>
+                            <span>E. pickers@official.co.kr</span>
+                            <span class="copy">2022 BY TEMPLATEHOUSE. ALL RIGHTS RESEVED</span>
+                        </div>
+                    </dif>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- [E]tedu-N17 -->
+  <script src="/js/setting.js"></script>
+  <script src="/js/plugin.js"></script>
+  <script src="/js/template.js"></script>
+  <script src="/js/common.js"></script>
+  <script src="/js/script.js"></script>
+</body>

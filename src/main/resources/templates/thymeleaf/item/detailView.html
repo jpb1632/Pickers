@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="imagetoolbar" content="no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="title" content="웹사이트">
+  <meta name="description" content="웹사이트입니다.">
+  <meta name="keywords" content="키워드,키워드,키워드">
+  <meta property="og:title" content="웹사이트">
+  <meta property="og:description" content="웹사이트입니다">
+  <meta property="og:image" content="https://웹사이트/images/opengraph.png">
+  <meta property="og:url" content="https://웹사이트">
+  <title>강의 정보</title>
+  <link rel="stylesheet" href="/css/setting.css">
+  <link rel="stylesheet" href="/css/plugin.css">
+  <link rel="stylesheet" href="/css/template.css">
+  <link rel="stylesheet" href="/css/common.css">
+  <link rel="stylesheet" href="/css/style.css">
+    <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.1.min.js"></script>
+<script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function() {
+            const inquireLink = document.getElementById("inquireLink");
+
+            if (inquireLink) { // 링크가 존재할 경우에만 이벤트 리스너 추가
+                inquireLink.addEventListener("click", function() {
+                    const isLoggedIn = "[[${session.auth != null ? 'true' : 'false'}]]" === "true";
+
+                    if (!isLoggedIn) {
+                        alert("로그인 후 이용할 수 있습니다.");
+                        location.href = "/login/login"; // 로그인 페이지로 리다이렉트
+                    } else {
+                        location.href = "/inquire/inquireWrite"; // 1:1 문의 페이지로 이동
+                    }
+                });
+            }
+        });
+    </script>
+  <script type="text/javascript">
+  $(function () {
+    // 수강 신청 버튼
+    $("#buyItem").click(function () {
+      // 로그인 여부 확인
+      var isLoggedIn = "[[${session.auth != null ? 'true' : 'false'}]]" === "true";
+      var userGrade = isLoggedIn ? "[[${session.auth != null ? session.auth.grade : ''}]]" : null;
+
+      if (!isLoggedIn) {
+        alert("로그인 후 이용할 수 있습니다.");
+        location.href = "/login/login";
+        return;
+      }
+
+      // 관리자인 경우
+      if (userGrade === "emp") {
+        alert("관리자는 사용할 수 없는 페이지입니다.");
+        return;
+      }
+
+      // 결제를 완료한 회원 또는 수강 신청 의사를 밝힌 경우
+      location.href = "/item/buyItem?lectureNum=[[${dto.lectureNum}]]";
+    });
+
+    // 찜하기 버튼
+    $("#wish").click(function () {
+      var isLoggedIn = "[[${session.auth != null ? 'true' : 'false'}]]" === "true";
+      var userGrade = isLoggedIn ? "[[${session.auth != null ? session.auth.grade : ''}]]" : null;
+
+      if (!isLoggedIn) {
+        alert("로그인 후 이용할 수 있습니다.");
+        location.href = "/login/login";
+        return;
+      }
+
+      if (userGrade === "emp") {
+        alert("관리자는 사용할 수 없는 페이지입니다.");
+        return;
+      }
+
+      var xhr = new XMLHttpRequest();
+      xhr.open("post", "/item/wishItem", true);
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.onload = function () {
+        if (xhr.status === 200) {
+          if ($("#wish").attr("src") === "/icons/ico_heart.svg") {
+            $("#wish").attr("src", "/icons/ico_heart_fill.svg");
+          } else {
+            $("#wish").attr("src", "/icons/ico_heart.svg");
+          }
+        } else {
+          alert("로그인 후 이용할 수 있습니다.");
+          location.href = "/login/login";
+        }
+      };
+      var formData = JSON.stringify({
+        lectureNum: "[[${dto.lectureNum}]]"
+      });
+      xhr.send(formData);
+    });
+
+    // 장바구니 담기 버튼
+    $("#cartBtn").click(function () {
+      var isLoggedIn = "[[${session.auth != null ? 'true' : 'false'}]]" === "true";
+      var userGrade = isLoggedIn ? "[[${session.auth != null ? session.auth.grade : ''}]]" : null;
+
+      if (!isLoggedIn) {
+        alert("로그인 후 이용할 수 있습니다.");
+        location.href = "/login/login";
+        return;
+      }
+
+      if (userGrade === "emp") {
+        alert("관리자는 사용할 수 없는 페이지입니다.");
+        return;
+      }
+
+      var xhr = new XMLHttpRequest();
+      xhr.open("post", "/item/cartAdd", true);
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.onload = function () {
+        if (xhr.status === 200) {
+          if (xhr.responseText === "200") {
+            alert("상품이 장바구니에 추가되었습니다.");
+          } else if (xhr.responseText.startsWith("EXISTS-")) {
+            if (confirm("이미 장바구니에 상품이 담겨있습니다. 장바구니로 이동하시겠습니까?")) {
+              location.href = "/item/cartList";
+            }
+          } else if (xhr.responseText === "900") {
+            alert("관리자는 사용할 수 없는 페이지입니다.");
+          } else if (xhr.responseText === "000") {
+            alert("로그인 후 이용할 수 있습니다.");
+            location.href = "/login/login";
+          } else {
+            alert("오류가 발생했습니다. 다시 시도해 주세요.");
+          }
+        } else {
+          alert("오류가 발생했습니다. 다시 시도해 주세요.");
+        }
+      };
+      var formData = JSON.stringify({
+        lectureNum: "[[${dto.lectureNum}]]",
+        qty: $("#cartQty").val()
+      });
+      xhr.send(formData);
+    });
+  });
+  
+</script>
+<style>
+.lecture-text-wrap {
+  white-space: pre-wrap !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.lecture-text-wrap .text {
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.5 !important; /* 줄 간격 조정 */
+}
+.title-area .title {
+    word-wrap: break-word; /* 긴 단어를 강제로 줄바꿈 */
+    word-break: break-word; /* 단어가 길 때 중간에서 줄바꿈 */
+    overflow-wrap: break-word; /* 브라우저 호환성을 위한 속성 */
+    white-space: normal; /* 기본적으로 줄바꿈 허용 */
+    display: block; /* 영역을 차지하도록 설정 */
+    max-width: 100%; /* 부모 영역의 너비를 초과하지 않도록 제한 */
+    line-height: 1.5; /* 줄 간격 설정 */
+}
+.text-wrap .title {
+    word-wrap: break-word; /* 긴 단어를 강제로 줄바꿈 */
+    word-break: break-word; /* 단어가 길 때 중간에서 줄바꿈 */
+    overflow-wrap: break-word; /* 브라우저 호환성을 위한 속성 */
+    white-space: normal; /* 줄바꿈 허용 */
+    display: block; /* 블록 요소로 설정 */
+    max-width: 100%; /* 부모 컨테이너를 초과하지 않도록 제한 */
+    line-height: 1.5; /* 줄 간격 조정 */
+    font-size: 1.2rem; /* 글씨 크기 조정 (필요에 따라 수정) */
+}
+
+</style>
+
+<!-- 
+.tedu-N20 .sidebar {
+
+  z-index: 1; /* 다른 요소 위로 올림 */
+}
+.tedu-N20.sticky {
+  z-index: 1; /* 낮은 z-index 값 설정 */
+}
+.faq-wrap {
+  position: relative; /* z-index를 적용하려면 position 속성이 필요합니다. */
+  z-index: 1000; /* 원하는 z-index 값 설정 */
+}
+
+.acc-item {
+  position: relative; /* 개별 FAQ 아이템에 z-index 적용 가능 */
+  z-index: 100; /* 필요한 경우 개별 항목에 다른 값 설정 */
+}
+.tab-menu-wrap {
+  position: relative; /* z-index를 적용하려면 position 설정이 필요 */
+  z-index: 1000; /* 높은 z-index 값 설정 */
+}
+
+.tab-menu {
+  position: relative; /* 개별 메뉴에 대해 추가 조정 가능 */
+  z-index: 1100; /* 필요하면 개별 메뉴의 z-index 값을 더 높임 */
+}
+ -->
+
+</head>
+
+<body>
+ <!-- [S]tedu-N3 -->
+    <div class="tedu-N3" data-bid="XEm3ZgHi4n">
+        <div class="header-container lightmode">
+            <div class="header-top">
+                <div class="inner">
+                    <div class="header-member">
+                        <th:block th:if="${session.auth == null}">
+                            <a href="/login/login">
+                                <em class="ico">
+                                    <img src="/icons/ico_login.svg" alt="로그인 아이콘">
+                                </em>
+                                <span>로그인</span>
+                            </a>
+                            <a href="/register/membershipAgree">
+                                <em class="ico">
+                                    <img src="/icons/ico_member.svg" alt="회원가입 아이콘">
+                                </em>
+                                <span>회원가입</span>
+                            </a>
+                        </th:block>
+
+                        <th:block th:if="${session.auth != null}">
+                            <a href="/login/logout">
+                                <em class="ico">
+                                    <img src="/icons/ico_login.svg" alt="로그아웃 아이콘">
+                                </em>
+                                <span>로그아웃</span>
+                            </a>
+                            <th:block th:if="${session.auth.grade == 'mem'}">
+                                <a href="/myPage/memMyPage">
+                                    <em class="ico">
+                                        <img src="/icons/ico_member.svg" alt="마이페이지 아이콘">
+                                    </em>
+                                    <span>마이페이지</span>
+                                </a>
+                            </th:block>
+                            <th:block th:if="${session.auth.grade == 'emp'}">
+                                <a href="/myPage/empMyPage">
+                                    <em class="ico">
+                                        <img src="/icons/ico_member.svg" alt="마이페이지 아이콘">
+                                    </em>
+                                    <span>마이페이지</span>
+                                </a>
+                            </th:block>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+            <div class="header-nav">
+                <div class="inner">
+                    <div class="header-logo">
+                        <a href="/">
+                            <img src="/images/pickers_logo_main.png" alt="로고">
+                        </a>
+                    </div>
+                    <div class="header-gnb">
+
+                    </div><br><br><br>
+                    <div class="header-btn">
+                        <a href="javascript:void(0)" class="menu-open">
+                            <em class="ico">
+                                <img src="/icons/ico_menu.svg" alt="메뉴 아이콘">
+                            </em>
+                        </a>
+                        <a href="javascript:void(0)" class="menu-close">
+                            <em class="ico">
+                                <img src="/icons/ico_close.svg" alt="닫기 아이콘">
+                            </em>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+
+            <section class="header-area">
+                <div class="inner">
+                    <div class="menu-wrap">
+                        <div class="menu-box">
+                            <a class="menu-title">강의</a>
+                            <a href="/lecture/lectureList">강의</a>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'mem'}">
+                                <a href="/lecture/mylectureList">my강의</a>
+                                <a href="/item/cartList">장바구니</a>
+                                <a href="/item/wishList">찜</a>
+                            </th:block>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                                <a href="/lecture/emplectureList">강의 관리</a>
+                                <a href="/orders/empOrderList">주문 관리</a>
+                            </th:block>
+                        </div>
+                        <div class="menu-box">
+                            <a class="menu-title">인사이트</a>
+                            <a href="/news/newsListM">뉴스</a>
+                            <a href="/company/companyListM">기업</a>
+                            <a href="/stock/stockListM">주식</a>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                                <a href="/news/newsList">뉴스 관리</a>
+                                <a href="/company/companyList">기업 관리</a>
+                                <a href="/stock/stockList">주식 관리</a>
+                            </th:block>
+                        </div>
+                        <div class="menu-box">
+                            <a class="menu-title">커뮤니티</a>
+                            <a href="/board/boardQueList">질문게시판</a>
+                            <a href="/board/boardFreeList">자유게시판</a>
+                            <a href="/board/boardProfitList">수익인증</a>
+                            <a href="/board/boardTipList">꿀팁공유</a>
+                        </div>
+                        <div class="menu-box">
+                            <a class="menu-title">교육</a>
+                            <a href="/chart/list">교육</a>
+                            <a th:href="@{/word/wordSearch}">용어</a>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                                <a th:href="@{/word/wordList}">용어 관리</a>
+                            </th:block>
+                        </div>
+                        <th:block th:if="${session.auth != null}">
+                            <div class="menu-box">
+                                <a class="menu-title">MY</a>
+                                <th:block th:if="${session.auth.grade == 'mem'}">
+                                    <a href="/inquire/inquireListM">1:1 문의내역</a>
+                                    <a th:href="@{/lectureInquire/lectureInquireListM/{memNum}(memNum=${session.memNum})}">강의 문의내역</a>
+                                    <a href="/orders/orderList">강의 주문내역</a>
+                                </th:block>
+                                <th:block th:if="${session.auth.grade == 'emp'}">
+                                    <a href="/inquire/inquireList">1:1문의 관리</a>
+                                    <a href="/lectureInquire/lectureInquireList">강의질문 관리</a>
+                                </th:block>
+                            </div>
+                        </th:block>
+                        <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                            <div class="menu-box">
+                                <a class="menu-title">유저</a>
+                                <a href="/member/memList">회원 관리</a>
+                                <a href="/employee/empList">직원 관리</a>
+                            </div>
+                        </th:block>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    <!-- [E]tedu-N3 -->
+
+  <main class="th-layout-main ">
+    <!-- [S]tedu-N18 -->
+    <form action="/orders/goodsBuy" method="post">
+    <div class="tedu-N18" data-bid="bGm3ZGomq3">
+      <div class="content-inner">
+        <div class="content-container">
+          <section class="subvisual">
+            <div class="card-img-area">
+              <div class="img-wrap">
+                <div class="img-box">
+                  <img class="card-img card-img-pc" th:src="|/upload/${dto.lectureMainStoreImage}|" alt="이미지">
+                  <img class="card-img card-img-mo" th:src="|/upload/${dto.lectureMainStoreImage}|" alt="모바일이미지">
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+    <!-- [E]tedu-N18 -->
+    <!-- [S]tedu-N20 -->
+    <div class="tedu-N20" data-bid="euM3zGon0M">
+      <div class="content-container">
+        <div class="sidebar">
+          <div class="text-warp">
+            <div class="cate-area">
+              <div class="tbox-list">
+                <span class="tbox">#[[${dto.lectureTopic}]]</span>
+              </div>
+              <div class="wish-cart-area">
+				  <img th:if="${wish <= 0 or wish == null}" th:src="|/icons/ico_heart.svg|" id="wish" width="30" alt="찜" />
+				  <img th:if="${wish > 0}" th:src="|/icons/ico_heart_fill.svg|" id="wish" width="30" alt="찜" />
+				    <em></em>				  
+				</div>
+
+              
+              
+            </div>
+            <div class="title-area">
+              <h3 class="title">[[${dto.lectureTitle}]]</h3>
+              <p class="text">강사이름 : [[${dto.lectureTeacherName}]]</p>
+            </div>
+            <div class="price-area">
+              <p class="sale-box">
+                <span>정가</span>
+                <span class="discount"></span>
+              </p>
+              <div class="price-box">
+                <div class="price-text">
+                  <strong class="per"></strong>
+                  <strong class="price">[[${dto.lecturePrice}]]원</strong>
+                </div>
+                <p class="price-info"></p>
+              </div>
+            </div>
+            <div class="button-area">
+  <!-- 강의 보기 버튼 (결제 완료인 경우) -->
+ <a th:if="${payStatus == '결제완료'}" 
+   th:href="@{/lecture/lectureWatch}" 
+   class="tedu-btn tedu-btn-light add-cart">
+   강의 보기
+</a>
+
+
+  <!-- 수강 신청 및 장바구니 버튼 (결제 완료가 아닌 경우) -->
+  <div th:if="${payStatus != '결제완료'}">
+    <button type="button" id="buyItem" class="tedu-btn tedu-btn-light add-cart">
+      수강 신청하기
+    </button>
+    <button type="button" id="cartBtn" class="tedu-btn tedu-btn-light add-cart">
+      장바구니 담기
+    </button>
+  </div>
+</div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    </form>
+    <!-- [E]tedu-N20 -->
+    <!-- [S]tedu-N22 -->
+    <div class="tedu-N22" data-bid="mlM3zGOn6A">
+      <div class="content-inner">
+        <div class="content-container">
+          <div class="tab-menu-wrap">
+            <div class="tab-menu active">
+              <a href="javascript:void(0)">
+                <span>강의소개</span>
+              </a>
+            </div>
+            
+            <div class="tab-menu">
+
+				<a th:href="|/item/lectureInquireListDetailView/${dto.lectureNum}|">
+             <!--    <a href="/lectureInquire/lectureInquireListDetailView"> -->
+				  <span>강의질문</span>
+				</a>
+			</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- [E]tedu-N22 -->
+    <!-- [S]tedu-N23 -->
+    <div class="tedu-N23" data-bid="jTM3ZgoNaO">
+      <div class="content-inner">
+        <div class="content-container">
+          <section class="intro-wrap"><br>
+            <div class="text-wrap">
+              <div class="title">"[[${dto.lectureTitle}]]" </div><br>
+            </div>
+            <div class="card-img-area" >
+              <div class="img-wrap">
+                <div class="img-box" >
+				<img class="card-img card-img-pc" 
+				     th:src="|/upload/${#strings.arraySplit(dto.lectureDetailStoreImage, '/')[0]}|"
+				     alt="이미지">
+                </div>
+              </div>
+            </div><br>
+
+            <div class="lecture-text-wrap" style="white-space: pre-wrap; margin: 0; padding: 0;">
+			  <p class="text" style="margin: 0 !important; padding: 0 !important;">[[${dto.lectureDescription}]]</p>
+			</div>
+
+
+
+          </section>
+          <section class="intro-wrap">
+
+            <div class="card-img-area" >
+              <div class="img-wrap">
+                <div class="img-box" >
+				<img class="card-img card-img-pc" 
+				     th:src="|/upload/${#strings.arraySplit(dto.lectureDetailStoreImage, '/')[1]}|"
+				     alt="이미지">
+                </div>
+              </div>
+            </div>
+        </div>
+      </div>
+    </div>
+    <!-- [E]tedu-N23 -->
+    <!-- [S]tedu-N25 -->
+    <div class="tedu-N25" data-bid="Fwm3zGOnGe">
+      <div class="content-inner">
+        <div class="content-container">
+          
+        </div>
+      </div>
+    </div>
+    <!-- [E]tedu-N25 -->
+    <!-- [S]tedu-N27 -->
+    <div class="tedu-N27" data-bid="iKm3zGOnl6">
+      <div class="content-inner">
+        <div class="content-container">
+          
+        </div>
+      </div>
+    </div>
+    <!-- [E]tedu-N27 -->
+    <!-- [S]tedu-N29 -->
+    <div class="tedu-N29" data-bid="Oxm3zGonog">
+      <div class="content-inner">
+        <div class="content-container">
+          <section class="faq-wrap">
+            <div class="text-wrap">
+              <div class="title">자주 묻는 질문</div>
+            </div>
+            <div class="acc-wrap">
+              <div class="acc-item">
+                <div class="acc-header">
+                  <button class="acc-btn" type="button">
+                    <span class="acc-q">Q</span>
+                    <strong>온라인 교육을 들을 수 있는 방법은 무엇인가요?</strong>
+                  </button>
+                </div>
+                <div class="acc-body">
+                  <div class="acc-cont"> 네, 강의는 수강 기간 내 여러번 반복 시청이 가능합니다. 강의에서 사용된 업계 전문 용어, 학습을 위한 참고자료, 미션 팁 등을 정리한 PDF 자료로 온라인으로 전달됩니다. 동영상 강의 수강권: 10만 원 / 온라인 코칭권 : 8만 원(1회 당) </div>
+                </div>
+              </div>
+              <div class="acc-item">
+                <div class="acc-header">
+                  <button class="acc-btn" type="button">
+                    <span class="acc-q">Q</span>
+                    <strong>결제기한은 언제까지인가요?</strong>
+                  </button>
+                </div>
+                <div class="acc-body">
+                  <div class="acc-cont"> 네, 강의는 수강 기간 내 여러번 반복 시청이 가능합니다. 강의에서 사용된 업계 전문 용어, 학습을 위한 참고자료, 미션 팁 등을 정리한 PDF 자료로 온라인으로 전달됩니다. 동영상 강의 수강권: 10만 원 / 온라인 코칭권 : 8만 원(1회 당) </div>
+                </div>
+              </div>
+              <div class="acc-item active">
+                <div class="acc-header">
+                  <button class="acc-btn" type="button">
+                    <span class="acc-q">Q</span>
+                    <strong>동영상 강의는 기간 내 무제한 시청이 가능한가요?</strong>
+                  </button>
+                </div>
+                <div class="acc-body">
+                  <div class="acc-cont"> 네, 강의는 수강 기간 내 여러번 반복 시청이 가능합니다. 강의에서 사용된 업계 전문 용어, 학습을 위한 참고자료, 미션 팁 등을 정리한 PDF 자료로 온라인으로 전달됩니다. 동영상 강의 수강권: 10만 원 / 온라인 코칭권 : 8만 원(1회 당) </div>
+                </div>
+              </div>
+              <div class="acc-item">
+                <div class="acc-header">
+                  <button class="acc-btn" type="button">
+                    <span class="acc-q">Q</span>
+                    <strong>2개 이상의 카드로 분할 결제할 수 있나요?</strong>
+                  </button>
+                </div>
+                <div class="acc-body">
+                  <div class="acc-cont"> 네, 강의는 수강 기간 내 여러번 반복 시청이 가능합니다. 강의에서 사용된 업계 전문 용어, 학습을 위한 참고자료, 미션 팁 등을 정리한 PDF 자료로 온라인으로 전달됩니다. 동영상 강의 수강권: 10만 원 / 온라인 코칭권 : 8만 원(1회 당) </div>
+                </div>
+              </div>
+              <div class="acc-item">
+                <div class="acc-header">
+                  <button class="acc-btn" type="button">
+                    <span class="acc-q">Q</span>
+                    <strong>포트폴리오 활용 용도에 적합한가요?</strong>
+                  </button>
+                </div>
+                <div class="acc-body">
+                  <div class="acc-cont"> 네, 강의는 수강 기간 내 여러번 반복 시청이 가능합니다. 강의에서 사용된 업계 전문 용어, 학습을 위한 참고자료, 미션 팁 등을 정리한 PDF 자료로 온라인으로 전달됩니다. 동영상 강의 수강권: 10만 원 / 온라인 코칭권 : 8만 원(1회 당) </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+    <!-- [E]tedu-N29 -->
+    <!-- [S]tedu-N31 -->
+    <div class="tedu-N31" data-bid="Iym3ZGoO3x">
+      <div class="content-inner">
+        <div class="content-container">
+          
+        </div>
+      </div>
+    </div>
+    <!-- [E]tedu-N31 -->
+  </main>
+<!-- [S]tedu-N17 -->
+    <div class="tedu-N17" data-bid="fLM3zgHIUl">
+        <div class="footer-container">
+            <div class="footer-top">
+                <div class="inner">
+                    <div class="footer-menu">
+                        <th:block th:if="${session.auth == null or session.auth.grade == 'emp'}">
+                            <a th:href="@{/employee/empWrite}">직원가입</a>
+                        </th:block>
+                        <th:block th:if="${session.auth == null or session.auth.grade != 'emp'}">
+                            <a href="javascript:void(0);" id="inquireLink">1:1 문의</a>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-area">
+                <div class="inner">
+                    <dif class="footer-info-wrap">
+                        <div class="footer-logo">
+                            <a href="javascript:void(0)">
+                                <img src="/images/pickers_logo_footer.png" alt="로고">
+                            </a>
+                        </div>
+                        <div class="footer-info">
+                            <span>경기도 안양시 만안구 성결대학로 53 성결관 301호</span>
+                            <span>T. 010-1234-5678</span>
+                            <span>E. pickers@official.co.kr</span>
+                            <span class="copy">2022 BY TEMPLATEHOUSE. ALL RIGHTS RESEVED</span>
+                        </div>
+                    </dif>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- [E]tedu-N17 -->
+  <script src="/js/setting.js"></script>
+  <script src="/js/plugin.js"></script>
+  <script src="/js/template.js"></script>
+  <script src="/js/common.js"></script>
+  <script src="/js/script.js"></script>
+</body>

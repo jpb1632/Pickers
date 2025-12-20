@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="imagetoolbar" content="no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="title" content="웹사이트">
+  <meta name="description" content="웹사이트입니다.">
+  <meta name="keywords" content="키워드,키워드,키워드">
+  <meta property="og:title" content="웹사이트">
+  <meta property="og:description" content="웹사이트입니다">
+  <meta property="og:image" content="https://웹사이트/images/opengraph.png">
+  <meta property="og:url" content="https://웹사이트">
+  <title>기업 관리</title>
+  <link rel="stylesheet" href="/css/setting.css">
+  <link rel="stylesheet" href="/css/plugin.css">
+  <link rel="stylesheet" href="/css/template.css">
+  <link rel="stylesheet" href="/css/common.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.1.min.js"></script>
+   <script type="text/javascript" src="/js/checkbox.js"></script>
+     <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function() {
+            const inquireLink = document.getElementById("inquireLink");
+
+            if (inquireLink) { // 링크가 존재할 경우에만 이벤트 리스너 추가
+                inquireLink.addEventListener("click", function() {
+                    const isLoggedIn = "[[${session.auth != null ? 'true' : 'false'}]]" === "true";
+
+                    if (!isLoggedIn) {
+                        alert("로그인 후 이용할 수 있습니다.");
+                        location.href = "/login/login"; // 로그인 페이지로 리다이렉트
+                    } else {
+                        location.href = "/inquire/inquireWrite"; // 1:1 문의 페이지로 이동
+                    }
+                });
+            }
+        });
+    </script>
+<script>
+    // 페이지 로드 시 자동으로 검색 실행
+    window.onload = function() {
+        searchCompany(); // 페이지가 로드되면 자동으로 검색
+    }
+
+    function selectCompany(companyName, companyNum) {
+        // 부모 창의 입력 필드에 값 설정
+        window.opener.document.getElementById('companyName').value = companyName;
+        window.opener.document.getElementById('companyNum').value = companyNum;
+
+        // 팝업 창 닫기
+        window.close();
+    }
+    
+    function searchCompany() {
+        const searchWord = document.getElementById('searchWord').value;
+
+        fetch(`/stock/searchCompany?companyName=${searchWord}`)
+            .then(response => response.json())
+            .then(data => {
+                const results = data.map((company, index) => `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${company.companyNum}</td>
+                        <td>${company.companyName}</td>
+                        <td>
+                            <button class="btnset-tableList-del" onclick="selectCompany('${company.companyName}', '${company.companyNum}')">
+                                선택
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+                document.getElementById('companySearchResults').innerHTML = results;
+            });
+    }
+</script>
+
+
+</head>
+<body>
+  <!-- [S]tedu-N3 -->
+  <div class="tedu-N3" data-bid="XEm3ZgHi4n">
+    <div class="header-container lightmode">
+	  <div class="header-nav">
+        <div class="inner">
+          <div class="header-logo">
+            <a >
+              <img src="/images/logo_black.png" alt="로고">
+            </a>
+          </div>
+          <br><br><br>          
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- [E]tedu-N3 -->
+  <main class="th-layout-main ">
+    <!-- [S]tedu-N47 -->
+    <div class="tedu-N47" data-bid="gKM3zgP8b1">
+      <div class="content-inner">
+        <div class="content-container">
+          <section class="myedu-wrap">
+            <div class="title-wrap">
+              <h3 class="cont-title">기업 검색</h3>
+            </div>
+
+<div class="myedu-cont-wrap">
+    <div class="tableset tableset-receipt tableset-text-top">
+        <span class="search-container">
+            기업 검색 :
+            <input type="text" id="searchWord" placeholder="기업 이름 검색" onkeyup="searchCompany()" class="btnset-tableList-del">
+        </span>
+
+        <table class="tableset-table table">
+            <colgroup>
+                <col>
+                <col>
+                <col>
+                <col>
+            </colgroup>
+            <thead class="thead-light thead-border-top">
+                <tr>
+                    <th scope="col">번호</th>
+                    <th scope="col">기업번호</th>
+                    <th scope="col">기업이름</th>
+                    <th scope="col">선택</th>
+                </tr>
+            </thead>
+            <tbody id="companySearchResults">
+              
+              <tr th:each="dto, stat : ${list}">
+        <td></td>
+        <!-- 항목 번호 계산 -->
+      <td class="tableset-dark">[[${stat.index + 1 + ((page - 1) * 10)}]]</td>
+             
+
+                  <td class="tableset-dark td-border-bottom">
+                    <a th:href="|companyDetail/${dto.companyNum}|">[[${dto.companyNum}]]</a></td>
+                       
+                  <td class="tableset-dark">
+                    <a th:href="|companyDetail/${dto.companyNum}|">[[${dto.companyName}]]</a></td>                                                    
+                			
+                </tr>
+<tr class="pagination-row">
+  <th colspan="7">
+    <nav class="p2 pagiset pagiset-line">
+      <!-- 처음 페이지 -->
+      <div class="pagiset-ctrl">
+        <a th:href="|companyList?page=1&searchWord=${searchWord}|" 
+           th:if="${page > 1}" 
+           class="pagiset-link pagiset-first">
+          <span class="visually-hidden">처음</span>
+        </a>
+        <span th:if="${page <= 1}" class="pagiset-link pagiset-first disabled">
+          <span class="visually-hidden">처음</span>
+        </span>
+      </div>
+
+      <!-- 이전 페이지 -->
+      <div class="pagiset-ctrl">
+        <a th:href="|companyList?page=${page - 1}&searchWord=${searchWord}|" 
+           th:if="${page > 1}" 
+           class="pagiset-link pagiset-prev">
+          <span class="visually-hidden">이전</span>
+        </a>
+        <span th:if="${page <= 1}" class="pagiset-link pagiset-prev disabled">
+          <span class="visually-hidden">이전</span>
+        </span>
+      </div>
+
+<!-- 페이지 번호 리스트 -->
+<div class="pagiset-list">
+    <a th:each="i : ${#numbers.sequence(startPageNum, endPageNum)}" 
+       th:href="|companyList?page=${i}&searchWord=${searchWord}|" 
+       th:classappend="${i == page} ? 'active-line' : ''" 
+       th:if="${startPageNum > 0 and endPageNum > 0}" 
+       class="pagiset-link">
+        [[${i}]]
+    </a>
+  
+    <!-- 상품이 없을 경우 기본 페이지 1 출력 -->
+    <a th:if="${endPageNum == 0}" 
+       th:href="|companyList?page=1&searchWord=${searchWord}|" 
+       th:classappend="${page == 1} ? 'active-line' : ''" 
+       class="pagiset-link">
+        1
+    </a>
+</div>
+
+
+      <!-- 다음 페이지 -->
+      <div class="pagiset-ctrl">
+        <a th:href="|companyList?page=${page + 1}&searchWord=${searchWord}|" 
+           th:if="${page < maxPage}" 
+           class="pagiset-link pagiset-next">
+          <span class="visually-hidden">다음</span>
+        </a>
+        <span th:if="${page >= maxPage}" class="pagiset-link pagiset-next disabled">
+          <span class="visually-hidden">다음</span>
+        </span>
+      </div>
+
+      <!-- 마지막 페이지 -->
+      <div class="pagiset-ctrl">
+        <a th:href="|companyList?page=${maxPage}&searchWord=${searchWord}|" 
+           th:if="${page < maxPage}" 
+           class="pagiset-link pagiset-last">
+          <span class="visually-hidden">마지막</span>
+        </a>
+        <span th:if="${page >= maxPage}" class="pagiset-link pagiset-last disabled">
+          <span class="visually-hidden">마지막</span>
+        </span>
+      </div>
+    </nav>
+  </th>
+</tr>
+
+                
+              </tbody>
+            </table>
+           
+          </div>
+          </div>
+          
+          </section>
+        </div>
+      </div>
+    </div>
+    <!-- [E]tedu-N47 -->
+  </main>
+  <!-- [S]tedu-N17 -->
+  <div class="tedu-N17" data-bid="fLM3zgHIUl">
+    <div class="popup-content">
+  <div class="footer-container">
+    <div class="footer-area">
+      <div class="footer-info-wrap">
+        <div class="footer-logo">
+          <a href="javascript:void(0)">
+            <img src="/images/logo_white.png" alt="로고">
+          </a>
+        </div>
+        <div class="footer-info">
+          <span>경기도 안양시 만안구 성결대학로 53 성결관 301호</span>
+          <span>T. 010-1234-5678</span>
+          <span>E. pickers@official.co.kr</span>
+          <span class="copy">2022 BY TEMPLATEHOUSE. ALL RIGHTS RESEVED</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+  </div>
+  <!-- [E]tedu-N17 -->
+  <script src="/js/setting.js"></script>
+  <script src="/js/plugin.js"></script>
+  <script src="/js/template.js"></script>
+  <script src="/js/common.js"></script>
+  <script src="/js/script.js"></script>
+</body>

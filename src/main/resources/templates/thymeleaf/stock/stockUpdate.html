@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="imagetoolbar" content="no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="title" content="웹사이트">
+    <meta name="description" content="웹사이트입니다.">
+    <meta name="keywords" content="키워드,키워드,키워드">
+    <meta property="og:title" content="웹사이트">
+    <meta property="og:description" content="웹사이트입니다">
+    <meta property="og:image" content="https://웹사이트/images/opengraph.png">
+    <meta property="og:url" content="https://웹사이트">
+    <title>주식 수정</title>
+    <link rel="stylesheet" href="/css/setting.css">
+    <link rel="stylesheet" href="/css/plugin.css">
+    <link rel="stylesheet" href="/css/template.css">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.1.min.js"></script>
+   -->
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script>
+        function openCompanyPopup() {
+            // 팝업 창 열기
+            window.open(
+                '/stock/companyList', // 팝업 창에 로드할 URL
+                'companyPopup', // 팝업 창 이름
+                'width=800,height=600,scrollbars=yes'
+            );
+        }
+    </script>
+      <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function() {
+            const inquireLink = document.getElementById("inquireLink");
+
+            if (inquireLink) { // 링크가 존재할 경우에만 이벤트 리스너 추가
+                inquireLink.addEventListener("click", function() {
+                    const isLoggedIn = "[[${session.auth != null ? 'true' : 'false'}]]" === "true";
+
+                    if (!isLoggedIn) {
+                        alert("로그인 후 이용할 수 있습니다.");
+                        location.href = "/login/login"; // 로그인 페이지로 리다이렉트
+                    } else {
+                        location.href = "/inquire/inquireWrite"; // 1:1 문의 페이지로 이동
+                    }
+                });
+            }
+        });
+    </script>
+</head>
+
+<body>
+    <!-- [S]tedu-N3 -->
+    <div class="tedu-N3" data-bid="XEm3ZgHi4n">
+        <div class="header-container lightmode">
+            <div class="header-top">
+                <div class="inner">
+                    <div class="header-member">
+                        <th:block th:if="${session.auth == null}">
+                            <a href="/login/login">
+                                <em class="ico">
+                                    <img src="/icons/ico_login.svg" alt="로그인 아이콘">
+                                </em>
+                                <span>로그인</span>
+                            </a>
+                            <a href="/register/membershipAgree">
+                                <em class="ico">
+                                    <img src="/icons/ico_member.svg" alt="회원가입 아이콘">
+                                </em>
+                                <span>회원가입</span>
+                            </a>
+                        </th:block>
+
+                        <th:block th:if="${session.auth != null}">
+                            <a href="/login/logout">
+                                <em class="ico">
+                                    <img src="/icons/ico_login.svg" alt="로그아웃 아이콘">
+                                </em>
+                                <span>로그아웃</span>
+                            </a>
+                            <th:block th:if="${session.auth.grade == 'mem'}">
+                                <a href="/myPage/memMyPage">
+                                    <em class="ico">
+                                        <img src="/icons/ico_member.svg" alt="마이페이지 아이콘">
+                                    </em>
+                                    <span>마이페이지</span>
+                                </a>
+                            </th:block>
+                            <th:block th:if="${session.auth.grade == 'emp'}">
+                                <a href="/myPage/empMyPage">
+                                    <em class="ico">
+                                        <img src="/icons/ico_member.svg" alt="마이페이지 아이콘">
+                                    </em>
+                                    <span>마이페이지</span>
+                                </a>
+                            </th:block>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+            <div class="header-nav">
+                <div class="inner">
+                    <div class="header-logo">
+                        <a href="/">
+                            <img src="/images/pickers_logo_main.png" alt="로고">
+                        </a>
+                    </div>
+                    <div class="header-gnb">
+
+                    </div><br><br><br>
+                    <div class="header-btn">
+                        <a href="javascript:void(0)" class="menu-open">
+                            <em class="ico">
+                                <img src="/icons/ico_menu.svg" alt="메뉴 아이콘">
+                            </em>
+                        </a>
+                        <a href="javascript:void(0)" class="menu-close">
+                            <em class="ico">
+                                <img src="/icons/ico_close.svg" alt="닫기 아이콘">
+                            </em>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+
+            <section class="header-area">
+                <div class="inner">
+                    <div class="menu-wrap">
+                        <div class="menu-box">
+                            <a class="menu-title">강의</a>
+                            <a href="/lecture/lectureList">강의</a>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'mem'}">
+                                <a href="/lecture/mylectureList">my강의</a>
+                                <a href="/item/cartList">장바구니</a>
+                                <a href="/item/wishList">찜</a>
+                            </th:block>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                                <a href="/lecture/emplectureList">강의 관리</a>
+                                <a href="/orders/empOrderList">주문 관리</a>
+                            </th:block>
+                        </div>
+                        <div class="menu-box">
+                            <a class="menu-title">인사이트</a>
+                            <a href="/news/newsListM">뉴스</a>
+                            <a href="/company/companyListM">기업</a>
+                            <a href="/stock/stockListM">주식</a>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                                <a href="/news/newsList">뉴스 관리</a>
+                                <a href="/company/companyList">기업 관리</a>
+                                <a href="/stock/stockList">주식 관리</a>
+                            </th:block>
+                        </div>
+                        <div class="menu-box">
+                            <a class="menu-title">커뮤니티</a>
+                            <a href="/board/boardQueList">질문게시판</a>
+                            <a href="/board/boardFreeList">자유게시판</a>
+                            <a href="/board/boardProfitList">수익인증</a>
+                            <a href="/board/boardTipList">꿀팁공유</a>
+                        </div>
+                        <div class="menu-box">
+                            <a class="menu-title">교육</a>
+                            <a href="/chart/list">교육</a>
+                            <a th:href="@{/word/wordSearch}">용어</a>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                                <a th:href="@{/word/wordList}">용어 관리</a>
+                            </th:block>
+                        </div>
+                        <th:block th:if="${session.auth != null}">
+                            <div class="menu-box">
+                                <a class="menu-title">MY</a>
+                                <th:block th:if="${session.auth.grade == 'mem'}">
+                                    <a href="/inquire/inquireListM">1:1 문의내역</a>
+                                    <a th:href="@{/lectureInquire/lectureInquireListM/{memNum}(memNum=${session.memNum})}">강의 문의내역</a>
+                                    <a href="/orders/orderList">강의 주문내역</a>
+                                </th:block>
+                                <th:block th:if="${session.auth.grade == 'emp'}">
+                                    <a href="/inquire/inquireList">1:1문의 관리</a>
+                                    <a href="/lectureInquire/lectureInquireList">강의질문 관리</a>
+                                </th:block>
+                            </div>
+                        </th:block>
+                        <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                            <div class="menu-box">
+                                <a class="menu-title">유저</a>
+                                <a href="/member/memList">회원 관리</a>
+                                <a href="/employee/empList">직원 관리</a>
+                            </div>
+                        </th:block>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div><br><br>
+    <main class="th-layout-main">
+        <!-- [S]tedu-N39 -->
+        <div class="tedu-N47" data-bid="gKM3zgP8b1">
+
+            <div class="content-inner">
+                <div class="content-container">
+                    <section class="myedu-wrap">
+                        <div class="title-wrap">
+                            <h3 class="cont-title">주식 수정</h3>
+                        </div>
+                        <div class="myedu-cont-wrap">
+                            <form action="/stock/stockUpdate" method="post" th:object="${stockCommand}">
+                                <button type="button" onclick="openCompanyPopup()" class="btnset-tableList-del">기업 검색</button>
+
+                                <div class="input_standard-tableset tableset-receipt tableset-text-top">
+                                    <table class="input_standard-tableset-table table">
+                                        <colgroup>
+                                            <col>
+                                            <col>
+                                        </colgroup>
+                                        <thead class="thead-light thead-border-top">
+                                            <tr>
+                                                <th scope="col">항목</th>
+                                                <th scope="col">내용</th>
+                                            </tr>
+                                        </thead><br>
+                                        <tbody>
+                                            <tr>
+                                                <td class="tableset-dark">기업 이름</td>
+                                                <td class="tableset-dark">
+                                                    <input type="text" id="companyName" name="companyName" class="tedu-input lightmode" readonly placeholder="선택한 기업 이름">
+                                                </td>
+                                            </tr>
+
+                                            <tr>
+                                                <td class="tableset-dark">기업 번호</td>
+                                                <td class="tableset-dark">
+                                                    <input type="text" id="companyNum" name="companyNum" class="tedu-input lightmode" readonly placeholder="선택한 기업 번호">
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="tableset-dark">주식종목코드</td>
+                                                <td class="tableset-dark">
+                                                    <input type="number" name="stockNum" th:value="${stockCommand.stockNum}" class="tedu-input lightmode" readonly="readonly" aria-label="주식종목코드">
+                                                    <div th:if="${#fields.hasErrors('stockNum')}" class="field-error">
+											      <p th:errors="*{stockNum}"></p>
+											    </div>
+                                            </td>
+                                        </tr>
+										<tr>
+						                    <td class="tableset-dark">현재가</td>
+						                    <td class="tableset-dark">
+						                      <input
+						                        type="number"
+						                        name="currentPrice"
+						                        th:value="${stockCommand.currentPrice}"
+						                        class="tedu-input lightmode"
+						                        placeholder="현재가를 입력해주세요." 
+						                        aria-label="현재가"
+						                        style="width: 100%;"
+						                      />
+						                      <div th:if="${#fields.hasErrors('currentPrice')}" class="field-error">
+											      <p th:errors="*{currentPrice}"></p>
+											    </div>
+						                    </td>
+						                </tr>
+										<tr>
+						                    <td class="tableset-dark">시가</td>
+						                    <td class="tableset-dark">
+						                      <input
+						                        type="number"
+						                        name="openingPrice"
+						                        th:value="${stockCommand.openingPrice}"
+						                        class="tedu-input lightmode"
+						                        placeholder="시가를 입력해주세요." 
+						                        aria-label="시가"
+						                        style="width: 100%;"
+						                      />
+						                      <div th:if="${#fields.hasErrors('openingPrice')}" class="field-error">
+											      <p th:errors="*{openingPrice}"></p>
+											    </div>
+						                    </td>
+						                </tr>
+										<tr>
+						                    <td class="tableset-dark">고가</td>
+						                    <td class="tableset-dark">
+						                      <input
+						                        type="number"
+						                        name="highPrice"
+						                        th:value="${stockCommand.highPrice}"
+						                        class="tedu-input lightmode"
+						                        placeholder="고가를 입력해주세요." 
+						                        aria-label="고가"
+						                        style="width: 100%;"
+						                      />
+						                      <div th:if="${#fields.hasErrors('highPrice')}" class="field-error">
+											      <p th:errors="*{highPrice}"></p>
+											    </div>
+						                    </td>
+						                </tr>
+						                <tr>
+						                    <td class="tableset-dark">저가</td>
+						                    <td class="tableset-dark">
+						                      <input
+						                        type="number"
+						                        name="lowPrice"
+						                        th:value="${stockCommand.lowPrice}"
+						                        class="tedu-input lightmode"
+						                        placeholder="저가를 입력해주세요." 
+						                        aria-label="저가"
+						                        style="width: 100%;"
+						                      />
+						                      <div th:if="${#fields.hasErrors('lowPrice')}" class="field-error">
+											      <p th:errors="*{lowPrice}"></p>
+											    </div>
+						                    </td>
+						                </tr>
+						               <tr>
+						                    <td class="tableset-dark">전일가</td>
+						                    <td class="tableset-dark">
+						                      <input
+						                        type="number"
+						                        name="previousPrice"
+						                        th:value="${stockCommand.previousPrice}"
+						                        class="tedu-input lightmode"
+						                        placeholder="전일가를 입력해주세요." 
+						                        aria-label="전일가"
+						                        style="width: 100%;"
+						                      />
+						                      <div th:if="${#fields.hasErrors('previousPrice')}" class="field-error">
+											      <p th:errors="*{previousPrice}"></p>
+											    </div>
+						                    </td>
+						                </tr>
+						               <tr>
+						                    <td class="tableset-dark">등락률</td>
+						                    <td class="tableset-dark">
+						                      <input
+						                        type="number"
+						                        name="priceChangeRate"
+						                        th:value="${stockCommand.priceChangeRate}" 
+						                        step="0.01";
+						                        class="tedu-input lightmode"
+						                        placeholder="등락률을 입력해주세요." 
+						                        aria-label="등락률"
+						                        style="width: 100%;"	
+						                        max="999.99"					                       
+						                      />
+						                      <div th:if="${#fields.hasErrors('priceChangeRate')}" class="field-error">
+											      <p th:errors="*{priceChangeRate}"></p>
+											    </div>
+						                    </td>
+						                </tr>						                
+						                <tr>
+						                    <td class="tableset-dark">거래량</td>
+						                    <td class="tableset-dark">
+						                      <input
+						                        type="number"
+						                        name="tradingAmount"
+						                        th:value="${stockCommand.tradingAmount}"
+						                        min="0"
+						                        class="tedu-input lightmode"
+						                        placeholder="거래량을 입력해주세요." 
+						                        aria-label="거래량"
+						                        style="width: 100%;"
+						                      />
+						                      <div th:if="${#fields.hasErrors('tradingAmount')}" class="field-error">
+											      <p th:errors="*{tradingAmount}"></p>
+											    </div>
+						                    </td>
+						                </tr>
+						                <tr>
+						                    <td class="tableset-dark">시가총액</td>
+						                    <td class="tableset-dark">
+						                      <input
+						                        type="number"
+						                        name="marketCap"
+						                        th:value="${stockCommand.marketCap}"
+						                        min="0"
+						                        class="tedu-input lightmode"
+						                        placeholder="시가총액을 입력해주세요." 
+						                        aria-label="시가총액"
+						                        style="width: 100%;"
+						                      />
+						                      <div th:if="${#fields.hasErrors('marketCap')}" class="field-error">
+											      <p th:errors="*{marketCap}"></p>
+											    </div>
+						                    </td>
+						                </tr>						                                                                                 
+                                        <tr>
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                           <div class="input_standard-btn-box form-footer">
+                             <th:block th:if="${session.auth != null and session.auth.grade == 'mem'}">
+                           <a class="tedu-btn tedu-btn-light btn-mono" th:href="@{/stock/stockListM}">목록보기</a>
+								</th:block>
+								<th:block th:if="${session.auth != null and session.auth.grade == 'emp'}">
+								<a class="tedu-btn tedu-btn-light btn-mono" href="javascript:history.back()">취소</a>
+								<input class="tedu-btn tedu-btn-light btn-link"  type="submit" value="수정하기"> 
+								</th:block>
+                            </div>
+                             <br><br><br>
+                        </form>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+    <!-- [E]tedu-N39 -->
+</main>
+ <!-- [S]tedu-N17 -->
+    <div class="tedu-N17" data-bid="fLM3zgHIUl">
+        <div class="footer-container">
+            <div class="footer-top">
+                <div class="inner">
+                    <div class="footer-menu">
+                        <th:block th:if="${session.auth == null or session.auth.grade == 'emp'}">
+                            <a th:href="@{/employee/empWrite}">직원가입</a>
+                        </th:block>
+                        <th:block th:if="${session.auth == null or session.auth.grade != 'emp'}">
+                            <a href="javascript:void(0);" id="inquireLink">1:1 문의</a>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-area">
+                <div class="inner">
+                    <dif class="footer-info-wrap">
+                        <div class="footer-logo">
+                            <a href="javascript:void(0)">
+                                <img src="/images/pickers_logo_footer.png" alt="로고">
+                            </a>
+                        </div>
+                        <div class="footer-info">
+                            <span>경기도 안양시 만안구 성결대학로 53 성결관 301호</span>
+                            <span>T. 010-1234-5678</span>
+                            <span>E. pickers@official.co.kr</span>
+                            <span class="copy">2022 BY TEMPLATEHOUSE. ALL RIGHTS RESEVED</span>
+                        </div>
+                    </dif>
+                </div>
+            </div>
+        </div>
+    </div>
+  <!-- [E]tedu-N17 -->
+  <script src="/js/setting.js"></script>
+  <script src="/js/plugin.js"></script>
+  <script src="/js/template.js"></script>
+  <script src="/js/common.js"></script>
+  <script src="/js/script.js"></script>
+</body>

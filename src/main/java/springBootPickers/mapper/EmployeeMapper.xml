@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="springBootPickers.mapper.EmployeeMapper">
+<sql id="employeeBaseColumns">
+EMP_NUM, EMP_NAME, EMP_ID, EMP_PW, EMP_ADDR, EMP_DETAIL_ADDR, EMP_POST, EMP_PHONE_NUM, EMP_EMAIL, EMP_HIRE_DATE, GENDER
+</sql>
+
+
+<insert id="employeeInsert" parameterType="employeeDTO">
+insert into employee (EMP_NUM, EMP_NAME, EMP_ID, EMP_PW, EMP_ADDR, EMP_DETAIL_ADDR, EMP_POST, EMP_PHONE_NUM, EMP_EMAIL, EMP_HIRE_DATE, GENDER)
+values (#{empNum}, #{empName}, #{empId}, #{empPw}, #{empAddr}, #{empDetailAddr}, #{empPost}, #{empPhoneNum}, #{empEmail}, #{empHireDate}, #{gender} )
+</insert>
+<select id="employeeSelectList" resultType="employeeDTO" parameterType="startEndPageDTO">
+select * from (select row_number() over(order by EMP_NUM) as rn
+, <include refid="employeeBaseColumns"/> from employee
+<where>
+	<if test="searchWord != null">
+		EMP_NAME like '%' || #{searchWord} || '%'
+		or EMP_ID like '%' || #{searchWord} || '%'
+		or EMP_NUM like '%' || #{searchWord} || '%'
+	</if>
+</where>
+)
+where rn between #{startRow} and #{endRow}
+</select>
+
+<select id="employeeCount" resultType="integer">
+select count(*) from employee
+</select>
+
+<select id="employeeSelectOne" parameterType="string" resultType="employeeDTO">
+select <include refid="employeeBaseColumns"/>
+from employee
+where emp_num = #{empNum}
+</select>
+
+<update id="employeeUpdate" parameterType="employeeDTO">
+update employee 
+<trim prefix="set" suffixOverrides=",">
+EMP_NAME = #{empName}, EMP_ADDR = #{empAddr}, EMP_DETAIL_ADDR = #{empDetailAddr}, EMP_POST = #{empPost}, EMP_PHONE_NUM = #{empPhoneNum}
+, EMP_EMAIL = #{empEmail}, EMP_HIRE_DATE = #{empHireDate}, GENDER = #{gender}
+</trim>
+where EMP_NUM = #{empNum}
+</update>
+
+<delete id="empDelete" parameterType="string">
+delete from employee
+where EMP_NUM = #{empNum} 
+</delete>
+
+<select id="getEmpNum" parameterType="string" resultType="string">
+select emp_num from employee
+where EMP_ID = #{empId} 
+</select>
+</mapper>

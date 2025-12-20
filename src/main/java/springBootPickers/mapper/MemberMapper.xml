@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="springBootPickers.mapper.MemberMapper">
+
+	<!-- 공통 컬럼 정의 -->
+	<sql id="memberBaseColumns">
+		MEM_NUM, MEM_NAME, MEM_ID, MEM_PW, MEM_ADDR, MEM_DETAIL_ADDR, MEM_POST, MEM_PHONE_NUM, MEM_EMAIL, 
+		MEM_REGISTER_DATE, GENDER, MEM_BIRTH
+	</sql>
+	
+	<!-- 회원 번호(강의에 쓰임) -->
+	<select id="memberNumSelect" parameterType="string" resultType="string">
+	select mem_num from member where mem_id = #{memId}
+	</select>
+
+	<!-- 회원 데이터 삽입 -->
+	<insert id="memberInsert" parameterType="memberDTO">
+		INSERT INTO member (
+			MEM_NUM, MEM_NAME, MEM_ID, MEM_PW, MEM_ADDR, MEM_DETAIL_ADDR, MEM_POST, MEM_PHONE_NUM, 
+			MEM_EMAIL, MEM_REGISTER_DATE, GENDER, MEM_BIRTH
+		) VALUES (
+			#{memNum}, #{memName}, #{memId}, #{memPw}, #{memAddr}, #{memDetailAddr}, #{memPost}, #{memPhoneNum}, 
+			#{memEmail}, SYSDATE, #{gender}, #{memBirth}
+		)
+	</insert>
+
+	<!-- 회원 목록 조회 (페이징 처리) -->
+	<select id="memberSelectList" resultType="memberDTO" parameterType="startEndPageDTO">
+		SELECT * FROM (
+			SELECT ROW_NUMBER() OVER(ORDER BY MEM_NUM) AS rn,
+			<include refid="memberBaseColumns"/>
+			FROM member
+			<where>
+				<if test="searchWord != null">
+					MEM_NAME LIKE '%' || #{searchWord} || '%' OR
+					MEM_ID LIKE '%' || #{searchWord} || '%' OR
+					MEM_NUM LIKE '%' || #{searchWord} || '%'
+				</if>
+			</where>
+		)
+		WHERE rn BETWEEN #{startRow} AND #{endRow}
+	</select>
+
+	<!-- 회원 수 조회 -->
+	<select id="memberCount" resultType="integer">
+		SELECT COUNT(*) FROM member
+	</select>
+
+	<!-- 특정 회원 조회 -->
+	<select id="memberSelectOne" parameterType="string" resultType="memberDTO">
+		SELECT <include refid="memberBaseColumns"/>
+		FROM member
+		WHERE MEM_NUM = #{memNum}
+	</select>
+
+	<!-- 회원 정보 수정 -->
+	<update id="memberUpdate" parameterType="memberDTO">
+		UPDATE member
+		<trim prefix="SET" suffixOverrides=",">
+			MEM_NAME = #{memName},
+			MEM_ADDR = #{memAddr},
+			MEM_DETAIL_ADDR = #{memDetailAddr},
+			MEM_POST = #{memPost},
+			MEM_PHONE_NUM = #{memPhoneNum},
+			MEM_EMAIL = #{memEmail},
+			GENDER = #{gender},
+			MEM_BIRTH = #{memBirth}
+		</trim>
+		WHERE MEM_NUM = #{memNum}
+	</update>
+
+	<!-- 회원 삭제 -->
+	<delete id="memDelete" parameterType="string">
+		DELETE FROM member
+		WHERE MEM_NUM = #{memNum}
+	</delete>
+
+	<!-- 회원 번호 조회 -->
+	<select id="getMemNum" parameterType="string" resultType="string">
+		SELECT MEM_NUM
+		FROM member
+		WHERE MEM_ID = #{memId}
+	</select>
+
+</mapper>

@@ -1,0 +1,77 @@
+spring.application.name=pickers
+
+server.port=8080
+
+#static 파일 경로 설정
+spring.mvc.static-path-pattern=/**
+spring.web.resources.add-mappings=true
+
+#Thymeleaf
+spring.thymeleaf.cache=false
+spring.thymeleaf.prefix=classpath:/templates/
+spring.thymeleaf.suffix=.html
+spring.thymeleaf.view-names=thymeleaf/*
+spring.thymeleaf.check-template-location=true
+
+#jsp
+spring.mvc.view.prefix=/WEB-INF/views/
+spring.mvc.view.suffix=.jsp
+
+#DB
+spring.datasource.driver-class-name=net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+spring.datasource.url=jdbc:log4jdbc:oracle:thin:@localhost:1521/XEPDB1
+#spring.datasource.driver-class-name=oracle.jdbc.driver.OracleDriver
+#spring.datasource.url=jdbc:oracle:thin:@localhost:1521:xe
+spring.datasource.username=YOUR_DB_USERNAME
+spring.datasource.password=YOUR_DB_PASSWORD
+
+spring.datasource.hikari.connection-init-sql=ALTER SESSION SET CURRENT_SCHEMA = PICKERS
+
+#Mybatis
+mybatis.type-aliases-package=springBootPickers.domain
+mybatis.configuration.map-underscore-to-camel-case=true
+mybatis.mapper-locations=classpath:mappers/**/*Mapper.xml
+
+#구글smtp설정
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=YOUR_EMAIL@gmail.com
+spring.mail.password=YOUR_EMAIL_APP_PASSWORD
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+
+#file 설정
+spring.servlet.multipart.max-file-size=100MB
+spring.servlet.multipart.max-request-size=100MB
+
+#news api
+newsapi.key=YOUR_NEWSAPI_KEY
+newsapi.url=https://newsapi.org/v2/top-headlines
+
+# PG 설정을 하드코딩에서 분리 (보안)
+inicis.mid=YOUR_INICIS_MID
+inicis.signkey=YOUR_INICIS_SIGNKEY
+
+# 트랜잭션 설정
+spring.datasource.hikari.auto-commit=false
+
+# 기본 Whitelabel Error Page 비활성화
+server.error.whitelabel.enabled=false
+
+# 에러 메시지 포함 (선택적)
+server.error.include-message=always
+server.error.include-binding-errors=always
+
+
+# Log4jdbc SQL 로깅 활성화
+logging.level.springBootPickers=DEBUG
+logging.level.jdbc.sqltiming=DEBUG
+logging.level.jdbc.resultsettable=DEBUG
+logging.level.jdbc.connection=DEBUG
+
+# 한국투자증권 API 설정
+kis.app-key=YOUR_KIS_APP_KEY
+kis.app-secret=YOUR_KIS_APP_SECRET
+kis.websocket.url=ws://ops.koreainvestment.com:21000
+kis.realtime.enabled=true
+kafka.enabled=true

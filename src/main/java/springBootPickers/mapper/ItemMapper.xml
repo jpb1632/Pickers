@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="springBootPickers.mapper.ItemMapper">
+<sql id="lectureColumnsBase">
+        LECTURE_NUM, LECTURE_TEACHER_NAME, LECTURE_TITLE, LECTURE_TOPIC, LECTURE_PRICE,
+        LECTURE_DESCRIPTION, LECTURE_STATUS, LECTURE_REGISTER_DATE, EMP_NUM,
+        LECTURE_MAIN_IMAGE, LECTURE_DETAIL_IMAGE, LECTURE_MAIN_STORE_IMAGE, LECTURE_DETAIL_STORE_IMAGE
+    </sql>
+<update id="wishItem" parameterType="map">
+merge into wish w 
+using (select lecture_num from lecture where lecture_num = #{lectureNum}) l
+on (w.lecture_num = l.lecture_num and mem_num = #{memNum})
+when matched then 
+    update set wish_date = sysdate
+    delete where mem_num = #{memNum} and lecture_num = #{lectureNum}
+when not matched then 
+    insert (mem_num, lecture_num, news_num, company_num, wish_date, wish_type)
+    values (
+        #{memNum}, 
+        l.lecture_num, 
+        NULL, 
+        NULL, 
+        sysdate,
+        '강의'
+    )
+</update>
+
+<select id="wishSelectList" parameterType="string" resultType="lecture">
+select <include refid="lectureColumnsBase"/>
+from lecture
+where lecture_num in (select lecture_num from wish where mem_num = #{memNum})
+</select>
+
+<select id="wishCountSelectOne" parameterType="hashmap" resultType="integer">
+select count(*) from wish
+where lecture_num = #{lectureNum} and mem_num = #{memNum, jdbcType=VARCHAR} 
+</select>
+
+<delete id="wishDelete" parameterType="map">
+    delete from wish
+    where mem_num = #{memNum}
+    and LECTURE_NUM in
+    <foreach collection="lectureNums" item="lectureNum" open="(" separator="," close=")">
+        #{lectureNum}
+    </foreach>
+</delete>
+
+
+
+</mapper>

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="springBootPickers.mapper.WordMapper">
+    <select id="getWords" parameterType="map" resultType="springBootPickers.command.WordCommand">
+        SELECT *
+        FROM WORD
+        <where>
+            <if test="keyword != null and keyword != ''">
+                WORD_NAME LIKE '%' || #{keyword} || '%'
+            </if>
+        </where>
+        ORDER BY WORD_NUM ASC
+        OFFSET #{startRow} ROWS FETCH NEXT #{pageSize} ROWS ONLY
+    </select>
+
+
+    <select id="countAllWords" resultType="int">
+        SELECT COUNT(*)
+        FROM WORD
+        <where>
+            <if test="keyword != null and keyword != ''">
+                WORD_NAME LIKE '%' || #{keyword} || '%'
+            </if>
+        </where>
+    </select>
+    
+
+    <select id="selectWordList" parameterType="startEndPageDTO" resultType="wordDTO">
+        SELECT * FROM (
+            SELECT ROW_NUMBER() OVER (ORDER BY WORD_NUM ASC) AS rn, 
+            WORD_NUM, WORD_NAME, WORD_DESCRIPTION, WORD_REGISTER_DATE, WORD_UPDATE_DATE, EMP_NUM
+            FROM WORD
+            <where>
+                <if test="searchWord != null and searchWord != ''">
+                    WORD_NAME LIKE '%' || #{searchWord} || '%'
+                </if>
+            </where>
+        )
+        WHERE rn BETWEEN #{startRow} AND #{endRow}
+    </select>
+
+
+    <select id="countAdminWords" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM WORD
+        <where>
+            <if test="searchWord != null and searchWord != ''">
+                WORD_NAME LIKE '%' || #{searchWord} || '%'
+            </if>
+        </where>
+    </select>
+
+    <insert id="insertWord" parameterType="wordDTO">
+        INSERT INTO WORD (WORD_NUM, WORD_NAME, WORD_DESCRIPTION, WORD_REGISTER_DATE, WORD_UPDATE_DATE, EMP_NUM)
+        VALUES (#{wordNum}, #{wordName}, #{wordDescription}, SYSDATE, SYSDATE, #{empNum})
+    </insert>
+
+
+
+    <select id="selectWordDetail" parameterType="string" resultType="wordDTO">
+        SELECT WORD_NUM, WORD_NAME, WORD_DESCRIPTION, WORD_REGISTER_DATE, WORD_UPDATE_DATE, EMP_NUM
+        FROM WORD
+        WHERE WORD_NUM = #{wordNum}
+    </select>
+
+    <update id="updateWord" parameterType="wordDTO">
+        UPDATE WORD
+        SET WORD_NAME = #{wordName},
+            WORD_DESCRIPTION = #{wordDescription},
+            WORD_UPDATE_DATE = SYSDATE,
+            EMP_NUM = #{empNum}
+        WHERE WORD_NUM = #{wordNum}
+    </update>
+
+    <delete id="deleteWord" parameterType="string">
+        DELETE FROM WORD WHERE WORD_NUM = #{wordNum}
+    </delete>
+    
+    <select id="getLastWordNum" resultType="string">
+    SELECT MAX(WORD_NUM) FROM WORD
+</select>
+
+<select id="selectEmployeeNumberByUserId" parameterType="string" resultType="string">
+    SELECT emp_num
+    FROM employee
+    WHERE emp_id = #{userId}
+</select>
+
+</mapper>
+

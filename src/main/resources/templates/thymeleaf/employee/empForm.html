@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="imagetoolbar" content="no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="title" content="웹사이트">
+  <meta name="description" content="웹사이트입니다.">
+  <meta name="keywords" content="키워드,키워드,키워드">
+  <meta property="og:title" content="웹사이트">
+  <meta property="og:description" content="웹사이트입니다">
+  <meta property="og:image" content="https://웹사이트/images/opengraph.png">
+  <meta property="og:url" content="https://웹사이트">
+  <title>직원 등록</title>
+  <link rel="stylesheet" href="/css/setting.css">
+  <link rel="stylesheet" href="/css/plugin.css">
+  <link rel="stylesheet" href="/css/template.css">
+  <link rel="stylesheet" href="/css/common.css">
+  <link rel="stylesheet" href="/css/style.css">
+  	<script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.1.min.js"></script>
+ 	<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+	<script type="text/javascript" src="/js/daumAddressScript.js"></script>
+	<script type="text/javascript" src="/js/check.js"></script>
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function() {
+            const inquireLink = document.getElementById("inquireLink");
+
+            if (inquireLink) { // 링크가 존재할 경우에만 이벤트 리스너 추가
+                inquireLink.addEventListener("click", function() {
+                    const isLoggedIn = "[[${session.auth != null ? 'true' : 'false'}]]" === "true";
+
+                    if (!isLoggedIn) {
+                        alert("로그인 후 이용할 수 있습니다.");
+                        location.href = "/login/login"; // 로그인 페이지로 리다이렉트
+                    } else {
+                        location.href = "/inquire/inquireWrite"; // 1:1 문의 페이지로 이동
+                    }
+                });
+            }
+        });
+    </script>
+</head>
+
+<body>
+   <!-- [S]tedu-N3 -->
+    <div class="tedu-N3" data-bid="XEm3ZgHi4n">
+        <div class="header-container lightmode">
+            <div class="header-top">
+                <div class="inner">
+                    <div class="header-member">
+                        <th:block th:if="${session.auth == null}">
+                            <a href="/login/login">
+                                <em class="ico">
+                                    <img src="/icons/ico_login.svg" alt="로그인 아이콘">
+                                </em>
+                                <span>로그인</span>
+                            </a>
+                            <a href="/register/membershipAgree">
+                                <em class="ico">
+                                    <img src="/icons/ico_member.svg" alt="회원가입 아이콘">
+                                </em>
+                                <span>회원가입</span>
+                            </a>
+                        </th:block>
+
+                        <th:block th:if="${session.auth != null}">
+                            <a href="/login/logout">
+                                <em class="ico">
+                                    <img src="/icons/ico_login.svg" alt="로그아웃 아이콘">
+                                </em>
+                                <span>로그아웃</span>
+                            </a>
+                            <th:block th:if="${session.auth.grade == 'mem'}">
+                                <a href="/myPage/memMyPage">
+                                    <em class="ico">
+                                        <img src="/icons/ico_member.svg" alt="마이페이지 아이콘">
+                                    </em>
+                                    <span>마이페이지</span>
+                                </a>
+                            </th:block>
+                            <th:block th:if="${session.auth.grade == 'emp'}">
+                                <a href="/myPage/empMyPage">
+                                    <em class="ico">
+                                        <img src="/icons/ico_member.svg" alt="마이페이지 아이콘">
+                                    </em>
+                                    <span>마이페이지</span>
+                                </a>
+                            </th:block>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+            <div class="header-nav">
+                <div class="inner">
+                    <div class="header-logo">
+                        <a href="/">
+                            <img src="/images/pickers_logo_main.png" alt="로고">
+                        </a>
+                    </div>
+                    <div class="header-gnb">
+
+                    </div><br><br><br>
+                    <div class="header-btn">
+                        <a href="javascript:void(0)" class="menu-open">
+                            <em class="ico">
+                                <img src="/icons/ico_menu.svg" alt="메뉴 아이콘">
+                            </em>
+                        </a>
+                        <a href="javascript:void(0)" class="menu-close">
+                            <em class="ico">
+                                <img src="/icons/ico_close.svg" alt="닫기 아이콘">
+                            </em>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+
+            <section class="header-area">
+                <div class="inner">
+                    <div class="menu-wrap">
+                        <div class="menu-box">
+                            <a class="menu-title">강의</a>
+                            <a href="/lecture/lectureList">강의</a>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'mem'}">
+                                <a href="/lecture/mylectureList">my강의</a>
+                                <a href="/item/cartList">장바구니</a>
+                                <a href="/item/wishList">찜</a>
+                            </th:block>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                                <a href="/lecture/emplectureList">강의 관리</a>
+                                <a href="/orders/empOrderList">주문 관리</a>
+                            </th:block>
+                        </div>
+                        <div class="menu-box">
+                            <a class="menu-title">인사이트</a>
+                            <a href="/news/newsListM">뉴스</a>
+                            <a href="/company/companyListM">기업</a>
+                            <a href="/stock/stockListM">주식</a>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                                <a href="/news/newsList">뉴스 관리</a>
+                                <a href="/company/companyList">기업 관리</a>
+                                <a href="/stock/stockList">주식 관리</a>
+                            </th:block>
+                        </div>
+                        <div class="menu-box">
+                            <a class="menu-title">커뮤니티</a>
+                            <a href="/board/boardQueList">질문게시판</a>
+                            <a href="/board/boardFreeList">자유게시판</a>
+                            <a href="/board/boardProfitList">수익인증</a>
+                            <a href="/board/boardTipList">꿀팁공유</a>
+                        </div>
+                        <div class="menu-box">
+                            <a class="menu-title">교육</a>
+                            <a href="/chart/list">교육</a>
+                            <a th:href="@{/word/wordSearch}">용어</a>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                                <a th:href="@{/word/wordList}">용어 관리</a>
+                            </th:block>
+                        </div>
+                        <th:block th:if="${session.auth != null}">
+                            <div class="menu-box">
+                                <a class="menu-title">MY</a>
+                                <th:block th:if="${session.auth.grade == 'mem'}">
+                                    <a href="/inquire/inquireListM">1:1 문의내역</a>
+                                    <a th:href="@{/lectureInquire/lectureInquireListM/{memNum}(memNum=${session.memNum})}">강의 문의내역</a>
+                                    <a href="/orders/orderList">강의 주문내역</a>
+                                </th:block>
+                                <th:block th:if="${session.auth.grade == 'emp'}">
+                                    <a href="/inquire/inquireList">1:1문의 관리</a>
+                                    <a href="/lectureInquire/lectureInquireList">강의질문 관리</a>
+                                </th:block>
+                            </div>
+                        </th:block>
+                        <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                            <div class="menu-box">
+                                <a class="menu-title">유저</a>
+                                <a href="/member/memList">회원 관리</a>
+                                <a href="/employee/empList">직원 관리</a>
+                            </div>
+                        </th:block>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    <!-- [E]tedu-N3 -->
+  <main class="th-layout-main ">
+    <!-- [S]tedu-N39 -->
+    <div class="tedu-N39" data-bid="Ffm3ZglDN3">
+      <div class="content-inner">
+        <div class="content-container">
+          <div class="member-wrap-03">
+            <ul class="step-list">
+              
+              <li class="step active">
+                <span class="step-num">1</span>
+                <p>정보입력</p>
+              </li>
+              <li class="step">
+                <span class="step-num">2</span>
+                <p>가입완료</p>
+              </li>
+            </ul>
+            <div class="form-wrap">
+              <form action="empRegist" method="post" th:object="${employeeCommand}">
+                <div class="form-body">
+                <fieldset class="fieldset">
+                    <legend class="legend">직원번호(자동부여)</legend>
+                    <div class="input-group">
+                      <div class="tedu-inputset">
+                        <input type="text" name="empNum" th:value="${employeeCommand.empNum}" class="tedu-input lightmode" readonly="readonly">
+                      </div>
+                    </div>
+                  </fieldset>
+                  <fieldset class="fieldset">
+                    <legend class="legend">이름</legend>
+                    <div class="input-group">
+                      <div class="tedu-inputset">
+                        <input type="text" name="empName" th:value="${employeeCommand.empName}" class="tedu-input lightmode" placeholder="이름을 입력해주세요." aria-label="이름">
+                      </div>
+                    </div>
+                      	<span style="color:red" th:if="${#fields.hasErrors('empName')}" th:errors="*{empName}"></span><br>
+                  </fieldset>
+                  <fieldset class="fieldset">
+                    <legend class="legend">아이디</legend>
+                    <div class="input-group flex-style">
+                      <div class="tedu-inputset">
+                        <input type="text" name="empId" id="userId" th:value="${employeeCommand.empId}" class="tedu-input lightmode" placeholder="영문/숫자 조합으로 3 - 12자리로만 입력해주세요." aria-label="영문/숫자 조합으로 3 - 12자리로만 입력해주세요.">
+                      </div>
+                      <button class="tedu-btn tedu-btn-dark btn-link btn-chk" type="button">중복확인</button>
+                    </div>
+                    <span id="idCheck"></span>
+                    <span style="color:red" th:if="${#fields.hasErrors('empId')}" th:errors="*{empId}"></span><br>
+                  </fieldset>
+                  <fieldset class="fieldset">
+                    <legend class="legend">비밀번호</legend>
+                    <div class="input-group">
+                      <div class="tedu-inputset">
+                        <input type="password" name="empPw" th:value="${employeeCommand.empPw}" class="tedu-input lightmode" placeholder="비밀번호는 영문자와 숫자, 특수문자가 포함된 8글자 이상으로 입력해주세요." aria-label="영문/숫자/특수문자 8 - 12자리">
+                      </div>
+                    </div>
+                    <span style="color:red" th:if="${#fields.hasErrors('empPw')}" th:errors="*{empPw}"></span><br>         
+                  </fieldset>
+                  <fieldset class="fieldset">
+                    <legend class="legend">비밀번호 확인</legend>
+                    <div class="input-group">
+                      <div class="tedu-inputset">
+                        <input type="password" name="empPwCon" th:value="${employeeCommand.empPwCon}" class="tedu-input lightmode" placeholder="비밀번호는 영문자와 숫자, 특수문자가 포함된 8글자 이상으로 다시한번 입력해주세요." aria-label="영문/숫자/특수문자 8 - 12자리 다시한번 입력">
+                      	<span style="color:red" th:if="${#fields.hasErrors('empPwCon')}" th:errors="*{empPwCon}"></span><br>
+                      </div>
+                    </div>
+                    <p class="description"> 비밀번호는 영문자와 숫자, 특수문자가 포함된 8글자 이상이여야합니다.</p>
+                  </fieldset>
+                  <fieldset class="fieldset">
+                    <legend class="legend">주소</legend>
+                    <div class="input-group">
+                      <div class="tedu-inputset">
+                        <input type="text" name="empAddr" id="sample4_roadAddress" th:value="${employeeCommand.empAddr}" class="tedu-input lightmode" placeholder="주소" aria-label="우편번호" readonly="readonly">
+                      </div>
+                      <button class="tedu-btn tedu-btn-dark btn-link" type="button" onclick="execDaumPostcode();">우편번호 검색</button>
+                    </div>
+                    <div class="input-group">
+                      <div class="tedu-inputset">
+                        <input type="text" name="empDetailAddr" th:value="${employeeCommand.empDetailAddr}" class="tedu-input lightmode" placeholder="상세 주소를 입력해주세요." aria-label="상세 주소를 입력해주세요.">
+                      </div>
+                      <div class="tedu-inputset">
+                        <input type="text" name="empPost" id="sample4_postcode" th:value="${employeeCommand.empPost}" class="tedu-input lightmode" placeholder="우편번호" aria-label="내용" readonly="readonly"> 
+                      </div>
+                    </div>
+                      <span style="color:red" th:if="${#fields.hasErrors('empAddr')}" th:errors="*{empAddr}"></span><br>                      
+                  </fieldset>
+                  <fieldset class="fieldset">
+  <legend class="legend">이메일</legend>
+  <div class="input-group input-group-mail">
+    <div class="tedu-inputset">
+      <input type="email" name="empEmail" id="userEmail" th:value="${employeeCommand.empEmail}" class="tedu-input lightmode" placeholder="이메일을 입력해주세요." aria-label="내용">
+        <span id="emailCheck"></span>
+    
+    </div>
+  </div>
+  <span style="color:red" th:if="${#fields.hasErrors('empEmail')}" th:errors="*{empEmail}"></span><br> 
+</fieldset>
+
+<fieldset class="fieldset">
+  <legend class="legend">입사일</legend>
+  <div class="input-group input-group-mail">
+    <div class="tedu-inputset">
+      <input type="date" name="empHireDate" th:value="${#dates.format(employeeCommand.empHireDate, 'yyyy-MM-dd')}" class="tedu-input lightmode" placeholder="입사일을 입력해주세요." aria-label="입사일">
+    </div>
+  </div>
+  <span style="color:red" th:if="${#fields.hasErrors('empHireDate')}" th:errors="*{empHireDate}"></span><br>
+</fieldset>
+                  
+				<fieldset class="fieldset">
+                    <legend class="legend">전화번호</legend>
+                    <div class="input-group input-group-mail">
+                      <div class="tedu-inputset">
+                        <input type="tel" name="empPhoneNum" th:value="${employeeCommand.empPhoneNum}" class="tedu-input lightmode" placeholder="전화번호를 입력해주세요." aria-label="내용">
+                      </div>
+                    </div>
+                      	<span style="color:red" th:if="${#fields.hasErrors('empPhoneNum')}" th:errors="*{empPhoneNum}"></span><br>                      
+                  </fieldset>
+                  <fieldset class="fieldset">
+                    <legend class="legend">성별</legend>
+                    <div class="radio-group">
+                      <div class="checkset">
+                        <input id="reply-1" name="gender" value="F" class="checkset-input" type="radio" >
+                        <label class="checkset-label" for="reply-1"></label>
+                        <span class="checkset-text">여자</span>
+                      </div>
+                      <div class="checkset">
+                        <input id="reply-2" name="gender" value="M" class="checkset-input" type="radio" >
+                        <label class="checkset-label" for="reply-2"></label>
+                        <span class="checkset-text">남자</span>
+                      </div>
+                    </div>
+                      	<span style="color:red" th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}"></span><br>                      
+                  </fieldset>
+                  <br>
+                </div>
+                
+                <div class="two-buttons-container">
+                  <a class="tedu-btn tedu-btn-light btn-mono two-button" href="/">취소</a>
+  					<input class="tedu-btn tedu-btn-light btn-link two-button" type="submit" value="확인">
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- [E]tedu-N39 -->
+  </main>
+     <!-- [S]tedu-N17 -->
+    <div class="tedu-N17" data-bid="fLM3zgHIUl">
+        <div class="footer-container">
+            <div class="footer-top">
+                <div class="inner">
+                    <div class="footer-menu">
+                        <th:block th:if="${session.auth == null or session.auth.grade == 'emp'}">
+                            <a th:href="@{/employee/empWrite}">직원가입</a>
+                        </th:block>
+                        <th:block th:if="${session.auth == null or session.auth.grade != 'emp'}">
+                            <a href="javascript:void(0);" id="inquireLink">1:1 문의</a>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-area">
+                <div class="inner">
+                    <dif class="footer-info-wrap">
+                        <div class="footer-logo">
+                            <a href="javascript:void(0)">
+                                <img src="/images/pickers_logo_footer.png" alt="로고">
+                            </a>
+                        </div>
+                        <div class="footer-info">
+                            <span>경기도 안양시 만안구 성결대학로 53 성결관 301호</span>
+                            <span>T. 010-1234-5678</span>
+                            <span>E. pickers@official.co.kr</span>
+                            <span class="copy">2022 BY TEMPLATEHOUSE. ALL RIGHTS RESEVED</span>
+                        </div>
+                    </dif>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- [E]tedu-N17 -->
+  <script src="/js/setting.js"></script>
+  <script src="/js/plugin.js"></script>
+  <script src="/js/template.js"></script>
+  <script src="/js/common.js"></script>
+  <script src="/js/script.js"></script>
+</body>

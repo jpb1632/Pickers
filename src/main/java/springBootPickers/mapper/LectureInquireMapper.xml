@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="springBootPickers.mapper.LectureInquireMapper">
+    <!-- 공통 컬럼 정의 -->
+    <sql id="lectureInquireBaseColumns">
+        LECTURE_Q_NUM, LECTURE_NUM, LECTURE_Q_TYPE, LECTURE_Q_REGISTER_DATE, MEM_NUM, LECTURE_A_STATUS,
+        LECTURE_A_NUM, LECTURE_A_CONTENT, LECTURE_A_REGISTER_DATE, EMP_NUM, LECTURE_Q_TITLE
+    </sql>
+
+    <!-- 강의 문의 데이터 삽입 -->
+    <insert id="lectureInquireInsert" parameterType="lectureInquireDTO">
+         INSERT INTO lecture_q (
+        lecture_q_num, 
+        lecture_num, 
+        lecture_q_type, 
+        lecture_q_title, 
+        lecture_q_register_date, 
+        mem_num, 
+        lecture_a_status
+    ) VALUES (
+        #{lectureQNum, jdbcType=VARCHAR}, 
+        #{lectureNum}, 
+        #{lectureQType, jdbcType=VARCHAR}, 
+        #{lectureQTitle}, 
+        SYSDATE, 
+        #{memNum, jdbcType=VARCHAR}, 
+        #{lectureAStatus}
+    )
+</insert>
+
+    <!-- 강의 문의 목록 조회 (페이징 처리) -->
+<select id="lectureInquireSelectList" resultType="lectureInquireDTO" parameterType="startEndPageDTO">
+    SELECT * FROM (
+        SELECT 
+            ROW_NUMBER() OVER(ORDER BY lecture_q_num desc) AS rn,
+            <include refid="lectureInquireBaseColumns"/>
+        FROM lecture_q
+        <where>
+            <if test="searchWord != null and searchWord != ''">
+                AND (lecture_q_title LIKE '%' || #{searchWord} || '%'
+                     OR lecture_q_type LIKE '%' || #{searchWord} || '%')
+            </if>
+        </where>
+    ) 
+    WHERE rn BETWEEN #{startRow} AND #{endRow}
+    order by lecture_q_register_date desc
+</select>
+
+
+    <!-- 강의 문의 개수 조회 (회원용) -->
+    <select id="lectureInquireCount" resultType="integer">
+        SELECT count(*) 
+        FROM lecture_q
+        <where>
+            <if test="grade == 'mem'">
+                AND mem_num = #{memNum}
+            </if>
+        </where>
+    </select>
+
+
+<!-- 강의 문의 목록 조회 (회원용) -->
+<select id="lectureInquireSelectListForMember" resultType="lectureInquireDTO" parameterType="startEndPageDTO">
+    SELECT *
+    FROM (
+        SELECT 
+            ROW_NUMBER() OVER(ORDER BY lecture_q_num DESC) AS rn,
+            LECTURE_Q_NUM, LECTURE_NUM, LECTURE_Q_TYPE, LECTURE_Q_REGISTER_DATE, MEM_NUM, LECTURE_A_STATUS,
+            LECTURE_A_NUM, LECTURE_A_CONTENT, LECTURE_A_REGISTER_DATE, EMP_NUM, LECTURE_Q_TITLE
+        FROM lecture_q
+        WHERE MEM_NUM = #{memNum} 
+        <where>
+            <if test="searchWord != null and searchWord != ''">
+                AND (lecture_q_title LIKE '%' || #{searchWord} || '%'
+                    OR LECTURE_A_CONTENT LIKE '%' || #{searchWord} || '%'
+                    OR lecture_a_status LIKE '%' || #{searchWord} || '%')
+            </if>
+        </where>
+    )
+    WHERE rn BETWEEN #{startRow} AND #{endRow}
+</select>
+
+
+
+<!-- 특정 강의 문의 조회 -->
+<select id="lectureInquireSelectOne" parameterType="string" resultType="lectureInquireDTO">
+    SELECT 
+        l.lecture_q_num AS lectureQNum,
+        l.lecture_num AS lectureNum,
+        l.lecture_q_type AS lectureQType,
+        l.lecture_q_register_date AS lectureQRegisterDate,
+        l.mem_num AS memNum,
+        l.lecture_a_status AS lectureAStatus,
+        l.lecture_a_num AS lectureANum,
+        l.lecture_a_content AS lectureAContent,
+        l.lecture_a_register_date AS lectureARegisterDate,
+        l.emp_num AS empNum,
+        l.lecture_q_title AS lectureQTitle,
+        m.mem_name AS memName 
+    FROM lecture_q l
+    LEFT JOIN member m ON l.mem_num = m.mem_num  
+    WHERE l.lecture_q_num = #{lectureQNum}
+    ORDER BY lecture_q_register_date DESC
+</select>
+
+
+
+    <!-- 강의 문의에 답변 추가 -->
+	 <update id="lectureInquireAnswer" parameterType="lectureInquireDTO">
+        UPDATE lecture_q
+        SET 
+            lecture_a_content = #{lectureAContent, jdbcType=VARCHAR},
+            lecture_a_register_date = sysdate,
+            lecture_a_status = '답변완료',
+            emp_num = #{empNum, jdbcType=VARCHAR}
+        WHERE lecture_q_num = #{lectureQNum, jdbcType=VARCHAR}
+    </update>
+
+    <!-- 강의 문의 상태를 '답변완료'로 업데이트 -->
+    <update id="updateLectureInquireStatusToAnswered" parameterType="string">
+        UPDATE lecture_q
+        SET lecture_a_status = '답변완료'
+        WHERE lecture_q_num = #{lectureQNum}
+    </update>
+
+    <!-- 강의 문의 삭제 -->
+    <delete id="lectureInquireDelete" parameterType="string">
+        DELETE FROM lecture_q
+        WHERE lecture_q_num = #{lectureQNum}
+    </delete>
+
+    <!-- 회원 이름 조회 -->
+    <select id="getMemberNameByMemNum" parameterType="String" resultType="String">
+        SELECT mem_name 
+        FROM member
+        WHERE mem_num = #{memNum}
+    </select>
+
+ <!-- 특정 강의에 대한 문의 목록 조회 (페이징 적용) -->
+  <select id="selectListByLectureNum" parameterType="startEndPageForInquireDTO" resultType="lectureInquireDTO">
+    SELECT *
+    FROM lecture_q
+    WHERE lecture_num = #{memNum}
+    <if test="searchWord != null and searchWord != ''">
+        AND (lecture_q_title LIKE '%' || #{searchWord} || '%' 
+            OR lecture_q_title LIKE '%' || #{searchWord} || '%')
+    </if>
+    ORDER BY lecture_q_register_date DESC
+</select>
+  
+    <!-- 특정 강의에 대한 문의 개수 조회 -->
+    <select id="lectureInquireCountLecture" parameterType="map" resultType="int">
+        SELECT COUNT(*) FROM lecture_q
+        WHERE lecture_num = #{lectureNum}
+    </select>
+    
+
+</mapper>

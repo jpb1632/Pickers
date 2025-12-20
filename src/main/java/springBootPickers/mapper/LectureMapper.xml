@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="springBootPickers.mapper.LectureMapper">
+    <sql id="lectureColumnsBase">
+        LECTURE_NUM, LECTURE_TEACHER_NAME, LECTURE_TITLE, LECTURE_TOPIC, LECTURE_PRICE,
+        LECTURE_DESCRIPTION, LECTURE_STATUS, LECTURE_REGISTER_DATE, EMP_NUM,
+        LECTURE_MAIN_IMAGE, LECTURE_DETAIL_IMAGE, LECTURE_MAIN_STORE_IMAGE, LECTURE_DETAIL_STORE_IMAGE
+    </sql>
+    <insert id="lectureInsert" parameterType="lecture">
+        insert into lecture (<include refid="lectureColumnsBase"/>)
+        values (
+            #{lectureNum}, #{lectureTeacherName}, #{lectureTitle}, #{lectureTopic}, #{lecturePrice},
+            #{lectureDescription}, null, sysdate, #{empNum},
+            #{lectureMainImage}, #{lectureDetailImage}
+            , #{lectureMainStoreImage}, #{lectureDetailStoreImage}
+        )
+    </insert>
+    
+    <resultMap type="lecture" id="lectureResultMap">
+    <constructor>
+        <idArg column="LECTURE_NUM" jdbcType="VARCHAR" javaType="string" />
+        <arg column="LECTURE_TEACHER_NAME" jdbcType="VARCHAR" javaType="string" />
+        <arg column="LECTURE_TITLE" jdbcType="VARCHAR" javaType="string" />
+        <arg column="LECTURE_TOPIC" jdbcType="VARCHAR" javaType="string" />
+        <arg column="LECTURE_PRICE" jdbcType="BIGINT" javaType="integer" />
+        <arg column="LECTURE_DESCRIPTION" jdbcType="VARCHAR" javaType="string" />
+        <arg column="LECTURE_STATUS" jdbcType="VARCHAR" javaType="string" />
+        <arg column="LECTURE_REGISTER_DATE" jdbcType="DATE" javaType="java.util.Date" />
+        <arg column="EMP_NUM" jdbcType="VARCHAR" javaType="string" />
+        <arg column="LECTURE_MAIN_IMAGE" jdbcType="VARCHAR" javaType="string" />
+        <arg column="LECTURE_DETAIL_IMAGE" jdbcType="VARCHAR" javaType="string" />
+        <arg column="LECTURE_MAIN_STORE_IMAGE" jdbcType="VARCHAR" javaType="string" />
+        <arg column="LECTURE_DETAIL_STORE_IMAGE" jdbcType="VARCHAR" javaType="string" />
+    </constructor>
+</resultMap>
+	<select id="allSelect" parameterType="startEndPageDTO">
+		select * from (select row_number() over (order by LECTURE_NUM desc) as rn
+			, <include refid="lectureColumnsBase"/> from lecture
+			<where>
+				<if test="searchWord != null">
+					LECTURE_TITLE like '%' || #{searchWord} || '%'
+					or LECTURE_NUM like '%' || #{searchWord} || '%'
+				</if>
+			</where>) sub1
+			where rn between #{startRow} and #{endRow}
+	</select>
+	
+	<select id="lectureCount" parameterType="string" resultType="integer">
+    select count(*) from lecture
+    <where>
+        <if test="searchWord != null">
+            AND (LECTURE_TITLE like '%' || #{searchWord} || '%'
+            or LECTURE_NUM like '%' || #{searchWord} || '%')
+        </if>
+    </where>
+</select>
+
+	<delete id="productDelete" parameterType="string">
+    delete from lecture
+    where LECTURE_NUM in 
+    <foreach collection="lectures" item="lectureNum" open="(" close=")" index="index" separator=",">
+        #{lectureNum}
+    </foreach>
+</delete>
+
+	<select id="lectureSelectOne" parameterType="string">
+	select <include refid="lectureColumnsBase"/> from lecture
+	where LECTURE_NUM = #{lectureNum}
+	</select>
+	
+	<update id="lectureUpdate" parameterType="lecture">
+    update lecture
+    <trim prefix="set" suffixOverrides=",">
+        LECTURE_TITLE = #{lectureTitle},
+        LECTURE_PRICE = #{lecturePrice},
+        LECTURE_DESCRIPTION = #{lectureDescription},
+        LECTURE_STATUS = null,
+        LECTURE_TOPIC = #{lectureTopic},
+        LECTURE_TEACHER_NAME = #{lectureTeacherName},
+        LECTURE_REGISTER_DATE = sysdate,
+        EMP_NUM = #{empNum},
+        LECTURE_MAIN_IMAGE = 
+          <choose>
+              <when test="lectureMainImage != null">#{lectureMainImage}</when>
+              <otherwise>LECTURE_MAIN_IMAGE</otherwise>
+          </choose>,
+        LECTURE_DETAIL_IMAGE = 
+          <choose>
+              <when test="lectureDetailImage != null">#{lectureDetailImage}</when>
+              <otherwise>LECTURE_DETAIL_IMAGE</otherwise>
+          </choose>,
+        LECTURE_MAIN_STORE_IMAGE = 
+          <choose>
+              <when test="lectureMainStoreImage != null">#{lectureMainStoreImage}</when>
+              <otherwise>LECTURE_MAIN_STORE_IMAGE</otherwise>
+          </choose>,
+        LECTURE_DETAIL_STORE_IMAGE = 
+          <choose>
+              <when test="lectureDetailStoreImage != null">#{lectureDetailStoreImage}</when>
+              <otherwise>LECTURE_DETAIL_STORE_IMAGE</otherwise>
+          </choose>
+    </trim>
+    where LECTURE_NUM = #{lectureNum}
+</update>
+
+
+	
+	<delete id="lectureDelete" parameterType="string">
+	delete from lecture
+	where LECTURE_NUM = #{lectureNum}
+	</delete>
+	
+<select id="paidLecturesWithPaging" parameterType="map" resultType="lecture">
+    SELECT *
+    FROM (
+        SELECT ROW_NUMBER() OVER (ORDER BY l.LECTURE_NUM DESC) AS rn,
+               l.LECTURE_NUM,
+               l.LECTURE_TITLE,
+               l.LECTURE_TOPIC,
+               l.LECTURE_PRICE,
+               l.LECTURE_MAIN_STORE_IMAGE
+        FROM LECTURE l
+        JOIN ORDER_LIST ol ON l.LECTURE_NUM = ol.LECTURE_NUM
+        JOIN ORDERS o ON ol.ORDER_NUM = o.ORDER_NUM
+        WHERE o.MEM_NUM = #{memNum}
+          AND o.PAY_STATUS = '결제완료'
+          <if test="searchWord != null">
+              AND (l.LECTURE_TITLE LIKE '%' || #{searchWord} || '%'
+              OR l.LECTURE_NUM LIKE '%' || #{searchWord} || '%')
+          </if>
+    ) sub
+    WHERE sub.rn BETWEEN #{startRow} AND #{endRow}
+</select>
+
+<select id="paidLectureCount" parameterType="map" resultType="integer">
+    SELECT COUNT(*)
+    FROM LECTURE l
+    JOIN ORDER_LIST ol ON l.LECTURE_NUM = ol.LECTURE_NUM
+    JOIN ORDERS o ON ol.ORDER_NUM = o.ORDER_NUM
+    WHERE o.MEM_NUM = #{memNum}
+      AND o.PAY_STATUS = '결제완료'
+      <if test="searchWord != null">
+          AND (l.LECTURE_TITLE LIKE '%' || #{searchWord} || '%'
+          OR l.LECTURE_NUM LIKE '%' || #{searchWord} || '%')
+      </if>
+</select>
+
+<select id="checkLecturePurchased" parameterType="map" resultType="string">
+    SELECT o.PAY_STATUS
+    FROM ORDERS o
+    JOIN ORDER_LIST ol ON o.ORDER_NUM = ol.ORDER_NUM
+    WHERE o.MEM_NUM = #{memNum}
+      AND ol.LECTURE_NUM = #{lectureNum}
+      AND o.PAY_STATUS = '결제완료'
+</select>
+
+	
+	
+</mapper>

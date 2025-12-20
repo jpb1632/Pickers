@@ -1,0 +1,1357 @@
+/* 배경 오버레이 */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* 반투명 검정 */
+  z-index: 9999; /* 높은 우선순위 */
+  display: none; /* 기본적으로 숨김 */
+}
+
+/* 설명창 스타일 */
+.explanation {
+  position: absolute;
+  background: white;
+  border-radius: 8px;
+  padding: 15px;
+  width: 300px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  display: none;
+  z-index: 10002; /* 퍼센트 hoverable-area 위로 */
+}
+
+/* 설명창 닫기 버튼 */
+.explanation button {
+  position: absolute;
+  top: 10px; /* 상단 여백 */
+  right: 10px; /* 우측 여백 */
+  width: 24px; /* 버튼 크기 */
+  height: 24px; /* 버튼 크기 */
+  padding: 0;
+  background-color: transparent; /* 배경 투명 */
+  color: black; /* 텍스트 색상 검정 */
+  border: 1px solid black; /* 검정 테두리 */
+  border-radius: 50%; /* 동그라미 버튼 */
+  font-size: 14px; /* 텍스트 크기 */
+  font-weight: bold; /* 텍스트 굵게 */
+  text-align: center; /* 텍스트 가운데 정렬 */
+  line-height: 20px; /* 텍스트 수직 정렬 */
+  cursor: pointer; /* 클릭 가능 */
+  display: flex;
+  align-items: center; /* 버튼 안 텍스트 중앙 정렬 */
+  justify-content: center; /* 버튼 안 텍스트 중앙 정렬 */
+  transition: background-color 0.2s ease; /* hover 효과 추가 */
+}
+
+.explanation button:hover {
+  background-color: rgba(0, 0, 0, 0.1); /* hover 시 회색 배경 */
+  color: black; /* 텍스트 색상 유지 */
+}
+
+/* 클릭 차단 */
+.no-click * {
+  pointer-events: none; /* 모든 요소 클릭 차단 */
+}
+
+/* 클릭 허용된 요소 */
+.allow-click {
+  pointer-events: auto !important; /* 클릭 허용 */
+}
+
+
+/* 물음표 아이콘 스타일 */
+.help-icon {
+  position: absolute;
+  top: 3px; /* 버튼 내부 위쪽 */
+  right: 3px; /* 버튼 내부 오른쪽 */
+  width: 16px;
+  height: 16px;
+  background-color: #ddd;
+  color: #000;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 16px;
+  text-align: center;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.help-icon:hover {
+  background-color: #bbb;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+
+
+/* orderType-hoverable-area: 교육 영역 */
+.orderType-hoverable-area {
+  position: relative;
+  background-color: transparent; /* 기본 배경 투명 */
+  transition: background-color 0.2s ease; /* 부드러운 전환 효과 */
+}
+
+/* 마우스 오버 시 회색 배경 */
+.orderType-hoverable-area:hover {
+  background-color: #f0f0f0; /* 밝은 회색 */
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+/* 설명창 활성화 시 orderType 영역 유지 */
+.orderType-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  transition: background-color 0.2s ease;
+}
+
+/* orderType-hoverable-area 내부의 셀렉트 박스 스타일 */
+.orderType-hoverable-area select {
+  background-color: transparent; /* 셀렉트 박스 기본 투명 */
+  color: rgba(0, 0, 0, 0.8); /* 기본 텍스트 색상 */
+  z-index: 1;
+  pointer-events: auto; /* 기본 클릭 가능 */
+  border: 1px solid #ddd; /* 기본 테두리 */
+}
+
+/* 퍼센트 설명창 활성화 시 orderType 내부 셀렉트 박스를 어둡게 */
+.percentage-hoverable-area.active ~ .orderType-hoverable-area select {
+  background-color: rgba(0, 0, 0, 0.5); /* 어두운 배경 */
+  color: rgba(255, 255, 255, 0.8); /* 텍스트 색상 흐릿하게 */
+  border: 1px solid #6E6E6E; 
+  pointer-events: none; /* 클릭 비활성화 */
+  transition: none !important; /* 트랜지션 제거 */
+}
+
+
+
+
+/* 구매 비율 hoverable-area */
+.percentage-hoverable-area {
+  position: relative;
+  background-color: transparent;
+}
+
+/* hover 상태에서 회색 배경 */
+.percentage-hoverable-area:hover {
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+/* hover 상태에서 버튼 회색 */
+.percentage-buttons .percentage-button:hover {
+  background-color: #e0e0e0; /* 버튼 회색 */
+}
+
+/* 퍼센트 설명창 활성화 시 orderType 영역 오버레이 처리 */
+.percentage-hoverable-area.active ~ .orderType-hoverable-area {
+  z-index: 9998; /* 오버레이보다 아래 */
+  background-color: rgba(0, 0, 0, 0.5); /* 어두운 오버레이 효과 */
+}
+
+/* 퍼센트 설명창 활성화 시 아래 퍼센트 영역 하얗게 유지 */
+.percentage-hoverable-area.active {
+  z-index: 10001; /* 오버레이 위로 */
+  background-color: white; /* 하얗게 유지 */
+}
+
+/* 주문 유형 영역 비활성화 시 스타일 */
+.orderType-hoverable-area.disabled {
+  pointer-events: none; /* 클릭 비활성화 */
+  background-color: transparent; /* hover 효과 제거 */
+  cursor: default; /* 기본 커서 */
+}
+
+/* 셀렉트 박스 비활성화 */
+.orderType-hoverable-area.disabled select {
+  pointer-events: none; /* 클릭 비활성화 */
+  border: 1px solid transparent; /* 테두리 제거 */
+}
+
+/* 셀렉트 박스 기본 상태 */
+.orderType-hoverable-area:not(.disabled) select {
+  background-color: white; /* 기본 흰색 배경 */
+  color: black; /* 기본 텍스트 색상 */
+  border: 1px solid #ddd; /* 기본 테두리 */
+  pointer-events: auto; /* 기본 클릭 가능 */
+}
+/* hover 상태에서 퍼센트 영역 전체 회색 */
+.percentage-hoverable-area:hover {
+  background-color: #f0f0f0; /* 밝은 회색 */
+  cursor: pointer;
+}
+
+/* hover 상태에서 버튼도 회색 */
+.percentage-hoverable-area:hover .percentage-buttons .percentage-button {
+  background-color: #f0f0f0; /* 버튼도 동일한 회색 */
+}
+
+
+
+
+
+/* 미수거래 hoverable-area */
+.misu-hoverable-area {
+  position: relative;
+  background-color: transparent; /* 기본 배경 투명 */
+  transition: background-color 0.2s ease; /* 부드러운 전환 효과 */
+}
+
+/* 마우스 오버 시 회색 배경 */
+.misu-hoverable-area:hover {
+  background-color: #f0f0f0; /* 밝은 회색 */
+  cursor: pointer; /* 클릭 가능 커서 */
+}
+
+/* 미수거래 설명창 활성화 시 orderType 영역 오버레이 처리 */
+.misu-hoverable-area.active ~ .orderType-hoverable-area {
+  z-index: 9998; /* 오버레이보다 아래 */
+  background-color: rgba(0, 0, 0, 0.5); /* 어두운 오버레이 효과 */
+}
+
+/* 미수거래 hoverable-area 활성화 시 하얗게 */
+.misu-hoverable-area.active {
+  z-index: 10001; /* 오버레이 위로 */
+  background-color: white; /* 하얗게 유지 */
+}
+
+/* 미수거래 설명창 활성화 시 orderType 내부 셀렉트 박스 스타일 */
+.misu-hoverable-area.active ~ .orderType-hoverable-area select {
+  background-color: rgba(0, 0, 0, 0.5); /* 어두운 배경 */
+  color: rgba(255, 255, 255, 0.8); /* 텍스트 색상 흐릿하게 */
+  border: 1px solid #6E6E6E; /* 테두리를 #6E6E6E로 설정 */
+  pointer-events: none; /* 클릭 비활성화 */
+  transition: none !important; /* 트랜지션 제거 */
+}
+
+/* 미수거래 설명창 비활성화 시 기본 스타일 복원 */
+.misu-hoverable-area:not(.active) ~ .orderType-hoverable-area select {
+  background-color: white; /* 기본 흰색 배경 */
+  color: black; /* 기본 텍스트 색상 */
+  pointer-events: auto; /* 클릭 가능 */
+  border: 1px solid #ddd; /* 기본 테두리 */
+  transition: none !important; /* 트랜지션 제거 */
+}
+
+
+
+
+/* 지정가 버튼 기본 스타일 */
+.price-type-button {
+  color: red; /* 기본 텍스트 색상 */
+  background-color: transparent; /* 기본 배경색 */
+  border: 1px solid #ddd; /* 기본 테두리 */
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* 지정가 버튼 활성화 스타일 */
+.price-type-button.active {
+  color: red; /* 활성화 시 텍스트 색상 유지 */
+  background-color: #fff; /* 활성화 시 배경색 */
+  border-color: #aaa; /* 활성화 시 테두리 색상 */
+    background-color: white; /* 활성화 시 배경 하얀색 */
+  z-index: 10001; /* 오버레이보다 위로 */
+    border: 1px solid #ddd; /* 기본 테두리 */
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+
+/* 지정가 버튼 비활성화 스타일 */
+.price-limit-disabled {
+    border-color: #6E6E6E !important;
+    background-color: #7F7F7F !important;
+    color: #7F2F2B !important;
+    pointer-events: none !important;
+    cursor: not-allowed !important;
+    transition: none !important; /* 즉각적으로 변경되도록 전환 효과 제거 */
+}
+
+/* 물음표 아이콘 비활성화 스타일 */
+.help-icon-disabled {
+    background-color: #6E6E6E !important;
+    border: 2px solid #6E6E6E !important; /* 테두리 색상 추가 */
+    cursor: not-allowed !important;
+    transition: none !important; /* 즉각적으로 변경되도록 전환 효과 제거 */
+}
+
+
+
+
+
+
+/* 구매 가능 금액 hoverable-area */
+.amount-hoverable-area {
+  position: relative;
+  background-color: transparent; /* 기본 배경 투명 */
+  padding: 5px 0; /* 위아래로 10px 추가 공간 */
+  transition: background-color 0.2s ease; /* 부드러운 전환 효과 */
+}
+
+/* 마우스 오버 시 회색 배경 */
+.amount-hoverable-area:hover {
+  background-color: #f0f0f0; /* 밝은 회색 */
+  cursor: pointer; /* 클릭 가능 커서 */
+}
+
+/* 설명창 활성화 시 유지 */
+.amount-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  transition: background-color 0.2s ease;
+  z-index: 10001; /* 다른 영역보다 위에 표시 */
+}
+
+
+
+
+/* 총 주문 금액 hoverable-area */
+.total-price-hoverable-area {
+  position: relative;
+  background-color: transparent; /* 기본 배경 투명 */
+  padding: 5px 0; /* 위아래 여백 */
+  transition: background-color 0.2s ease; /* 부드러운 전환 효과 */
+}
+
+/* 마우스 오버 시 회색 배경 */
+.total-price-hoverable-area:hover {
+  background-color: #f0f0f0; /* 밝은 회색 */
+  cursor: pointer; /* 클릭 가능 커서 */
+}
+
+/* 설명창 활성화 시 스타일 */
+.total-price-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  transition: background-color 0.2s ease;
+  z-index: 10001; /* 다른 요소보다 위에 표시 */
+}
+
+
+
+/* 수량 hoverable-area */
+.quantity-hoverable-area {
+  position: relative;
+  background-color: transparent; /* 기본 배경 투명 */
+  transition: background-color 0.2s ease; /* 부드러운 전환 효과 */
+  display: flex; /* 자식 요소 정렬을 위해 추가 */
+  align-items: center; /* 버튼과 입력창 세로 정렬 */
+}
+
+/* 마우스 오버 시 전체 회색 배경 */
+.quantity-hoverable-area:hover {
+  background-color: #f0f0f0; /* 밝은 회색 */
+  cursor: pointer; /* 클릭 가능 커서 */
+}
+
+/* 마우스 오버 시 내부 버튼과 입력창에도 스타일 적용 */
+.quantity-hoverable-area:hover .quantity-input,
+.quantity-hoverable-area:hover .quantity-button {
+  background-color: #f0f0f0; /* 입력창과 버튼도 동일한 회색 */
+}
+
+/* 설명창 활성화 시 스타일 */
+.quantity-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  transition: background-color 0.2s ease;
+  z-index: 10001; /* 다른 요소보다 위에 표시 */
+}
+
+/* 수량 입력창 focus 상태 제거 */
+.quantity-input {
+  background-color: white; /* 입력창 기본 배경 */
+  border: 1px solid #ddd; /* 기본 테두리 */
+  outline: none; /* 포커스 시 외부 테두리 제거 */
+}
+
+/* focus 상태에서 클릭 티 안 나게 처리 */
+.quantity-input:focus {
+  border: 1px solid #ddd; /* 기존 테두리 유지 */
+  box-shadow: none; /* 추가적인 테두리 효과 제거 */
+  outline: none; /* 기본 outline 제거 */
+}
+
+
+.quantity-button {
+  background-color: white; /* 버튼 기본 배경 */
+  border: 1px solid #ddd;
+  cursor: pointer; /* 클릭 가능 */
+}
+
+
+
+
+/* 시장가 hover 상태 */
+.market-type-button:hover {
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+/* 활성화된 상태 */
+.market-type-button.active {
+  border: 1px solid #aaa;
+  background-color: white;
+  color: red;
+}
+/* 시장가 버튼 활성화 상태 스타일 */
+.market-type-button.active {
+  background-color: white; /* 배경 하얗게 */
+  border: 1px solid #ddd; /* 기본 테두리 */
+  color: black; /* 텍스트 색상 */
+  z-index: 10001; /* 다른 요소 위로 */
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+
+
+/* 시장가 버튼 비활성화 스타일 */
+.market-type-disabled {
+    border-color: #6E6E6E !important;
+    background-color: #7F7F7F !important;
+    color: #7F2F2B !important;
+    pointer-events: none !important;
+    cursor: not-allowed !important;
+    transition: none !important; /* 즉각적으로 변경되도록 전환 효과 제거 */
+}
+
+/* 물음표 아이콘 비활성화 스타일 */
+.help-icon-disabled {
+    background-color: #6E6E6E !important;
+    border: 2px solid #6E6E6E !important; /* 테두리 색상 추가 */
+    cursor: not-allowed !important;
+    transition: none !important; /* 즉각적으로 변경되도록 전환 효과 제거 */
+}
+
+
+
+
+/* 총 수익 기본 스타일 */
+.profit-hoverable-area {
+  position: relative;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+/* 총 수익 hover 시 회색 배경 */
+.profit-hoverable-area:hover {
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+/* 총 수익 hover 상태에서 활성화된 설명창 스타일 */
+.profit-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  z-index: 10001;
+}
+
+
+
+
+/* 총 금액 기본 스타일 */
+.total-amount-hoverable-area {
+  position: relative;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+/* 총 금액 hover 시 회색 배경 */
+.total-amount-hoverable-area:hover {
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+/* 총 금액 hover 상태에서 활성화된 설명창 스타일 */
+.total-amount-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  z-index: 10001;
+}
+
+
+
+
+/* 수량 hoverable-area 기본 스타일 */
+.myquantity-hoverable-area {
+  position: relative;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+/* 수량 hover 시 회색 배경 */
+.myquantity-hoverable-area:hover {
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+/* 수량 hover 상태에서 활성화된 설명창 스타일 */
+.myquantity-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  z-index: 10001;
+}
+
+
+
+/* 1주 평균 금액 hoverable-area 기본 스타일 */
+.average-price-hoverable-area {
+  position: relative;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+/* 1주 평균 금액 hover 시 회색 배경 */
+.average-price-hoverable-area:hover {
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+/* 1주 평균 금액 hover 상태에서 활성화된 설명창 스타일 */
+.average-price-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  z-index: 10001;
+}
+
+
+
+
+/* 드롭다운 hoverable-area 기본 스타일 */
+.dropdown-hoverable-area {
+  position: relative;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+/* 드롭다운 hover 시 회색 배경 */
+.dropdown-hoverable-area:hover {
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+/* 드롭다운 hover 상태에서 활성화된 설명창 스타일 */
+.dropdown-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  z-index: 10001;
+}
+
+
+
+
+/* 시간 프레임 hoverable-area 기본 스타일 */
+.timeframe-hoverable-area {
+  position: relative;
+  display: flex; /* 가로로 버튼을 나열 */
+  gap: 5px; /* 버튼 간격 유지 */
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+/* 시간 프레임 hover 시 회색 배경 */
+.timeframe-hoverable-area:hover {
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+/* 시간 프레임 hover 상태에서 활성화된 설명창 스타일 */
+.timeframe-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  z-index: 10001;
+}
+
+
+
+/* 보조지표 hoverable-area 기본 스타일 */
+.indicator-hoverable-area {
+  position: relative;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+/* 보조지표 hover 시 회색 배경 */
+.indicator-hoverable-area:hover {
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+/* 보조지표 hover 상태에서 활성화된 설명창 스타일 */
+.indicator-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  z-index: 10001;
+}
+
+
+/* 그리기 hoverable-area 기본 스타일 */
+.drawing-hoverable-area {
+  position: relative;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+/* 그리기 hover 시 회색 배경 */
+.drawing-hoverable-area:hover {
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+/* 그리기 hover 상태에서 활성화된 설명창 스타일 */
+.drawing-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  z-index: 10001;
+}
+
+
+
+
+/* 종목비교 hoverable-area 기본 스타일 */
+.comparison-hoverable-area {
+  position: relative;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+/* 종목비교 hover 시 회색 배경 */
+.comparison-hoverable-area:hover {
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+/* 종목비교 hover 상태에서 활성화된 설명창 스타일 */
+.comparison-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  z-index: 10001;
+}
+
+
+
+
+/* 차트모양 hoverable-area 기본 스타일 */
+.chart-style-hoverable-area {
+  position: relative;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+/* 차트모양 hover 시 회색 배경 */
+.chart-style-hoverable-area:hover {
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+/* 차트모양 hover 상태에서 활성화된 설명창 스타일 */
+.chart-style-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  z-index: 10001;
+}
+
+
+
+
+/* 종목 정보 hoverable-area 기본 스타일 */
+.stock-info-hoverable-area {
+  position: relative;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+/* 종목 정보 hover 시 회색 배경 */
+.stock-info-hoverable-area:hover {
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+/* 종목 정보 hover 상태에서 활성화된 설명창 스타일 */
+.stock-info-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  z-index: 10001;
+}
+
+
+/* 뉴스 / 공시 hoverable-area 기본 스타일 */
+.news-info-hoverable-area {
+    position: relative;
+    background-color: transparent;
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+}
+
+/* 뉴스 / 공시 hover 시 회색 배경 */
+.news-info-hoverable-area:hover {
+    background-color: #f0f0f0;
+    cursor: pointer;
+}
+
+/* 뉴스 / 공시 hover 상태에서 활성화된 설명창 스타일 */
+.news-info-hoverable-area.active {
+    background-color: white; /* 활성화 시 배경 흰색 */
+    z-index: 10001;
+}
+
+
+
+
+/* 커뮤니티 hoverable-area 기본 스타일 */
+.community-info-hoverable-area {
+  position: relative;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+/* 커뮤니티 hover 시 회색 배경 */
+.community-info-hoverable-area:hover {
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+/* 커뮤니티 hover 상태에서 활성화된 설명창 스타일 */
+.community-info-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  z-index: 10001;
+}
+
+
+
+/* 주식 이름 hoverable-area 기본 스타일 */
+.stock-name-hoverable-area {
+  position: relative;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+/* 주식 이름 hover 시 회색 배경 */
+.stock-name-hoverable-area:hover {
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+/* 주식 이름 hover 상태에서 활성화된 설명창 스타일 */
+.stock-name-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  z-index: 10001;
+}
+
+
+
+
+/* 주식 코드 hoverable-area 기본 스타일 */
+.stock-code-hoverable-area {
+  position: relative;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+/* 주식 코드 hover 시 회색 배경 */
+.stock-code-hoverable-area:hover {
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+/* 주식 코드 hover 상태에서 활성화된 설명창 스타일 */
+.stock-code-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  z-index: 10001;
+}
+
+
+
+
+/* 실시간 주식 가격 hoverable-area 기본 스타일 */
+.stock-price-hoverable-area {
+  position: relative;
+  display: inline-block; /* 텍스트 크기만큼 영역 제한 */
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+/* 실시간 주식 가격 hover 시 회색 배경 */
+.stock-price-hoverable-area:hover {
+  background-color: #f0f0f0;
+}
+
+/* 설명창 활성화 시 하얀 배경 */
+.stock-price-hoverable-area.active {
+  background-color: white;
+  z-index: 10001; /* 다른 요소 위로 표시 */
+}
+
+
+
+
+/* 차트 제목 hoverable-area 기본 스타일 */
+.chart-title-hoverable-area {
+  position: relative;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+/* 차트 제목 hover 시 회색 배경 */
+.chart-title-hoverable-area:hover {
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+/* 차트 제목 활성화 시 하얀 배경 */
+.chart-title-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  z-index: 10001;
+}
+
+/*  ---------------------- 실시간 데이터 테이블 부분 -----------------------*/
+/* 체결가 hoverable-area 기본 스타일 */
+.trade-price-hoverable-area {
+  position: relative;
+  display: inline-block; /* 글씨 크기에 맞게 영역 설정 */
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+/* 체결가 hover 시 회색 배경 */
+.trade-price-hoverable-area:hover {
+  background-color: #d9d9d9;
+  cursor: pointer;
+}
+/* 체결가 활성화 시 하얀 배경 */
+.trade-price-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  z-index: 10001;
+}
+
+
+/* 체결량 hoverable-area 기본 스타일 */
+.trade-volume-hoverable-area {
+  position: relative;
+  display: inline-block; /* 글씨 크기에 맞게 영역 설정 */
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+/* 체결량 hover 시 회색 배경 */
+.trade-volume-hoverable-area:hover {
+  background-color: #d9d9d9; /* 진한 회색 */
+  cursor: pointer;
+}
+/* 체결량 활성화 시 하얀 배경 */
+.trade-volume-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  z-index: 10001;
+}
+
+
+/* 등락률 hoverable-area 기본 스타일 */
+.change-rate-hoverable-area {
+  position: relative;
+  display: inline-block; /* 글씨 크기에 맞게 영역 설정 */
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+/* 등락률 hover 시 회색 배경 */
+.change-rate-hoverable-area:hover {
+  background-color: #d9d9d9; /* 진한 회색 */
+  cursor: pointer;
+}
+/* 등락률 활성화 시 하얀 배경 */
+.change-rate-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  z-index: 10001;
+}  
+
+
+  /* 거래량 hoverable-area 기본 스타일 */
+.volume-hoverable-area {
+  position: relative;
+  display: inline-block; /* 글씨 크기에 맞게 영역 설정 */
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+/* 거래량 hover 시 회색 배경 */
+.volume-hoverable-area:hover {
+  background-color: #d9d9d9; /* 진한 회색 */
+  cursor: pointer;
+}
+/* 거래량 활성화 시 하얀 배경 */
+.volume-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  z-index: 10001;
+}
+
+/* 시간 hoverable-area 기본 스타일 */
+.time-hoverable-area {
+  position: relative;
+  display: inline-block; /* 글씨 크기에 맞게 영역 설정 */
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+/* 시간 hover 시 회색 배경 */
+.time-hoverable-area:hover {
+  background-color: #d9d9d9; /* 진한 회색 */
+  cursor: pointer;
+}
+/* 시간 활성화 시 하얀 배경 */
+.time-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  z-index: 10001;
+}
+/*--------------------------------------------------------*/
+
+
+/* 내 주식 평균 hoverable-area 기본 스타일 */
+.stock-average-hoverable-area {
+  position: relative;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+/* 내 주식 평균 hover 시 회색 배경 */
+.stock-average-hoverable-area:hover {
+  background-color: #f0f0f0; /* 진한 회색 */
+  cursor: pointer;
+}
+/* 내 주식 평균 활성화 시 하얀 배경 */
+.stock-average-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  z-index: 10001;
+}
+
+
+
+/* 구매 후 예상 hoverable-area 기본 스타일 */
+.purchase-estimate-hoverable-area {
+  position: relative;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+/* 구매 후 예상 hover 시 회색 배경 */
+.purchase-estimate-hoverable-area:hover {
+  background-color: #f0f0f0; /* 진한 회색 */
+  cursor: pointer;
+}
+/* 구매 후 예상 활성화 시 하얀 배경 */
+.purchase-estimate-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  z-index: 10001;
+}
+
+
+
+/* 대기 hoverable-area 기본 스타일 */
+.pending-order-hoverable-area {
+  position: relative;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+  color: inherit; /* 기본 글씨 색 유지 */
+}
+/* 설명창 열림 시 강조 스타일 */
+.pending-order-hoverable-area.active-highlight {
+  background-color: white; /* 강조 상태 */
+  z-index: 10001;
+  color: inherit; /* 강조 상태에서도 글씨 색 유지 */
+  transition: none !important; /* 트랜지션 제거 */
+}
+
+
+
+/* 완료 hoverable-area 기본 스타일 */
+.completed-order-hoverable-area {
+  position: relative;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+  color: inherit; /* 기본 글씨 색 유지 */
+}
+/* 설명창 열림 시 강조 스타일 */
+.completed-order-hoverable-area.active-highlight {
+  background-color: white; /* 강조 상태 */
+  z-index: 10001;
+  color: inherit; /* 강조 상태에서도 글씨 색 유지 */
+  transition: none !important; /* 트랜지션 제거 */
+}
+
+
+  
+  
+/* 조건주문 hoverable-area 기본 스타일 */
+.conditional-order-hoverable-area {
+  position: relative;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+  color: inherit; /* 기본 글씨 색 유지 */
+}
+/* 설명창 열림 시 강조 스타일 */
+.conditional-order-hoverable-area.active-highlight {
+  background-color: white; /* 강조 상태 */
+  z-index: 10001;
+  color: inherit; /* 강조 상태에서도 글씨 색 유지 */
+  transition: none !important; /* 트랜지션 제거 */
+}
+  
+
+
+
+
+/* 가격 hoverable-area */
+.price-hoverable-area {
+  position: relative;
+  background-color: transparent; /* 기본 배경 투명 */
+  transition: background-color 0.2s ease; /* 부드러운 전환 효과 */
+  display: flex; /* 자식 요소 정렬을 위해 추가 */
+  align-items: center; /* 버튼과 입력창 세로 정렬 */
+}
+/* hover 상태에서 전체 회색 배경 */
+.price-hoverable-area:hover {
+  background-color: #f0f0f0; /* 밝은 회색 */
+  cursor: pointer; /* 클릭 가능 커서 */
+}
+/* hover 상태에서 내부 버튼과 입력창에도 스타일 적용 */
+.price-hoverable-area:hover .price-input,
+.price-hoverable-area:hover .price-button {
+  background-color: #f0f0f0; /* 입력창과 버튼도 동일한 회색 */
+}
+/* 설명창 활성화 시 스타일 */
+.price-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  transition: background-color 0.2s ease;
+  z-index: 10001; /* 다른 요소보다 위에 표시 */
+}
+/* focus 상태에서 클릭 티 안 나게 처리 */
+.price-input:focus {
+  border: 1px solid #ddd; /* 기존 테두리 유지 */
+  box-shadow: none; /* 추가적인 테두리 효과 제거 */
+  outline: none; /* 기본 outline 제거 */
+}
+.price-hoverable-area .button-minus,
+.price-hoverable-area .button-plus {
+  background-color: white; /* 기본 배경 */
+  color: black; /* 기본 텍스트 색상 */
+  border: 1px solid #ddd; /* 기본 테두리 */
+  transition: background-color 0.2s ease, color 0.2s ease; /* 부드러운 전환 효과 */
+}
+/* hover 상태에서 버튼 텍스트 및 배경색 유지 */
+.price-hoverable-area:hover .button-minus,
+.price-hoverable-area:hover .button-plus {
+  background-color: #f0f0f0 !important; /* hover 상태에서 회색 배경 */
+  color: black !important; /* 텍스트 색상 유지 */
+  border-color: #ddd !important; /* 테두리 유지 */
+}
+
+
+
+
+/* 판매 지정가 오프 함수 켜질때 */
+.sell-price-type-button.sell-price-limit-disabled {
+  color: #003D7F !important;
+}
+/* 판매 지정가 버튼 기본 스타일 */
+.sell-price-type-button {
+  background-color: transparent; /* 기본 배경색 */
+  border: 1px solid #ddd; /* 기본 테두리 */
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+/* 판매 지정가 버튼 활성화 스타일 */
+.sell-price-type-button.active {
+  background-color: #fff; /* 활성화 시 배경색 */
+  border-color: #aaa; /* 활성화 시 테두리 색상 */
+    background-color: white; /* 활성화 시 배경 하얀색 */
+  z-index: 10001; /* 오버레이보다 위로 */
+    border: 1px solid #ddd; /* 기본 테두리 */
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+/* 판매 지정가 버튼 비활성화 스타일 */
+.sell-price-limit-disabled {
+    border-color: #6E6E6E !important;
+    background-color: #7F7F7F !important;
+    color: #003D7F !important;
+    pointer-events: none !important;
+    cursor: not-allowed !important;
+    transition: none !important; /* 즉각적으로 변경되도록 전환 효과 제거 */
+}
+
+
+
+
+/* 판매 시장가 버튼 비활성화 시 스타일 */
+.sell-market-type-button.sell-market-price-disabled {
+    color: #003D7F !important; /* 비활성화 시 글씨 색 */
+}
+/* 판매 시장가 버튼 기본 스타일 */
+.sell-market-type-button {
+  background-color: transparent; /* 기본 배경색 */
+  border: 1px solid #ddd; /* 기본 테두리 */
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+/* 판매 시장가 버튼 활성화 스타일 */
+.sell-market-type-button.active {
+  background-color: #fff; /* 활성화 시 배경색 */
+  border-color: #aaa; /* 활성화 시 테두리 색상 */
+    background-color: white; /* 활성화 시 배경 하얀색 */
+  z-index: 10001; /* 오버레이보다 위로 */
+    border: 1px solid #ddd; /* 기본 테두리 */
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+/* 판매 지정가 버튼 비활성화 스타일 */
+.sell-market-price-disabled {
+    border-color: #6E6E6E !important;
+    background-color: #7F7F7F !important;
+    color: #003D7F !important;
+    pointer-events: none !important;
+    cursor: not-allowed !important;
+    transition: none !important; /* 즉각적으로 변경되도록 전환 효과 제거 */
+}
+
+/* 물음표 아이콘 비활성화 스타일 */
+.help-icon-disabled {
+    background-color: #6E6E6E !important;
+    border: 2px solid #6E6E6E !important; /* 테두리 색상 추가 */
+    cursor: not-allowed !important;
+    transition: none !important; /* 즉각적으로 변경되도록 전환 효과 제거 */
+}
+
+
+
+
+
+/* 시장가 hover 상태 */
+.sell-market-type-button:hover {
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+/* 활성화된 상태 */
+.sell-market-type-button.active {
+  border: 1px solid #aaa;
+  background-color: white;
+  color: red;
+}
+/* 시장가 버튼 활성화 상태 스타일 */
+.sell-market-type-button.active {
+  background-color: white; /* 배경 하얗게 */
+  border: 1px solid #ddd; /* 기본 테두리 */
+  color: black; /* 텍스트 색상 */
+  z-index: 10001; /* 다른 요소 위로 */
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* 시장가 버튼 비활성화 스타일 */
+.market-type-disabled {
+    border-color: #6E6E6E !important;
+    background-color: #7F7F7F !important;
+    color: #7F2F2B !important;
+    pointer-events: none !important;
+    cursor: not-allowed !important;
+    transition: none !important; /* 즉각적으로 변경되도록 전환 효과 제거 */
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* orderType-hoverable-area: 교육 영역 */
+.orderType-hoverable-area {
+  position: relative;
+  z-index: 10001; /* 오버레이보다 위 */
+  background-color: transparent; /* 기본 배경 투명 */
+  transition: background-color 0.2s ease; /* 부드러운 전환 효과 */
+}
+
+/* 마우스 오버 시 회색 배경 */
+.orderType-hoverable-area:hover {
+  background-color: #f0f0f0; /* 밝은 회색 */
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+/* 설명창 활성화 시 orderType 영역 유지 */
+.orderType-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  transition: background-color 0.2s ease;
+}
+
+
+/* 퍼센트 설명창 활성화 시 orderType 내부 셀렉트 박스를 어둡게 */
+.percentage-hoverable-area.active ~ .orderType-hoverable-area select {
+  background-color: rgba(0, 0, 0, 0.5); /* 어두운 배경 */
+  color: rgba(255, 255, 255, 0.8); /* 텍스트 색상 흐릿하게 */
+  border: 1px solid #6E6E6E; 
+  pointer-events: none; /* 클릭 비활성화 */
+  transition: none !important; /* 트랜지션 제거 */
+}
+
+
+
+
+
+/* sell-orderType-hoverable-area: 판매 주문 유형 영역 */
+.sell-orderType-hoverable-area {
+  position: relative;
+  z-index: 10001; /* 오버레이보다 위 */
+  background-color: transparent; /* 기본 배경 투명 */
+  transition: background-color 0.2s ease; /* 부드러운 전환 효과 */
+}
+
+/* 마우스 오버 시 회색 배경 */
+.sell-orderType-hoverable-area:hover {
+  background-color: #f0f0f0; /* 밝은 회색 */
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+/* 설명창 활성화 시 sell-orderType 영역 유지 */
+.sell-orderType-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  transition: background-color 0.2s ease;
+}
+
+/* sell-orderType-hoverable-area 내부의 셀렉트 박스 스타일 */
+.sell-orderType-hoverable-area select {
+  background-color: transparent; /* 셀렉트 박스 기본 투명 */
+  color: rgba(0, 0, 0, 0.8); /* 기본 텍스트 색상 */
+  z-index: 1;
+  pointer-events: auto; /* 기본 클릭 가능 */
+  border: 1px solid #ddd; /* 기본 테두리 */
+}
+/* 판매 주문 유형 비활성화 스타일 */
+.sell-orderType-hoverable-area.disabled select {
+  pointer-events: none; /* 클릭 비활성화 */
+  border: 1px solid transparent; /* 테두리 제거 */
+}
+
+
+
+
+/* 예상 수익률 hoverable-area 기본 스타일 */
+.sell-profit-hoverable-area {
+  position: relative;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+/* 예상 수익률 hover 시 회색 배경 */
+.sell-profit-hoverable-area:hover {
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+/* 예상 수익률 hover 상태에서 활성화된 설명창 스타일 */
+.sell-profit-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  z-index: 10001;
+}
+
+
+
+
+
+/* 예상 손익 hoverable-area 기본 스타일 */
+.sell-profit-amount-hoverable-area {
+  position: relative;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+/* 예상 손익 hover 시 회색 배경 */
+.sell-profit-amount-hoverable-area:hover {
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+/* 예상 손익 hover 상태에서 활성화된 설명창 스타일 */
+.sell-profit-amount-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  z-index: 10001;
+}
+
+
+
+
+/* 총 금액 hoverable-area 기본 스타일 */
+.sell-total-price-hoverable-area {
+  position: relative;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+/* 총 금액 hover 시 회색 배경 */
+.sell-total-price-hoverable-area:hover {
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+/* 총 금액 hover 상태에서 활성화된 설명창 스타일 */
+.sell-total-price-hoverable-area.active {
+  background-color: white; /* 활성화 시 배경 흰색 */
+  z-index: 10001;
+}
+
+
+
+
+
+
+
+/* hover 상태에서 퍼센트 영역 전체 회색 */
+.sell-percentage-hoverable-area:hover {
+  background-color: #f0f0f0; /* 밝은 회색 */
+  cursor: pointer;
+}
+
+/* hover 상태에서 버튼도 회색 */
+.sell-percentage-hoverable-area:hover .percentage-buttons .percentage-button {
+  background-color: #f0f0f0; /* 버튼도 동일한 회색 */
+}
+/* 구매 비율 hoverable-area */
+.sell-percentage-hoverable-area {
+  position: relative;
+  background-color: transparent;
+}
+
+/* hover 상태에서 회색 배경 */
+.sell-percentage-hoverable-area:hover {
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+/* hover 상태에서 버튼 회색 */
+.sell-percentage-buttons .percentage-button:hover {
+  background-color: #e0e0e0; /* 버튼 회색 */
+}
+
+/* 퍼센트 설명창 활성화 시 orderType 영역 오버레이 처리 */
+.sell-percentage-hoverable-area.active ~ .orderType-hoverable-area {
+  z-index: 9998; /* 오버레이보다 아래 */
+  background-color: rgba(0, 0, 0, 0.5); /* 어두운 오버레이 효과 */
+}
+
+/* 퍼센트 설명창 활성화 시 아래 퍼센트 영역 하얗게 유지 */
+.sell-percentage-hoverable-area.active {
+  z-index: 10001; /* 오버레이 위로 */
+  background-color: white; /* 하얗게 유지 */
+}
+

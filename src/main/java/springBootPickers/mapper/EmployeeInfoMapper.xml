@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="springBootPickers.mapper.EmployeeInfoMapper">
+<select id="employeeSelectOne" parameterType="string" resultType="employeeDTO">
+select EMP_NUM as empNum, EMP_NAME as empName, EMP_ID as empId
+, EMP_PW as empPw, EMP_ADDR as empAddr, EMP_DETAIL_ADDR as empDetailAddr
+, EMP_POST as empPost, EMP_PHONE_NUM as empPhoneNum, EMP_EMAIL as empEmail
+, EMP_HIRE_DATE as empHireDate, GENDER as gender
+from employee
+where emp_id = #{emp_id}
+</select>
+
+<update id="employeeUpdate" parameterType="employeeDTO">
+update employee
+SET EMP_NAME = #{empName,jdbcType=VARCHAR},
+    EMP_ADDR = #{empAddr,jdbcType=VARCHAR},
+    EMP_DETAIL_ADDR = #{empDetailAddr,jdbcType=VARCHAR},
+    EMP_POST = #{empPost,jdbcType=VARCHAR},
+    EMP_PHONE_NUM = #{empPhoneNum,jdbcType=VARCHAR},
+    EMP_EMAIL = #{empEmail,jdbcType=VARCHAR},
+    EMP_HIRE_DATE = #{empHireDate,jdbcType=DATE},
+    GENDER = #{gender,jdbcType=VARCHAR}
+where EMP_Id = #{empId,jdbcType=VARCHAR}
+</update>
+
+
+
+<update id="empPwUpdate">
+update employee
+set emp_pw = #{_newPw}
+where emp_id = #{_empId}
+</update>
+
+<delete id="empDelete">
+delete from employee where emp_id=#{empId}
+</delete>
+
+</mapper>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="springBootPickers.mapper.LoginMapper">
+
+	<select id="idCheckSelectOne" parameterType="string" resultType="integer">
+		select 1 from member where mem_id = #{userId}
+		union
+		select 1 from employee where emp_id = #{userId}
+	</select>
+	
+<select id="emailCheckSelectOne" parameterType="string" resultType="integer">
+	select 1  from member where mem_email = #{userEmail}
+	union
+	select 1 from employee where emp_email = #{userEmail}
+</select>
+
+
+<resultMap type="auth" id="authResultMap">
+	<result column="mem_id" property="userId" jdbcType="VARCHAR"/>
+	<result column="mem_pw" property="userPw" jdbcType="VARCHAR"/>
+	<result column="mem_name" property="userName" jdbcType="VARCHAR"/>
+	<result column="mem_email" property="userEmail" jdbcType="VARCHAR"/>
+	<result column="grade" property="grade" jdbcType="VARCHAR"/>
+	
+	<result column="mem_num" property="memNum" jdbcType="VARCHAR"/>
+    <result column="emp_num" property="empNum" jdbcType="VARCHAR"/>
+
+</resultMap>
+
+<select id="loginSelectOne" parameterType="string"  resultMap="authResultMap">
+select mem_id, mem_pw, mem_name, mem_email, mem_num, 'mem' as grade 
+from member
+where mem_id = #{userId} 
+union
+select emp_id, emp_pw, emp_name, emp_email, emp_num,  'emp' 
+from employee
+where emp_id=#{userId}
+</select>
+</mapper>

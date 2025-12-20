@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="imagetoolbar" content="no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="title" content="웹사이트">
+  <meta name="description" content="웹사이트입니다.">
+  <meta name="keywords" content="키워드,키워드,키워드">
+  <meta property="og:title" content="웹사이트">
+  <meta property="og:description" content="웹사이트입니다">
+  <meta property="og:image" content="https://웹사이트/images/opengraph.png">
+  <meta property="og:url" content="https://웹사이트">
+  <meta name="auth" th:content="${auth != null ? auth : 'null'}">
+  <title>게시판</title>
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <link rel="stylesheet" href="/css/setting.css">
+  <link rel="stylesheet" href="/css/plugin.css">
+  <link rel="stylesheet" href="/css/template.css">
+  <link rel="stylesheet" href="/css/common.css">
+  <link rel="stylesheet" href="/css/style.css">
+     <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function() {
+            const inquireLink = document.getElementById("inquireLink");
+
+            if (inquireLink) { // 링크가 존재할 경우에만 이벤트 리스너 추가
+                inquireLink.addEventListener("click", function() {
+                    const isLoggedIn = "[[${session.auth != null ? 'true' : 'false'}]]" === "true";
+
+                    if (!isLoggedIn) {
+                        alert("로그인 후 이용할 수 있습니다.");
+                        location.href = "/login/login"; // 로그인 페이지로 리다이렉트
+                    } else {
+                        location.href = "/inquire/inquireWrite"; // 1:1 문의 페이지로 이동
+                    }
+                });
+            }
+        });
+    </script>
+ <style type="text/css">
+.comment-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid #eee; 
+}
+
+.comment-content {
+    flex-grow: 1; 
+    margin-right: 10px;
+}
+
+.delete-comment-btn {
+    background: none;
+    border: none;
+    color: #ccc; 
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 16px; 
+}
+
+.delete-comment-btn:hover {
+    color: #999; 
+}
+</style>
+</head>
+
+<body>
+ <!-- [S]tedu-N3 -->
+    <div class="tedu-N3" data-bid="XEm3ZgHi4n">
+        <div class="header-container lightmode">
+            <div class="header-top">
+                <div class="inner">
+                    <div class="header-member">
+                        <th:block th:if="${session.auth == null}">
+                            <a href="/login/login">
+                                <em class="ico">
+                                    <img src="/icons/ico_login.svg" alt="로그인 아이콘">
+                                </em>
+                                <span>로그인</span>
+                            </a>
+                            <a href="/register/membershipAgree">
+                                <em class="ico">
+                                    <img src="/icons/ico_member.svg" alt="회원가입 아이콘">
+                                </em>
+                                <span>회원가입</span>
+                            </a>
+                        </th:block>
+
+                        <th:block th:if="${session.auth != null}">
+                            <a href="/login/logout">
+                                <em class="ico">
+                                    <img src="/icons/ico_login.svg" alt="로그아웃 아이콘">
+                                </em>
+                                <span>로그아웃</span>
+                            </a>
+                            <th:block th:if="${session.auth.grade == 'mem'}">
+                                <a href="/myPage/memMyPage">
+                                    <em class="ico">
+                                        <img src="/icons/ico_member.svg" alt="마이페이지 아이콘">
+                                    </em>
+                                    <span>마이페이지</span>
+                                </a>
+                            </th:block>
+                            <th:block th:if="${session.auth.grade == 'emp'}">
+                                <a href="/myPage/empMyPage">
+                                    <em class="ico">
+                                        <img src="/icons/ico_member.svg" alt="마이페이지 아이콘">
+                                    </em>
+                                    <span>마이페이지</span>
+                                </a>
+                            </th:block>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+            <div class="header-nav">
+                <div class="inner">
+                    <div class="header-logo">
+                        <a href="/">
+                            <img src="/images/pickers_logo_main.png" alt="로고">
+                        </a>
+                    </div>
+                    <div class="header-gnb">
+
+                    </div><br><br><br>
+                    <div class="header-btn">
+                        <a href="javascript:void(0)" class="menu-open">
+                            <em class="ico">
+                                <img src="/icons/ico_menu.svg" alt="메뉴 아이콘">
+                            </em>
+                        </a>
+                        <a href="javascript:void(0)" class="menu-close">
+                            <em class="ico">
+                                <img src="/icons/ico_close.svg" alt="닫기 아이콘">
+                            </em>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+
+            <section class="header-area">
+                <div class="inner">
+                    <div class="menu-wrap">
+                        <div class="menu-box">
+                            <a class="menu-title">강의</a>
+                            <a href="/lecture/lectureList">강의</a>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'mem'}">
+                                <a href="/lecture/mylectureList">my강의</a>
+                                <a href="/item/cartList">장바구니</a>
+                                <a href="/item/wishList">찜</a>
+                            </th:block>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                                <a href="/lecture/emplectureList">강의 관리</a>
+                                <a href="/orders/empOrderList">주문 관리</a>
+                            </th:block>
+                        </div>
+                        <div class="menu-box">
+                            <a class="menu-title">인사이트</a>
+                            <a href="/news/newsListM">뉴스</a>
+                            <a href="/company/companyListM">기업</a>
+                            <a href="/stock/stockListM">주식</a>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                                <a href="/news/newsList">뉴스 관리</a>
+                                <a href="/company/companyList">기업 관리</a>
+                                <a href="/stock/stockList">주식 관리</a>
+                            </th:block>
+                        </div>
+                        <div class="menu-box">
+                            <a class="menu-title">커뮤니티</a>
+                            <a href="/board/boardQueList">질문게시판</a>
+                            <a href="/board/boardFreeList">자유게시판</a>
+                            <a href="/board/boardProfitList">수익인증</a>
+                            <a href="/board/boardTipList">꿀팁공유</a>
+                        </div>
+                        <div class="menu-box">
+                            <a class="menu-title">교육</a>
+                            <a href="/chart/list">교육</a>
+                            <a th:href="@{/word/wordSearch}">용어</a>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                                <a th:href="@{/word/wordList}">용어 관리</a>
+                            </th:block>
+                        </div>
+                        <th:block th:if="${session.auth != null}">
+                            <div class="menu-box">
+                                <a class="menu-title">MY</a>
+                                <th:block th:if="${session.auth.grade == 'mem'}">
+                                    <a href="/inquire/inquireListM">1:1 문의내역</a>
+                                    <a th:href="@{/lectureInquire/lectureInquireListM/{memNum}(memNum=${session.memNum})}">강의 문의내역</a>
+                                    <a href="/orders/orderList">강의 주문내역</a>
+                                </th:block>
+                                <th:block th:if="${session.auth.grade == 'emp'}">
+                                    <a href="/inquire/inquireList">1:1문의 관리</a>
+                                    <a href="/lectureInquire/lectureInquireList">강의질문 관리</a>
+                                </th:block>
+                            </div>
+                        </th:block>
+                        <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                            <div class="menu-box">
+                                <a class="menu-title">유저</a>
+                                <a href="/member/memList">회원 관리</a>
+                                <a href="/employee/empList">직원 관리</a>
+                            </div>
+                        </th:block>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    <!-- [E]tedu-N3 -->
+<main class="th-layout-main">
+    <div class="th-layout-sideleft"></div>
+    <div class="th-layout-stickyleft"></div>
+    <section class="opilsol-N25" id="IpM50MFBgh">
+        <div class="contents-container container-md">
+            <div class="contents-inner">
+              
+                <div class="contant-header textset">
+                    <h2 class="textset-tit h4"
+        th:text="${board.boardTitle}"
+        style="font-size: 24px; margin-bottom: 40px !important; word-wrap: break-word; overflow-wrap: break-word; white-space: pre-line;">
+        게시글 제목
+    </h2>
+                    <p class="textset-desc p2" th:text="${#dates.format(board.boardRegisterDate, 'yyyy-MM-dd')}">작성일</p>
+                </div>
+
+<div class="d-flex justify-content-between align-items-center" style="margin-bottom: 8px;">
+    <!-- 게시글 제목과 날짜가 있는 섹션 -->
+    <div></div>
+    <!-- 좋아요와 조회수를 오른쪽 정렬 -->
+       <div class="d-flex align-items-center" style="gap: 12px;">
+        <!-- 좋아요 -->
+        <div class="like-area d-flex align-items-center">
+            <button class="like-btn" type="button"
+                th:data-board-num="${board.boardNum}"
+                th:data-is-liked="${isLiked != null ? isLiked : false}"
+                th:data-auth="${auth != null ? 'true' : 'false'}"
+                style="border: none; background: none; font-size: 16px; display: flex; align-items: center; gap: 6px;">
+                <img th:src="@{/icons/{icon}(icon=${isLiked != null && isLiked ? 'full_heart_icon.svg' : 'empty_heart_icon.svg'})}"
+                     alt="like-icon" 
+                     style="width: 16px; height: 16px; margin-top: 2px !important;">
+                <span class="like-count"
+                      th:if="${likeCount > 0}" 
+                      th:style="'color: ' + (auth == null ? '#cccccc' : '#000000')"
+                      style="font-size: 16px;" 
+                      th:text="${likeCount}">
+                </span>
+            </button>
+        </div>
+
+        <!-- 조회수 -->
+        <div class="view-area">
+            <span class="view-count" style="font-size: 16px;">조회수: <span th:text="${board.viewCount}">0</span></span>
+        </div>
+    </div>
+</div>
+
+               
+<div class="contant-body">
+    <!-- 게시글 내용을 위한 div 태그로 변경 -->
+    <div class="p2" id="content-area"
+         style="font-size: 17px; text-align: left; margin-bottom: 2px;"
+         th:text="${board.boardContent}">
+        게시글 내용
+    </div>
+</div>
+
+              
+             <div class="contant-bottom">
+
+<div class="contant-nav">
+    <p class="p2" style="font-size: 14px; margin-top: 3px; margin-bottom: 2px;">NEXT</p>
+    <a class="con-link p2" th:if="${nextBoard != null}" 
+       th:href="@{/board/boardDetail/{boardNum}(boardNum=${nextBoard.boardNum}, boardType=${boardType})}"
+       style="font-size: 15px; margin-top: 3px; margin-bottom: 2px;">
+        <span th:text="${nextBoard.boardTitle}">다음 글 제목</span>
+    </a>
+</div>
+
+
+<div class="contant-nav" >
+    <p class="p2" style="font-size: 14px; margin-top: 3px; margin-bottom: 2px;">PREV</p>
+    <a class="con-link p2" th:if="${prevBoard != null}" 
+       th:href="@{/board/boardDetail/{boardNum}(boardNum=${prevBoard.boardNum}, boardType=${boardType})}"
+       style="font-size: 15px; margin-top: 3px; margin-bottom: 2px;">
+        <span th:text="${prevBoard.boardTitle}">이전 글 제목</span>
+    </a>
+</div>
+
+
+</div>
+
+
+
+</div>
+<div id="comment-section" style="margin-top: 30px; width: 100%; padding-top: 0px;">
+    <h3 style="margin-bottom: 20px; font-size: 16px;">댓글: <span th:text="${#lists.size(comments)}">0</span>개</h3>
+
+ <!-- 댓글 작성 -->
+<form id="commentForm"
+      th:data-board-num="${board.boardNum}"
+      th:data-board-type="${boardType}"
+      th:data-auth="${auth != null ? 'true' : 'false'}"
+      style="display: flex; align-items: center; margin-bottom: 20px; width: 100%;">
+    <textarea id="commentContent"
+              placeholder="댓글을 입력하세요"
+              style="flex: 1; height: 50px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; resize: none;"
+              required></textarea>
+    <button type="submit"
+            class="btn btn-light"
+            th:if="${auth != null}"
+            style="margin-left: 10px; border: 1px solid #ccc; padding: 8px 16px;">
+        댓글 작성
+    </button>
+    <div th:if="${auth == null}" style="margin-left: 10px;">
+        <button class="btn btn-light"
+                onclick="alert('로그인 후 이용할 수 있습니다.'); location.href='/login/login'; return false;"
+                style="border: 1px solid #ccc; padding: 8px 16px;">
+            댓글 작성
+        </button>
+    </div>
+</form>
+
+  
+    <div style="padding-top: 15px; width: 100%;">
+        <div th:each="comment : ${comments}" 
+             style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+        
+            <div style="flex: 1;">
+                <p style="margin: 0; font-size: 14px;">
+                    <strong style="color: #333; margin-right: 10px;" th:text="${#strings.substring(comment.memId, 0, 3) + '****'}">회원 아이디</strong> :
+                    <span style="color: #555;" th:text="${comment.commentContent}">댓글 내용</span>
+                </p>
+            </div>
+             <button th:if="${isEmployee || (auth != null && auth.memNum == comment.memNum)}" 
+                    th:data-comment-id="${comment.commentNum}" 
+                    class="delete-comment-btn"
+                    onclick="deleteComment(this)">
+                x
+            </button>
+        </div>
+        <div th:if="${comments == null || comments.isEmpty()}" style="text-align: center; color: #999;">
+            댓글이 없습니다. 첫 댓글을 남겨보세요!
+        </div>
+    </div>
+
+  
+    <div class="d-flex justify-content-end mt-4" style="margin-top: 10px;">
+     
+        <a th:if="${isAuthor}" 
+           th:href="@{/board/boardUpdate/{boardNum}(boardNum=${board.boardNum}, boardType=${boardType})}" 
+           class="btn btn-light" 
+           style="border: 1px solid #ccc; padding: 8px 16px; margin-right: 10px;">
+            수정
+        </a>
+
+      
+        <button th:if="${isAuthor || isEmployee}" 
+                th:data-board-num="${board.boardNum}" 
+                th:data-board-type="${boardType}" 
+                class="btn btn-light" 
+                style="border: 1px solid #ccc; padding: 8px 16px;  margin-right: 10px;" 
+                onclick="deletePost(this)">
+            삭제
+        </button>
+        
+    <!-- 목록 버튼 -->
+    <a th:href="${listUrl}" 
+       class="btn btn-light" 
+       style="border: 1px solid #ccc; padding: 8px 16px;">
+        목록
+    </a>
+        
+    </div>
+</div>
+  </div>
+</main>
+
+<script>
+//DOMContentLoaded 이벤트 발생 시 실행
+document.addEventListener('DOMContentLoaded', function() {
+    var contentArea = document.getElementById('content-area');
+    if (contentArea) {
+        // 서버에서 전달된 텍스트 내의 줄바꿈을 <br/>로 변환
+        contentArea.innerHTML = contentArea.textContent.replace(/\n/g, '<br/>');
+    }
+});
+
+//좋아요 버튼 처리
+document.querySelectorAll(".like-btn").forEach(button => {
+    button.addEventListener("click", function () {
+        const boardNum = this.getAttribute("data-board-num");
+        const isLoggedIn = this.getAttribute("data-auth") === "true";
+
+        if (!isLoggedIn) {
+            alert("로그인 후 이용할 수 있습니다.");
+            location.href = "/login/login";
+            return;
+        }
+
+        let isLiked = this.getAttribute("data-is-liked") === "true";
+        this.disabled = true; // 중복 클릭 방지
+
+        fetch(`/board/boardDetail/like/${boardNum}`, {
+            method: "POST",
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(message => {
+                        throw new Error(message || "오류 발생");
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("DEBUG: 좋아요 상태 및 수 - ", data);
+
+                // 서버 응답 데이터 유효성 검사
+                if (!data || typeof data.likeCount !== "number" || typeof data.isLiked !== "boolean") {
+                    throw new Error("잘못된 서버 응답입니다.");
+                }
+
+                // 좋아요 상태 업데이트
+                isLiked = data.isLiked;
+                this.setAttribute("data-is-liked", isLiked.toString());
+
+                // 좋아요 아이콘 업데이트
+                const icon = this.querySelector("img");
+                icon.src = `/icons/${isLiked ? "full_heart_icon.svg" : "empty_heart_icon.svg"}`;
+
+                // 좋아요 숫자 업데이트
+                const likeCountSpan = this.closest(".like-area").querySelector(".like-count");
+                if (data.likeCount > 0) {
+                    if (likeCountSpan) {
+                        likeCountSpan.textContent = data.likeCount; // 숫자 표시
+                        likeCountSpan.style.display = "inline";
+                    } else {
+                        const newSpan = document.createElement("span");
+                        newSpan.className = "like-count";
+                        newSpan.style.fontSize = "16px";
+                        newSpan.textContent = data.likeCount;
+                        this.appendChild(newSpan);
+                    }
+                } else if (likeCountSpan) {
+                    likeCountSpan.textContent = ""; // 숫자 숨기기
+                    likeCountSpan.style.display = "none";
+                }
+
+                this.disabled = false; // 버튼 다시 활성화
+            })
+            .catch(error => {
+                console.error("좋아요 처리 중 오류:", error);
+                alert(`좋아요 처리 중 문제가 발생했습니다. (${error.message})`);
+                this.disabled = false; // 버튼 다시 활성화
+            });
+    });
+});
+
+
+
+function editPost(button) {
+    const boardNum = button.getAttribute("data-board-num");
+    if (!boardNum) {
+        alert("게시글 번호를 찾을 수 없습니다.");
+        return;
+    }
+
+    location.href = `/board/edit/${boardNum}`; 
+}
+
+
+function deletePost(button) {
+    const boardNum = button.getAttribute("data-board-num");
+    const boardType = button.getAttribute("data-board-type");
+
+    if (!boardNum || !boardType) {
+        alert("삭제 정보를 확인할 수 없습니다.");
+        return;
+    }
+
+    if (confirm("정말 삭제하시겠습니까?")) {
+        fetch(`/board/boardDetail/delete/${boardNum}?boardType=${boardType}`, {
+            method: "POST",
+        })
+            .then(response => {
+                if (response.ok) {
+                    let redirectUrl = `/board/`;
+                    switch (boardType) {
+                        case "Free":
+                            redirectUrl += "boardFreeList";
+                            break;
+                        case "Profit":
+                            redirectUrl += "boardProfitList";
+                            break;
+                        case "Tip":
+                            redirectUrl += "boardTipList";
+                            break;
+                        case "Question":
+                        default:
+                            redirectUrl += "boardQueList";
+                            break;
+                    }
+                    window.location.href = redirectUrl;
+                } else {
+                    alert("삭제에 실패했습니다.");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("삭제 중 문제가 발생했습니다.");
+            });
+    }
+}
+//댓글 작성 처리
+$("#commentForm").submit(function (e) {
+    e.preventDefault();
+
+    const isLoggedIn = $(this).data("auth") === true; // 로그인 여부 확인
+    if (!isLoggedIn) {
+        alert("로그인 후 이용할 수 있습니다.");
+        location.href = "/login/login";
+        return;
+    }
+
+    const boardNum = $(this).data("board-num");
+    const boardType = $(this).data("board-type");
+    const commentContent = $("#commentContent").val();
+
+    if (!boardNum || !boardType || !commentContent) {
+        alert("필수 데이터를 모두 입력해주세요.");
+        return;
+    }
+
+    $.ajax({
+        type: "POST",
+        url: `/comments?boardType=${boardType}`,
+        contentType: "application/json",
+        data: JSON.stringify({
+            boardNum: boardNum,
+            commentContent: commentContent,
+        }),
+        success: function () {
+            location.reload();
+        },
+        error: function (error) {
+            alert("관리자는 사용할 수 없는 기능입니다.");
+            console.error(error);
+        }
+    });
+});
+
+function deleteComment(button) {
+    const commentNum = button.getAttribute("data-comment-id");
+
+    if (!commentNum) {
+        alert("댓글 번호를 확인할 수 없습니다.");
+        return;
+    }
+
+    if (confirm("정말 삭제하시겠습니까?")) {
+        fetch(`/comments/${commentNum}`, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(message => {
+                        throw new Error(message);
+                    });
+                }
+                location.reload(); 
+            })
+            .catch(error => {
+                console.error("삭제 중 오류:", error);
+                alert("댓글 삭제에 실패했습니다.");
+            });
+    }
+}
+
+
+
+
+
+
+
+
+</script>
+<!-- [S]tedu-N17 -->
+    <div class="tedu-N17" data-bid="fLM3zgHIUl">
+        <div class="footer-container">
+            <div class="footer-top">
+                <div class="inner">
+                    <div class="footer-menu">
+                        <th:block th:if="${session.auth == null or session.auth.grade == 'emp'}">
+                            <a th:href="@{/employee/empWrite}">직원가입</a>
+                        </th:block>
+                        <th:block th:if="${session.auth == null or session.auth.grade != 'emp'}">
+                            <a href="javascript:void(0);" id="inquireLink">1:1 문의</a>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-area">
+                <div class="inner">
+                    <dif class="footer-info-wrap">
+                        <div class="footer-logo">
+                            <a href="javascript:void(0)">
+                                <img src="/images/pickers_logo_footer.png" alt="로고">
+                            </a>
+                        </div>
+                        <div class="footer-info">
+                            <span>경기도 안양시 만안구 성결대학로 53 성결관 301호</span>
+                            <span>T. 010-1234-5678</span>
+                            <span>E. pickers@official.co.kr</span>
+                            <span class="copy">2022 BY TEMPLATEHOUSE. ALL RIGHTS RESEVED</span>
+                        </div>
+                    </dif>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- [E]tedu-N17 -->
+    <script src="/js/setting.js"></script>
+    <script src="/js/plugin.js"></script>
+    <script src="/js/template.js"></script>
+    <script src="/js/common.js"></script>
+    <script src="/js/script.js"></script>
+</body>
+</html>

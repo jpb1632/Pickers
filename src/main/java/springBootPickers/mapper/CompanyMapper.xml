@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="springBootPickers.mapper.CompanyMapper">
+  
+    <insert id="companyInsert" parameterType="companyDTO">
+        INSERT INTO company (
+            company_num, 
+            company_name, 
+            ceo_name, 
+            establish_year, 
+            listing_date, 
+            issued_shares, 
+            COMPANY_DESCRIPTION,
+            emp_num
+        ) VALUES (
+              #{companyNum}
+            , #{companyName}
+            , #{ceoName}
+            , #{establishYear, jdbcType=INTEGER}
+            , #{listingDate, jdbcType=DATE}
+            , #{issuedShares, jdbcType=INTEGER}
+            , #{companyDescription, jdbcType=VARCHAR}
+            , #{empNum}
+        )
+    </insert> 
+
+
+    <select id="companySelectList" resultType="companyDTO" parameterType="startEndPageDTO">
+        SELECT * FROM (
+            SELECT 
+            ROW_NUMBER() OVER(ORDER BY company_num) AS rn,
+           	COMPANY_NUM AS companyNum, 
+			COMPANY_NAME AS companyName, 
+			CEO_NAME AS ceoName, 
+			ESTABLISH_YEAR AS establishYear, 
+			LISTING_DATE AS listingDate, 
+			ISSUED_SHARES AS issuedShares, 
+			COMPANY_DESCRIPTION AS companyDescription
+        FROM company
+            <where>
+               <if test="searchWord != null and searchWord != ''">
+                    COMPANY_NAME LIKE '%' || #{searchWord} || '%' OR
+                    CEO_NAME LIKE '%' || #{searchWord} || '%' OR
+                    COMPANY_NUM LIKE '%' || #{searchWord} || '%'
+                </if>
+            </where>
+        )
+        WHERE rn BETWEEN #{startRow} AND #{endRow}
+    </select>
+
+
+    <select id="companyCount" resultType="integer">
+        SELECT COUNT(*) FROM company
+    </select>
+
+
+   <select id="companySelectOne" resultType="companyDTO" parameterType="string">
+   SELECT
+    c.COMPANY_NUM AS companyNum, 
+    c.COMPANY_NAME AS companyName, 
+    c.CEO_NAME AS ceoName, 
+    c.ESTABLISH_YEAR AS establishYear, 
+    c.LISTING_DATE AS listingDate, 
+    c.ISSUED_SHARES AS issuedShares, 
+    c.COMPANY_DESCRIPTION AS companyDescription, 
+    c.emp_num AS empNum,
+    e.emp_name AS empName
+FROM company c
+LEFT JOIN employee e ON c.emp_num = e.emp_num
+WHERE c.company_num = #{companyNum}
+
+</select>
+
+
+
+    <update id="companyUpdate" parameterType="companyDTO">
+        UPDATE company
+        <trim prefix="set" suffixOverrides=",">
+            company_name = #{companyName},
+	        ceo_name = #{ceoName},
+	        establish_year = #{establishYear, jdbcType=INTEGER},
+	        listing_date = #{listingDate, jdbcType=DATE},
+	        issued_shares = #{issuedShares, jdbcType=INTEGER},
+	        company_description = #{companyDescription},
+	        emp_num = #{empNum}
+        </trim>
+        WHERE company_num = #{companyNum}
+    </update>
+
+
+    <delete id="companyDelete" parameterType="string">
+        DELETE FROM company
+        WHERE company_num = #{companyNum}
+    </delete>
+    
+    <select id="searchCompaniesByName" resultType="companyDTO">
+    SELECT company_num AS companyNum, company_name AS companyName
+    FROM company
+    WHERE company_name LIKE '%' || #{companyName} || '%'
+</select>
+    
+
+</mapper>

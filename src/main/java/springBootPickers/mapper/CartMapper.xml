@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="springBootPickers.mapper.CartMapper">
+	<sql id="lectureColumnsBase">
+        LECTURE_NUM, LECTURE_TEACHER_NAME, LECTURE_TITLE, LECTURE_TOPIC, LECTURE_PRICE,
+        LECTURE_DESCRIPTION, LECTURE_STATUS, LECTURE_REGISTER_DATE, EMP_NUM,
+        LECTURE_MAIN_IMAGE, LECTURE_DETAIL_IMAGE, LECTURE_MAIN_STORE_IMAGE, LECTURE_DETAIL_STORE_IMAGE
+    </sql>
+    
+    <resultMap type="lecture" id="lectureResultMap">
+    	<constructor>
+	        <idArg column="LECTURE_NUM" jdbcType="VARCHAR" javaType="string" />
+	        <arg column="LECTURE_TEACHER_NAME" jdbcType="VARCHAR" javaType="string" />
+	        <arg column="LECTURE_TITLE" jdbcType="VARCHAR" javaType="string" />
+	        <arg column="LECTURE_TOPIC" jdbcType="VARCHAR" javaType="string" />
+	        <arg column="LECTURE_PRICE" jdbcType="BIGINT" javaType="integer" />
+	        <arg column="LECTURE_DESCRIPTION" jdbcType="VARCHAR" javaType="string" />
+	        <arg column="LECTURE_STATUS" jdbcType="VARCHAR" javaType="string" />
+	        <arg column="LECTURE_REGISTER_DATE" jdbcType="DATE" javaType="java.util.Date" />
+	        <arg column="EMP_NUM" jdbcType="VARCHAR" javaType="string" />
+	        <arg column="LECTURE_MAIN_IMAGE" jdbcType="VARCHAR" javaType="string" />
+	        <arg column="LECTURE_DETAIL_IMAGE" jdbcType="VARCHAR" javaType="string" />
+	        <arg column="LECTURE_MAIN_STORE_IMAGE" jdbcType="VARCHAR" javaType="string" />
+	        <arg column="LECTURE_DETAIL_STORE_IMAGE" jdbcType="VARCHAR" javaType="string" />
+    	</constructor>
+	</resultMap>
+	
+	<resultMap type="cart" id="cartResultMap">
+		<id column="MEM_NUM" jdbcType="VARCHAR" property="memNum"/>
+		<id column="LECTURE_NUM" jdbcType="VARCHAR" property="lectureNum"/>
+		<result column="CART_DATE" jdbcType="DATE" property="cartDate"/>
+		<result column="CART_QTY" jdbcType="BIGINT" property="cartQty"/>
+		<result column="CART_NUM" jdbcType="VARCHAR" property="cartNum"/>
+	</resultMap>
+	
+	<insert id="cartInsert" parameterType="cart">
+    INSERT INTO cart (MEM_NUM, LECTURE_NUM, CART_DATE, CART_QTY)
+    VALUES (#{memNum}, #{lectureNum}, SYSDATE, 1)
+</insert>
+
+<select id="isLectureInCart" parameterType="map" resultType="int">
+    SELECT COUNT(*)
+    FROM cart
+    WHERE mem_num = #{memNum} AND lecture_num = #{lectureNum}
+</select>
+
+	
+	
+	<update id="cartMerge">
+    MERGE INTO cart c
+    USING (
+        SELECT lecture_num FROM lecture WHERE lecture_num = #{lectureNum, jdbcType=VARCHAR}
+    ) l
+    ON (c.lecture_num = l.lecture_num AND mem_num = #{memNum, jdbcType=VARCHAR})
+    WHEN MATCHED THEN
+        UPDATE SET CART_QTY = NVL(CART_QTY, 0) + NVL(#{cartQty, jdbcType=INTEGER}, 1)
+    WHEN NOT MATCHED THEN
+        INSERT (MEM_NUM, LECTURE_NUM, CART_DATE, CART_QTY)
+        VALUES (#{memNum, jdbcType=VARCHAR}, #{lectureNum, jdbcType=VARCHAR}, SYSDATE, NVL(#{cartQty, jdbcType=INTEGER}, 1))
+</update>
+
+	
+	<select id="lectureSelect" parameterType="string" resultMap="lectureResultMap">
+	select <include refid="lectureColumnsBase"/>
+	from lecture
+	where lecture_num = #{lectureNum}
+	</select>
+	
+	<select id="cartSelect" parameterType="integer" resultMap="cartResultMap">
+	select MEM_NUM, LECTURE_NUM, CART_DATE, CART_QTY, CART_NUM
+	from cart
+	where cart_num = #{cartNum}
+	</select>
+	
+	<resultMap type="cartLecture" id="cartLectureReulstMap">
+		<association property="lectureDTO" javaType="lecture" column="lectureNum" select="lectureSelect"/>
+		<association property="cartDTO" javaType="cart" column="cartNum" select="cartSelect"/>
+	</resultMap>
+	
+	<select id="cartSelectList" resultMap="cartLectureReulstMap">
+	select lecture_num lectureNum, cart_num cartNum
+	from cart
+	<trim prefix="where" prefixOverrides="AND | OR">
+	mem_num = #{memNum}
+	<if test="nums != null">
+		and lecture_num in
+		<foreach collection="nums" item="lectureNum" close=")" open="(" index="index"
+		separator=",">
+		#{lectureNum}
+		</foreach>
+	</if>
+	</trim>
+	</select>
+	
+	<update id="cartQtyDown">
+	update cart set
+	CART_QTY = CART_QTY - 1
+	where lecture_num = #{lectureNum} and mem_num = #{memNum}
+	</update>
+	
+	<delete id="lectureNumsDelete" parameterType="hashmap">
+	delete from cart
+	where mem_num = #{memNum}
+	and lecture_num in
+	<foreach collection="lectureNums" item="lectureNum" close=")" open="(" index="index" separator=",">
+	#{lectureNum}
+	</foreach>
+	</delete>
+
+</mapper>

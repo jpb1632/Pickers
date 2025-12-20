@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="imagetoolbar" content="no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="title" content="웹사이트">
+  <meta name="description" content="웹사이트입니다.">
+  <meta name="keywords" content="키워드,키워드,키워드">
+  <meta property="og:title" content="웹사이트">
+  <meta property="og:description" content="웹사이트입니다">
+  <meta property="og:image" content="https://웹사이트/images/opengraph.png">
+  <meta property="og:url" content="https://웹사이트">
+  <title>교육</title>
+  <link rel="stylesheet" href="/css/setting.css">
+  <link rel="stylesheet" href="/css/plugin.css">
+  <link rel="stylesheet" href="/css/template.css">
+  <link rel="stylesheet" href="/css/common.css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+  <link rel="stylesheet" href="/css_3/setting.css">
+  <link rel="stylesheet" href="/css_3/plugin.css">
+  <link rel="stylesheet" href="/css_3/templatehouse.css">
+  <link rel="stylesheet" href="/css_3/style.css">
+  <link rel="stylesheet" href="/css_3/testList.css">
+  <link rel="stylesheet" href="/css_3/Edu.css">
+  	<script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.1.min.js"></script>
+ 	<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+	<script type="text/javascript" src="/js/daumAddressScript.js"></script>
+	<script type="text/javascript" src="/js/check.js"></script>
+	    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function() {
+            const inquireLink = document.getElementById("inquireLink");
+
+            if (inquireLink) { // 링크가 존재할 경우에만 이벤트 리스너 추가
+                inquireLink.addEventListener("click", function() {
+                    const isLoggedIn = "[[${session.auth != null ? 'true' : 'false'}]]" === "true";
+
+                    if (!isLoggedIn) {
+                        alert("로그인 후 이용할 수 있습니다.");
+                        location.href = "/login/login"; // 로그인 페이지로 리다이렉트
+                    } else {
+                        location.href = "/inquire/inquireWrite"; // 1:1 문의 페이지로 이동
+                    }
+                });
+            }
+        });
+    </script>
+<style type="text/css">
+.sortable {
+    font-weight: normal; /* 기본 텍스트 */
+    color: #8a8a8a;
+    text-decoration: none;
+}
+
+.active {
+    font-weight: bold; /* 선택된 텍스트 볼드 처리 */
+    color: rgb(43, 102, 240); /* 파란색 */
+}
+
+.sortable:hover {
+    color: black; /* 기본 상태에서 hover 시 검은색 */
+}
+
+.active:hover {
+    color: rgb(43, 102, 240); /* 파란색 유지 */
+    font-weight: normal; /* 볼드만 제거 */
+}
+.pagiset-link {
+    font-size: 14px; 
+    
+}
+/* 선택된 번호(active-line) */
+.pagiset-link.active-line {
+    color: #007bff !important; /* 파란색 텍스트 */
+    border: 1px solid #007bff !important; /* 파란색 테두리 */
+    font-size: 14px; /* 선택된 텍스트 크기 더 키우기 */
+}
+
+/* 공통 설명창 스타일 */
+.explanation {
+    position: absolute;
+    background: white;
+    border-radius: 8px;
+    padding: 10px 15px; /* 여백 조정 (기존 15px → 10px으로 줄임) */
+    width: 300px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    display: none;
+    z-index: 10002;
+    font-size: 14px; /* 텍스트 크기 통일 */
+}
+
+.explanation p {
+    margin-top: 5px; /* 내용 텍스트 위쪽 여백 */
+    margin-bottom: 10px; /* 아래쪽 여백 제거 */
+    font-size: 15px;
+    line-height: 1.4; /* 줄 간격 조정 */
+}
+
+/* 닫기 버튼 스타일 */
+.explanation button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    background-color: transparent;
+    color: black;
+    border: 1px solid black;
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+}
+
+.explanation button:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: black;
+}
+
+/* 설명창 제목 크기 통일 */
+.explanation h3 {
+    font-size: 16px; /* 모든 설명창 제목 크기 동일 */
+    font-weight: bold; /* 굵게 */
+    margin: 0 0 10px; /* 여백 조정 */
+}
+
+/* 어두운 배경 */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: none;
+}
+[data-explanation-id] {
+    pointer-events: auto; /* 텍스트 클릭 허용 */
+}
+.disabled-text {
+    pointer-events: none; /* 클릭 차단 */
+    opacity: 0.5; /* 흐릿하게 표시 */
+    cursor: not-allowed; /* 클릭 불가 커서 */
+}
+.highlight-text {
+    background-color: white; /* 강조를 위한 배경 */
+    color: black !important; /* 검정색 텍스트 유지 */
+    z-index: 10003; /* 텍스트를 오버레이 위로 */
+    padding: 0 5px; /* 약간의 여백 추가 */
+    border-radius: 4px; /* 부드러운 모서리 */
+    font-weight: bold; /* 강조된 느낌을 주기 위해 폰트 굵게 설정 */
+}
+/* 투자위험 주식 설명창 */
+#riskExplanation {
+  position: absolute;
+  display: none;
+  background: white;
+  border-radius: 8px;
+  padding: 10px;
+  width: 300px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 10002;
+}
+th {
+    position: relative; /* 각 열 안에서 위치를 상대적으로 조정 */
+}
+#riskExplanation {
+    padding: 10px 15px; /* 다른 설명창과 동일한 여백 */
+    margin: 0; /* 여백 초기화 */
+}
+
+#riskExplanation h3 {
+    font-size: 16px; /* 모든 설명창 제목 크기 동일 */
+    font-weight: bold; /* 굵게 */
+    margin: 0 0 10px; /* 여백 조정 */
+}
+
+#riskExplanation p {
+    margin-top: 5px; /* 내용 텍스트 위쪽 여백 */
+    margin-bottom: 10px; /* 아래쪽 여백 제거 */
+    font-size: 15px;
+    line-height: 1.4; /* 줄 간격 조정 */
+}
+</style>
+
+</head>
+
+
+<body>
+ <!-- [S]tedu-N3 -->
+    <div class="tedu-N3" data-bid="XEm3ZgHi4n">
+        <div class="header-container lightmode">
+            <div class="header-top">
+                <div class="inner">
+                    <div class="header-member">
+                        <th:block th:if="${session.auth == null}">
+                            <a href="/login/login">
+                                <em class="ico">
+                                    <img src="/icons/ico_login.svg" alt="로그인 아이콘">
+                                </em>
+                                <span>로그인</span>
+                            </a>
+                            <a href="/register/membershipAgree">
+                                <em class="ico">
+                                    <img src="/icons/ico_member.svg" alt="회원가입 아이콘">
+                                </em>
+                                <span>회원가입</span>
+                            </a>
+                        </th:block>
+
+                        <th:block th:if="${session.auth != null}">
+                            <a href="/login/logout">
+                                <em class="ico">
+                                    <img src="/icons/ico_login.svg" alt="로그아웃 아이콘">
+                                </em>
+                                <span>로그아웃</span>
+                            </a>
+                            <th:block th:if="${session.auth.grade == 'mem'}">
+                                <a href="/myPage/memMyPage">
+                                    <em class="ico">
+                                        <img src="/icons/ico_member.svg" alt="마이페이지 아이콘">
+                                    </em>
+                                    <span>마이페이지</span>
+                                </a>
+                            </th:block>
+                            <th:block th:if="${session.auth.grade == 'emp'}">
+                                <a href="/myPage/empMyPage">
+                                    <em class="ico">
+                                        <img src="/icons/ico_member.svg" alt="마이페이지 아이콘">
+                                    </em>
+                                    <span>마이페이지</span>
+                                </a>
+                            </th:block>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+            <div class="header-nav">
+                <div class="inner">
+                    <div class="header-logo">
+                        <a href="/">
+                            <img src="/images/pickers_logo_main.png" alt="로고">
+                        </a>
+                    </div>
+                    <div class="header-gnb">
+
+                    </div><br><br><br>
+                    <div class="header-btn">
+                        <a href="javascript:void(0)" class="menu-open">
+                            <em class="ico">
+                                <img src="/icons/ico_menu.svg" alt="메뉴 아이콘">
+                            </em>
+                        </a>
+                        <a href="javascript:void(0)" class="menu-close">
+                            <em class="ico">
+                                <img src="/icons/ico_close.svg" alt="닫기 아이콘">
+                            </em>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+
+            <section class="header-area">
+                <div class="inner">
+                    <div class="menu-wrap">
+                        <div class="menu-box">
+                            <a class="menu-title">강의</a>
+                            <a href="/lecture/lectureList">강의</a>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'mem'}">
+                                <a href="/lecture/mylectureList">my강의</a>
+                                <a href="/item/cartList">장바구니</a>
+                                <a href="/item/wishList">찜</a>
+                            </th:block>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                                <a href="/lecture/emplectureList">강의 관리</a>
+                                <a href="/orders/empOrderList">주문 관리</a>
+                            </th:block>
+                        </div>
+                        <div class="menu-box">
+                            <a class="menu-title">인사이트</a>
+                            <a href="/news/newsListM">뉴스</a>
+                            <a href="/company/companyListM">기업</a>
+                            <a href="/stock/stockListM">주식</a>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                                <a href="/news/newsList">뉴스 관리</a>
+                                <a href="/company/companyList">기업 관리</a>
+                                <a href="/stock/stockList">주식 관리</a>
+                            </th:block>
+                        </div>
+                        <div class="menu-box">
+                            <a class="menu-title">커뮤니티</a>
+                            <a href="/board/boardQueList">질문게시판</a>
+                            <a href="/board/boardFreeList">자유게시판</a>
+                            <a href="/board/boardProfitList">수익인증</a>
+                            <a href="/board/boardTipList">꿀팁공유</a>
+                        </div>
+                        <div class="menu-box">
+                            <a class="menu-title">교육</a>
+                            <a href="/chart/list">교육</a>
+                            <a th:href="@{/word/wordSearch}">용어</a>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                                <a th:href="@{/word/wordList}">용어 관리</a>
+                            </th:block>
+                        </div>
+                        <th:block th:if="${session.auth != null}">
+                            <div class="menu-box">
+                                <a class="menu-title">MY</a>
+                                <th:block th:if="${session.auth.grade == 'mem'}">
+                                    <a href="/inquire/inquireListM">1:1 문의내역</a>
+                                    <a th:href="@{/lectureInquire/lectureInquireListM/{memNum}(memNum=${session.memNum})}">강의 문의내역</a>
+                                    <a href="/orders/orderList">강의 주문내역</a>
+                                </th:block>
+                                <th:block th:if="${session.auth.grade == 'emp'}">
+                                    <a href="/inquire/inquireList">1:1문의 관리</a>
+                                    <a href="/lectureInquire/lectureInquireList">강의질문 관리</a>
+                                </th:block>
+                            </div>
+                        </th:block>
+                        <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                            <div class="menu-box">
+                                <a class="menu-title">유저</a>
+                                <a href="/member/memList">회원 관리</a>
+                                <a href="/employee/empList">직원 관리</a>
+                            </div>
+                        </th:block>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    <!-- [E]tedu-N3 -->
+  <main class="th-layout-main">
+    <div class="th-layout-sideleft"></div>
+    <div class="th-layout-stickyleft"></div>
+    <div class="th-layout-content">
+        <div class="hooms-N6" id="oZm5m6P2BZ" style="margin-top: -50px !important;">
+            <div class="tabset tabset-solid border-bottom" style="margin-bottom: 50px; display: flex; justify-content: center;">
+                <ul class="tabset-list tabset-lg">
+                    <li class="tabset-item">
+                        <a class="tabset-link" href="javascript:void(0)">
+                            <span style="text-align: left;">홈</span>
+                        </a>
+                    </li>
+                    <li class="tabset-item">
+                        <a class="tabset-link" href="javascript:void(0)">
+                            <span style="text-align: left;">뉴스</span>
+                        </a>
+                    </li>
+                    <li class="tabset-item">
+                        <a class="tabset-link" href="javascript:void(0)">
+                            <span>주식 골라보기</span>
+                        </a>
+                    </li>
+                    <li class="tabset-item">
+                        <a class="tabset-link" href="javascript:void(0)">
+                            <span>내 계좌</span>
+                        </a>
+                    </li>
+                 
+                </ul>
+            </div>
+            <div class="form-box">
+            </div>
+           
+            
+        <!-- 피커스 시가총액 -->
+            <div class="contents-container container-md">
+             <!-- 실시간 차트 및 기준 시간 -->
+          <div class="real-time-chart">
+        <div class="textset" style="margin-bottom: -10px;">
+            <h2 class="textset-tit h4" style="display: inline;">실시간 차트</h2>
+            <p class="p2" style="display: inline; margin-left: 15px; margin-bottom: 10px; color: rgba(0, 0, 0, 0.6);">오늘 17:35 기준</p>
+        </div>
+    </div>
+                <div class="tabset tabset-solid border-bottom">
+                    <ul class="tabset-list tabset-lg border-bottom">
+                       <li class="tabset-item">
+    <a class="tabset-link" href="javascript:void(0)" data-explanation-id="focusMarketCapExplanation" onclick="showExplanation('focusMarketCapExplanation')">
+        <span>피커스 시가총액</span>
+    </a>
+</li>
+<li class="tabset-item">
+    <a class="tabset-link" href="javascript:void(0)" data-explanation-id="focusVolumeExplanation" onclick="showExplanation('focusVolumeExplanation')">
+        <span>피커스 거래량</span>
+    </a>
+</li>
+<li class="tabset-item">
+    <a class="tabset-link" href="javascript:void(0)" data-explanation-id="marketCapExplanationFocus" onclick="showExplanation('marketCapExplanationFocus')">
+        <span>시가총액</span>
+    </a>
+</li>
+<li class="tabset-item">
+    <a class="tabset-link" href="javascript:void(0)" data-explanation-id="volumeExplanationFocus" onclick="showExplanation('volumeExplanationFocus')">
+        <span>거래량</span>
+    </a>
+</li>
+<li class="tabset-item">
+    <a class="tabset-link" href="javascript:void(0)" data-explanation-id="upwardExplanation" onclick="showExplanation('upwardExplanation')">
+        <span>급상승</span>
+    </a>
+</li>
+<li class="tabset-item">
+    <a class="tabset-link" href="javascript:void(0)" data-explanation-id="downwardExplanation" onclick="showExplanation('downwardExplanation')">
+        <span>급하락</span>
+    </a>
+</li>
+<li class="tabset-item">
+    <a class="tabset-link" href="javascript:void(0)" data-explanation-id="popularExplanation" onclick="showExplanation('popularExplanation')">
+        <span>인기</span>
+    </a>
+</li>
+
+<div class="risk-checkbox-container" style="float: right; margin-right: 0; display: flex; align-items: center; position: absolute; right: 20px; top: 20px;">
+    <span class="help-icon" onmouseover="showRiskExplanation(event)" onmouseout="hideRiskExplanation()" style="margin-right: -24px; margin-top: -12px;">?</span>
+    <input type="checkbox" id="risk-checkbox" class="risk-checkbox" style="margin-right: 5px; margin-top: 1px;" />
+    <label for="risk-checkbox" class="risk-checkbox-label" style="color: rgb(43, 102, 240); font-weight: bold; cursor: pointer;">
+        투자위험 주식 숨기기
+    </label>
+</div>
+
+
+                    </ul>
+                             <!-- 실시간/1일/1주일 버튼 -->
+ <div class="real-time-buttons">
+        <div class="badge-wrap">
+            <button class="filter-button active">실시간</button>
+            <button class="filter-button">1일</button>
+            <button class="filter-button">1주일</button>
+            <button class="filter-button">1개월</button>
+            <button class="filter-button">3개월</button>
+            <button class="filter-button">6개월</button>
+            <button class="filter-button">1년</button>
+        </div>
+    </div>
+                </div>
+                
+            </div>
+
+        </div>
+      <section class="campland-N12" id="zim5m6c7Fq" style="margin-top: -70px !important;">
+        <div class="contents-container container-md">
+          <div class="textset textset-sub">
+          </div>
+          <div class="tableset tableset-fract">
+            <table class="tableset-table table">
+              <colgroup>
+                <col />
+                <col />
+                <col />
+              </colgroup>
+             <thead class="thead-light thead-border-top">
+    <tr>
+        <th scope="col" class="sortable">번호</th>
+        <th scope="col" class="sortable">종목</th>
+        <th scope="col" style="position: relative;">
+            <a th:href="@{/chart/list(sortField='currentPrice', sortOrder=${sortField == 'currentPrice' && sortOrder == 'desc' ? 'asc' : 'desc'})}"
+               th:classappend="${sortField == 'currentPrice' ? 'active' : 'sortable'}">
+               <span>현재가</span>
+               <span th:if="${sortField == 'currentPrice'}" th:text="${sortOrder == 'desc' ? '▼' : '▲'}"></span>
+            </a>
+             <span class="help-icon" 
+              onmouseover="showColumnExplanation(event, 'priceExplanation')" 
+              onmouseout="hideColumnExplanation('priceExplanation')" 
+              style="position: absolute; right: 60px; top: 0; cursor: default;">?</span>
+        </th>
+        <th scope="col" style="position: relative;">
+            <a th:href="@{/chart/list(sortField='priceChangeRate', sortOrder=${sortField == 'priceChangeRate' && sortOrder == 'desc' ? 'asc' : 'desc'})}"
+               th:classappend="${sortField == 'priceChangeRate' ? 'active' : 'sortable'}">
+               <span>등락률</span>
+               <span th:if="${sortField == 'priceChangeRate'}" th:text="${sortOrder == 'desc' ? '▼' : '▲'}"></span>              
+            </a>
+            <span class="help-icon" 
+              onmouseover="showColumnExplanation(event, 'rateExplanation')" 
+              onmouseout="hideColumnExplanation('rateExplanation')" 
+              style="position: absolute; right: 60px; top: 0; cursor: default;">?</span>
+        </th>
+        <th scope="col" style="position: relative;">
+            <a th:href="@{/chart/list(sortField='marketCap', sortOrder=${sortField == 'marketCap' && sortOrder == 'desc' ? 'asc' : 'desc'})}"
+               th:classappend="${sortField == 'marketCap' ? 'active' : 'sortable'}">
+               <span>시가총액</span>
+               <span th:if="${sortField == 'marketCap'}" th:text="${sortOrder == 'desc' ? '▼' : '▲'}"></span>            
+            </a>
+            <span class="help-icon" 
+              onmouseover="showColumnExplanation(event, 'marketCapExplanationCurrent')" 
+              onmouseout="hideColumnExplanation('marketCapExplanationCurrent')" 
+              style="position: absolute; right: 80px; top: 0; cursor: default;">?</span>
+        </th>
+        <th scope="col" style="position: relative;">
+            <a th:href="@{/chart/list(sortField='tradingAmount', sortOrder=${sortField == 'tradingAmount' && sortOrder == 'desc' ? 'asc' : 'desc'})}"
+               th:classappend="${sortField == 'tradingAmount' ? 'active' : 'sortable'}">
+               <span>거래량</span>
+               <span th:if="${sortField == 'tradingAmount'}" th:text="${sortOrder == 'desc' ? '▼' : '▲'}"></span>               
+            </a>
+            <span class="help-icon" 
+              onmouseover="showColumnExplanation(event, 'volumeExplanationCurrent')" 
+              onmouseout="hideColumnExplanation('volumeExplanationCurrent')" 
+              style="position: absolute; right: 60px; top: 0; cursor: default;">?</span>
+        </th>
+    </tr>
+</thead>
+  <tbody>
+                    <tr th:each="stock, stat : ${chartData.stocks}">
+                        <td th:text="${stat.index + 1}"></td>
+                        <td>
+                            <a th:href="@{/chart/detail(stockNum=${stock.stockNum})}" th:text="${stock.companyName}"></a>
+                        </td>
+                        <td th:text="${stock.currentPrice}"></td>
+                        <td th:text="${stock.priceChangeRate} + '%'"></td>
+                        <td th:text="${stock.marketCap}"></td>
+                        <td th:text="${stock.tradingAmount}"></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(chartData.stocks)}">
+                        <td colspan="6" style="text-align: center;">데이터가 없습니다.</td>
+                    </tr>
+                </tbody>
+
+
+
+
+            </table>
+          </div>
+        </div>
+     <div style="text-align: center; margin: 20px 0;">
+  <nav class="p2 pagiset pagiset-line">
+
+    <!-- 첫 페이지로 이동 -->
+    <div class="pagiset-ctrl">
+      <a th:href="@{/chart/list(page=1, sortField=${sortField}, sortOrder=${sortOrder})}"
+         th:if="${currentPage > 1}" 
+         class="pagiset-link pagiset-first">
+        <span class="visually-hidden">처음</span>
+      </a>
+      <span th:if="${currentPage <= 1}" class="pagiset-link pagiset-first disabled">
+        <span class="visually-hidden">처음</span>
+      </span>
+    </div>
+
+    <!-- 이전 페이지로 이동 -->
+    <div class="pagiset-ctrl">
+      <a th:href="@{/chart/list(page=${currentPage - 1}, sortField=${sortField}, sortOrder=${sortOrder})}" 
+         th:if="${currentPage > 1}" 
+         class="pagiset-link pagiset-prev">
+        <span class="visually-hidden">이전</span>
+      </a>
+      <span th:if="${currentPage <= 1}" class="pagiset-link pagiset-prev disabled">
+        <span class="visually-hidden">이전</span>
+      </span>
+    </div>
+
+    <!-- 페이지 번호 -->
+    <div class="pagiset-list">
+      <a th:each="i : ${#numbers.sequence(startPage, endPage)}" 
+         th:href="@{/chart/list(page=${i}, sortField=${sortField}, sortOrder=${sortOrder})}" 
+         th:classappend="${i == currentPage} ? 'active-line' : ''" 
+         class="pagiset-link">
+        [[${i}]]
+      </a>
+    </div>
+
+    <!-- 다음 페이지로 이동 -->
+    <div class="pagiset-ctrl">
+      <a th:href="@{/chart/list(page=${currentPage + 1}, sortField=${sortField}, sortOrder=${sortOrder})}" 
+         th:if="${currentPage < totalPages}" 
+         class="pagiset-link pagiset-next">
+        <span class="visually-hidden">다음</span>
+      </a>
+      <span th:if="${currentPage >= totalPages}" class="pagiset-link pagiset-next disabled">
+        <span class="visually-hidden">다음</span>
+      </span>
+    </div>
+
+    <!-- 마지막 페이지로 이동 -->
+    <div class="pagiset-ctrl">
+      <a th:href="@{/chart/list(page=${totalPages}, sortField=${sortField}, sortOrder=${sortOrder})}" 
+         th:if="${currentPage < totalPages}" 
+         class="pagiset-link pagiset-last">
+        <span class="visually-hidden">마지막</span>
+      </a>
+      <span th:if="${currentPage >= totalPages}" class="pagiset-link pagiset-last disabled">
+        <span class="visually-hidden">마지막</span>
+      </span>
+    </div>
+  </nav>
+</div>
+
+      </section>
+    </div>
+
+    <div class="th-layout-stickyright"></div>
+    <div class="th-layout-sideright"></div>
+  </main>
+     <!-- [S]tedu-N17 -->
+    <div class="tedu-N17" data-bid="fLM3zgHIUl">
+        <div class="footer-container">
+            <div class="footer-top">
+                <div class="inner">
+                    <div class="footer-menu">
+                        <th:block th:if="${session.auth == null or session.auth.grade == 'emp'}">
+                            <a th:href="@{/employee/empWrite}">직원가입</a>
+                        </th:block>
+                        <th:block th:if="${session.auth == null or session.auth.grade != 'emp'}">
+                            <a href="javascript:void(0);" id="inquireLink">1:1 문의</a>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-area">
+                <div class="inner">
+                    <dif class="footer-info-wrap">
+                        <div class="footer-logo">
+                            <a href="javascript:void(0)">
+                                <img src="/images/pickers_logo_footer.png" alt="로고">
+                            </a>
+                        </div>
+                        <div class="footer-info">
+                            <span>경기도 안양시 만안구 성결대학로 53 성결관 301호</span>
+                            <span>T. 010-1234-5678</span>
+                            <span>E. pickers@official.co.kr</span>
+                            <span class="copy">2022 BY TEMPLATEHOUSE. ALL RIGHTS RESEVED</span>
+                        </div>
+                    </dif>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- [E]tedu-N17 -->
+  <script src="/js/setting.js"></script>
+  <script src="/js/plugin.js"></script>
+  <script src="/js/template.js"></script>
+  <script src="/js/common.js"></script>
+  <script src="/js/script.js"></script>
+  
+    <script src="/js_3/setting.js"></script>
+  <script src="/js_3/plugin.js"></script>
+  <script src="/js_3/templatehouse.js"></script>
+  <script src="/js_3/script.js"></script>
+  <script src="/js_3/Edu.js"></script>
+  
+  <!-- 설명창과 배경 오버레이 -->
+<div id="overlay" class="overlay" onclick="closeAllExplanations()"></div>
+<!-- 설명창 추가 -->
+<div id="priceExplanation" class="explanation" style="display: none;">
+    <h3>현재가 설명</h3>
+    <p>현재가는 종목의 최신 가격 정보입니다.</p>
+</div>
+<div id="rateExplanation" class="explanation" style="display: none;">
+    <h3>등락률 설명</h3>
+    <p>등락률은 전일 대비 현재 가격의 변동률을 나타냅니다.</p>
+</div>
+<div id="marketCapExplanationCurrent" class="explanation" style="display: none;">
+    <h3>시가총액 설명</h3>
+    <p>시가총액은 회사의 총 자산 가치를 나타냅니다.</p>
+</div>
+<div id="volumeExplanationCurrent" class="explanation" style="display: none;">
+    <h3>거래량 설명</h3>
+    <p>거래량은 주식의 총 거래 건수를 나타냅니다.</p>
+</div>
+
+<div id="focusMarketCapExplanation" class="explanation">
+    <h3>피커스 시가총액 설명</h3>
+    <p>피커스 시가총액을 기준으로 높은 순으로 정렬해주는 버튼입니다.</p>
+    <button onclick="closeExplanation('focusMarketCapExplanation')">X</button>
+</div>
+<div id="focusVolumeExplanation" class="explanation">
+    <h3>피커스 거래량 설명</h3>
+    <p>피커스 거래량을 기준으로 높은 순으로 정렬해주는 버튼입니다.</p>
+    <button onclick="closeExplanation('focusVolumeExplanation')">X</button>
+</div>
+<div id="marketCapExplanationFocus" class="explanation">
+    <h3>시가총액 설명</h3>
+    <p>시가총액을 기준으로 높은 순으로 정렬해주는 버튼입니다.</p>
+    <button onclick="closeExplanation('marketCapExplanationFocus')">X</button>
+</div>
+<div id="volumeExplanationFocus" class="explanation">
+    <h3>거래량 설명</h3>
+    <p>거래량을 기준으로 높은 순으로 정렬해주는 버튼입니다.</p>
+    <button onclick="closeExplanation('volumeExplanationFocus')">X</button>
+</div>
+<div id="upwardExplanation" class="explanation">
+    <h3>급상승 설명</h3>
+    <p>급상승을 기준으로 높은 순으로 정렬해주는 버튼입니다.</p>
+    <button onclick="closeExplanation('upwardExplanation')">X</button>
+</div>
+<div id="downwardExplanation" class="explanation">
+    <h3>급하락 설명</h3>
+    <p>급하락을 기준으로 높은 순으로 정렬해주는 버튼입니다.</p>
+    <button onclick="closeExplanation('downwardExplanation')">X</button>
+</div>
+<div id="popularExplanation" class="explanation">
+    <h3>인기 설명</h3>
+    <p>인기(많이 찾아본 순)를 기준으로 높은 순으로 정렬해주는 버튼입니다.</p>
+    <button onclick="closeExplanation('popularExplanation')">X</button>
+</div>
+<!-- 투자위험 주식 설명창 -->
+<div id="riskExplanation" class="explanation">
+    <h3>투자위험 주식 설명</h3>
+    <p>투자 위험(상장폐지가 될 확률이 있는)이 높은 주식을 숨기고 목록에서 제외합니다.</p>
+</div>
+
+
+<script type="text/javascript">
+document.addEventListener('DOMContentLoaded', () => {
+    const explanationMap = {
+        // 현재가 ~ 거래량
+        '현재가': 'priceExplanation',
+        '등락률': 'rateExplanation',
+        '시가총액(현재가)': 'marketCapExplanationCurrent',
+        '거래량(현재가)': 'volumeExplanationCurrent',
+        
+        // 피커스 시가총액 ~ 인기
+        '피커스 시가총액': 'focusMarketCapExplanation',
+        '피커스 거래량': 'focusVolumeExplanation',
+        '시가총액(피커스)': 'marketCapExplanationFocus',
+        '거래량(피커스)': 'volumeExplanationFocus',
+        '급상승': 'upwardExplanation',
+        '급하락': 'downwardExplanation',
+        '인기': 'popularExplanation',
+        
+        // 투자위험 주식
+        '투자위험 주식 숨기기': 'riskExplanation'
+    };
+
+    const tabLinks = document.querySelectorAll('.tabset-link, .risk-checkbox-label');
+    tabLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            const explanationId = explanationMap[link.textContent.trim()];
+            if (explanationId) {
+                showExplanation(explanationId);
+            }
+        });
+    });
+});
+
+function showExplanation(id) {
+    const overlay = document.getElementById('overlay');
+    const explanation = document.getElementById(id);
+
+    if (overlay && explanation) {
+        const triggerElement = document.querySelector(`[data-explanation-id="${id}"]`);
+        if (triggerElement) {
+            const rect = triggerElement.getBoundingClientRect();
+
+            let additionalOffset = 0;
+
+            // 피커스 시가총액 ~ 인기 위치 보정
+            if (["marketCapExplanationFocus", "volumeExplanationFocus"].includes(id)) {
+                additionalOffset = -108;
+            }
+
+            // 현재가 ~ 거래량 위치 보정
+            if (["priceExplanation", "rateExplanation", "marketCapExplanationCurrent", "volumeExplanationCurrent"].includes(id)) {
+                additionalOffset = -20;
+            }
+
+            explanation.style.top = `${window.scrollY + rect.top - explanation.offsetHeight - 10 + additionalOffset}px`;
+            explanation.style.left = `${window.scrollX + rect.left}px`;
+
+            overlay.style.display = 'block';
+            explanation.style.display = 'block';
+
+            // 텍스트 강조
+            document.querySelectorAll('[data-explanation-id]').forEach(element => {
+                element.classList.remove('highlight-text');
+            });
+            triggerElement.classList.add('highlight-text');
+        }
+    }
+}
+
+
+function closeExplanation(id) {
+    const overlay = document.getElementById('overlay');
+    const explanation = document.getElementById(id);
+
+    if (overlay && explanation) {
+        overlay.style.display = 'none';
+        explanation.style.display = 'none';
+
+        // 텍스트 강조 초기화
+        const triggerElement = document.querySelector(`[data-explanation-id="${id}"]`);
+        if (triggerElement) {
+            triggerElement.classList.remove('highlight-text');
+        }
+    }
+}
+
+
+
+
+function closeAllExplanations() {
+    document.querySelectorAll('.explanation').forEach(explanation => {
+        explanation.style.display = 'none';
+    });
+    const overlay = document.getElementById('overlay');
+    if (overlay) overlay.style.display = 'none';
+}
+
+//투자위험 주식 설명창 열기
+function showRiskExplanation(event) {
+	document.querySelectorAll('.risk-checkbox').forEach(checkbox => {
+	    checkbox.classList.add('allow-click');
+	    checkbox.addEventListener('click', function (e) {
+	        e.stopPropagation();
+	    });
+	});
+    const explanation = document.getElementById('riskExplanation');
+    const rect = event.target.getBoundingClientRect();
+
+    // 설명창 위치 설정
+    explanation.style.top = `${window.scrollY + rect.top - explanation.offsetHeight - 120}px`;
+    explanation.style.left = `${window.scrollX + rect.left - 305}px`;
+
+    // 설명창 표시
+    explanation.style.display = 'block';
+}
+
+// 투자위험 주식 설명창 닫기
+function hideRiskExplanation() {
+    const explanation = document.getElementById('riskExplanation');
+
+    // 설명창 숨기기
+    explanation.style.display = 'none';
+}
+
+function showColumnExplanation(event, id) {
+    const explanation = document.getElementById(id);
+    const rect = event.target.getBoundingClientRect();
+
+    let additionalOffset = 0;
+
+    // 등락률과 시가총액 설명창만 위치 보정
+    if (id === "rateExplanation" || id === "marketCapExplanationCurrent") {
+        additionalOffset = -20; // 높이를 20px 올림
+    }
+
+    // 설명창 위치 설정
+    explanation.style.top = `${window.scrollY + rect.top - explanation.offsetHeight - 95 + additionalOffset}px`;
+    explanation.style.left = `${window.scrollX + rect.left + 20}px`;
+
+    // 설명창 표시
+    explanation.style.display = 'block';
+    explanation.style.pointerEvents = 'none'; // 설명창이 마우스 이벤트에 영향을 받지 않도록 설정
+}
+
+function hideColumnExplanation(id) {
+    const explanation = document.getElementById(id);
+
+    // 설명창 숨기기
+    if (explanation) {
+        explanation.style.display = 'none';
+    }
+}
+
+
+
+</script>
+  
+</body>
+</html>

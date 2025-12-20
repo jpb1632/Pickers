@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="imagetoolbar" content="no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="title" content="웹사이트">
+  <meta name="description" content="웹사이트입니다.">
+  <meta name="keywords" content="키워드,키워드,키워드">
+  <meta property="og:title" content="웹사이트">
+  <meta property="og:description" content="웹사이트입니다">
+  <meta property="og:image" content="https://웹사이트/images/opengraph.png">
+  <meta property="og:url" content="https://웹사이트">
+  <title>강의 수정</title>
+  <link rel="stylesheet" href="/css/setting.css">
+  <link rel="stylesheet" href="/css/plugin.css">
+  <link rel="stylesheet" href="/css/template.css">
+  <link rel="stylesheet" href="/css/common.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.1.min.js"></script>
+<script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function() {
+            const inquireLink = document.getElementById("inquireLink");
+
+            if (inquireLink) { // 링크가 존재할 경우에만 이벤트 리스너 추가
+                inquireLink.addEventListener("click", function() {
+                    const isLoggedIn = "[[${session.auth != null ? 'true' : 'false'}]]" === "true";
+
+                    if (!isLoggedIn) {
+                        alert("로그인 후 이용할 수 있습니다.");
+                        location.href = "/login/login"; // 로그인 페이지로 리다이렉트
+                    } else {
+                        location.href = "/inquire/inquireWrite"; // 1:1 문의 페이지로 이동
+                    }
+                });
+            }
+        });
+    </script>
+<script type="text/javascript">
+function validateFiles() {
+    const detailImageInput = document.getElementById("lectureDetailImage");
+    const selectedFiles = detailImageInput.files; // 새로 선택한 파일
+    const existingImageButtons = document.querySelectorAll(".btnset-tableList-del[data-type='detail']");
+    const errorElement = document.getElementById("detailImageError");
+
+    let validExistingImages = 0;
+
+    console.log(`existingImageButtons (상세이미지) 개수: ${existingImageButtons.length}`);
+
+    // 기존 상세이미지 중 삭제되지 않은 개수 확인
+    existingImageButtons.forEach((button, index) => {
+        console.log(`상세이미지 버튼 ${index + 1} 상태: ${button.innerText.trim()}`);
+        if (button.innerText.trim() === "삭제") {
+            validExistingImages++;
+        }
+    });
+
+    console.log(`삭제되지 않은 기존 상세이미지 개수: ${validExistingImages}`);
+    console.log(`선택한 파일 개수: ${selectedFiles.length}`);
+
+    // 총 이미지 개수 계산
+    const totalFiles = validExistingImages + selectedFiles.length;
+
+    // 1. 기존 이미지 2개를 유지한 경우 (아무 파일 선택 X)
+    if (validExistingImages === 2 && selectedFiles.length === 0) {
+        errorElement.style.display = "none"; // 에러 메시지 숨김
+        return true;
+    }
+
+    // 2. 기존 이미지와 새로 선택한 파일의 합이 2개가 아닌 경우
+    if (totalFiles !== 2) {
+        errorElement.textContent = "강의 상세이미지는 반드시 2개를 선택해야 합니다.";
+        errorElement.style.display = "block";
+        return false;
+    }
+
+    // 모든 조건 만족 시
+    errorElement.style.display = "none";
+    return true;
+}
+
+</script>
+
+
+  
+  <script type="text/javascript">
+  function fileDel(btn, orgFile, storeFile,kind) {
+	$.ajax({
+		type:'post',
+		url:'/file/fileDel',
+		data:{"orgFile":orgFile, "storeFile" : storeFile},
+		dataType:'text',
+		success:function(result){
+			if(result == "1"){
+				$(btn).text("삭제취소");
+				if(kind == 'main'){
+					$("#main").css("display", "none");
+					$("#mainFile").html("<input type='file' name='lectureMainImage'/>");
+				}
+			}else{
+					$(btn).text("삭제");
+					if(kind == 'main'){
+						$("#main").css("display","");
+						$("#mainFile").html("");
+					}
+				}
+			},
+			error:function(){
+				alert("서버오류");
+			}
+	});
+}
+  function fileChk() {
+	let fileInput = $("input[name='lectureMainImage']");
+	if(fileInput.length > 0 && !fileInput[0].files.length){
+		alert("파일을 선택해주세요.");
+		return false;
+	}
+  }
+
+  </script>
+</head>
+
+<body>
+<!-- [S]tedu-N3 -->
+    <div class="tedu-N3" data-bid="XEm3ZgHi4n">
+        <div class="header-container lightmode">
+            <div class="header-top">
+                <div class="inner">
+                    <div class="header-member">
+                        <th:block th:if="${session.auth == null}">
+                            <a href="/login/login">
+                                <em class="ico">
+                                    <img src="/icons/ico_login.svg" alt="로그인 아이콘">
+                                </em>
+                                <span>로그인</span>
+                            </a>
+                            <a href="/register/membershipAgree">
+                                <em class="ico">
+                                    <img src="/icons/ico_member.svg" alt="회원가입 아이콘">
+                                </em>
+                                <span>회원가입</span>
+                            </a>
+                        </th:block>
+
+                        <th:block th:if="${session.auth != null}">
+                            <a href="/login/logout">
+                                <em class="ico">
+                                    <img src="/icons/ico_login.svg" alt="로그아웃 아이콘">
+                                </em>
+                                <span>로그아웃</span>
+                            </a>
+                            <th:block th:if="${session.auth.grade == 'mem'}">
+                                <a href="/myPage/memMyPage">
+                                    <em class="ico">
+                                        <img src="/icons/ico_member.svg" alt="마이페이지 아이콘">
+                                    </em>
+                                    <span>마이페이지</span>
+                                </a>
+                            </th:block>
+                            <th:block th:if="${session.auth.grade == 'emp'}">
+                                <a href="/myPage/empMyPage">
+                                    <em class="ico">
+                                        <img src="/icons/ico_member.svg" alt="마이페이지 아이콘">
+                                    </em>
+                                    <span>마이페이지</span>
+                                </a>
+                            </th:block>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+            <div class="header-nav">
+                <div class="inner">
+                    <div class="header-logo">
+                        <a href="/">
+                            <img src="/images/pickers_logo_main.png" alt="로고">
+                        </a>
+                    </div>
+                    <div class="header-gnb">
+
+                    </div><br><br><br>
+                    <div class="header-btn">
+                        <a href="javascript:void(0)" class="menu-open">
+                            <em class="ico">
+                                <img src="/icons/ico_menu.svg" alt="메뉴 아이콘">
+                            </em>
+                        </a>
+                        <a href="javascript:void(0)" class="menu-close">
+                            <em class="ico">
+                                <img src="/icons/ico_close.svg" alt="닫기 아이콘">
+                            </em>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+
+            <section class="header-area">
+                <div class="inner">
+                    <div class="menu-wrap">
+                        <div class="menu-box">
+                            <a class="menu-title">강의</a>
+                            <a href="/lecture/lectureList">강의</a>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'mem'}">
+                                <a href="/lecture/mylectureList">my강의</a>
+                                <a href="/item/cartList">장바구니</a>
+                                <a href="/item/wishList">찜</a>
+                            </th:block>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                                <a href="/lecture/emplectureList">강의 관리</a>
+                                <a href="/orders/empOrderList">주문 관리</a>
+                            </th:block>
+                        </div>
+                        <div class="menu-box">
+                            <a class="menu-title">인사이트</a>
+                            <a href="/news/newsListM">뉴스</a>
+                            <a href="/company/companyListM">기업</a>
+                            <a href="/stock/stockListM">주식</a>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                                <a href="/news/newsList">뉴스 관리</a>
+                                <a href="/company/companyList">기업 관리</a>
+                                <a href="/stock/stockList">주식 관리</a>
+                            </th:block>
+                        </div>
+                        <div class="menu-box">
+                            <a class="menu-title">커뮤니티</a>
+                            <a href="/board/boardQueList">질문게시판</a>
+                            <a href="/board/boardFreeList">자유게시판</a>
+                            <a href="/board/boardProfitList">수익인증</a>
+                            <a href="/board/boardTipList">꿀팁공유</a>
+                        </div>
+                        <div class="menu-box">
+                            <a class="menu-title">교육</a>
+                            <a href="/chart/list">교육</a>
+                            <a th:href="@{/word/wordSearch}">용어</a>
+                            <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                                <a th:href="@{/word/wordList}">용어 관리</a>
+                            </th:block>
+                        </div>
+                        <th:block th:if="${session.auth != null}">
+                            <div class="menu-box">
+                                <a class="menu-title">MY</a>
+                                <th:block th:if="${session.auth.grade == 'mem'}">
+                                    <a href="/inquire/inquireListM">1:1 문의내역</a>
+                                    <a th:href="@{/lectureInquire/lectureInquireListM/{memNum}(memNum=${session.memNum})}">강의 문의내역</a>
+                                    <a href="/orders/orderList">강의 주문내역</a>
+                                </th:block>
+                                <th:block th:if="${session.auth.grade == 'emp'}">
+                                    <a href="/inquire/inquireList">1:1문의 관리</a>
+                                    <a href="/lectureInquire/lectureInquireList">강의질문 관리</a>
+                                </th:block>
+                            </div>
+                        </th:block>
+                        <th:block th:if="${session.auth != null && session.auth.grade == 'emp'}">
+                            <div class="menu-box">
+                                <a class="menu-title">유저</a>
+                                <a href="/member/memList">회원 관리</a>
+                                <a href="/employee/empList">직원 관리</a>
+                            </div>
+                        </th:block>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    <!-- [E]tedu-N3 --><br><br>
+  <main class="th-layout-main">
+      <div class="tedu-N47" data-bid="gKM3zgP8b1">
+  <div class="input_standard-content-inner">
+    <div class="content-container">
+      <section class="myedu-wrap">
+        <div class="title-wrap">
+          <h3 class="cont-title">강의 수정</h3>
+        </div>
+        <div class="myedu-cont-wrap">
+          <form action="lectureUpdate" method="post" th:object="${lectureCommand}" enctype="multipart/form-data" onsubmit="return validateFiles();">
+            <div class="input_standard-tableset tableset-receipt tableset-text-top">
+              <table class="input_standard-tableset-table table">
+                <colgroup>
+                  <col>
+                  <col>
+                </colgroup>
+                <thead class="thead-light thead-border-top">
+                  <tr>
+                    <th scope="col">항목</th>
+                    <th scope="col">내용</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="tableset-dark">강의 번호</td>
+                    <td class="tableset-dark">
+                      <input
+                      	th:value="${lectureCommand.lectureNum}"
+                        type="text"
+                        name="lectureNum"
+                        class="tedu-input lightmode"
+                        placeholder="강의 번호 자동부여"
+                        aria-label="강의 번호"
+                        style="width: 100%;"
+                        readonly="readonly"
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="tableset-dark">강사 이름</td>
+                    <td class="tableset-dark">
+                      <input
+                      	th:value="${lectureCommand.lectureTeacherName}"
+                        type="text"
+                        name="lectureTeacherName"
+                        class="tedu-input lightmode"
+                        placeholder="강사 이름을 입력해주세요."
+                        aria-label="강사 이름"
+                        style="width: 100%;"
+                      />
+                      <span style="color:red" th:if="${#fields.hasErrors('lectureTeacherName')}" th:errors="*{lectureTeacherName}"></span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="tableset-dark">강의 제목</td>
+                    <td class="tableset-dark">
+                      <input
+                      	th:value="${lectureCommand.lectureTitle}"
+                        type="text"
+                        name="lectureTitle"
+                        class="tedu-input lightmode"
+                        placeholder="강의 제목을 입력해주세요."
+                        aria-label="강의 제목"
+                        style="width: 100%;"
+                      />
+                      <span style="color:red" th:if="${#fields.hasErrors('lectureTitle')}" th:errors="*{lectureTitle}"></span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="tableset-dark">강의 주제</td>
+                    <td class="tableset-dark">
+                      <input
+                      	th:value="${lectureCommand.lectureTopic}"
+                        type="text"
+                        name="lectureTopic"
+                        class="tedu-input lightmode"
+                        placeholder="강의 주제를 입력해주세요."
+                        aria-label="강의 주제"
+                        style="width: 100%;"
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="tableset-dark">강의 가격</td>
+                    <td class="tableset-dark">
+                      <input
+                      	th:value="${lectureCommand.lecturePrice}"
+                        type="number"
+                        name="lecturePrice"
+                        class="tedu-input lightmode"
+                        placeholder="강의 가격을 입력해주세요."
+                        aria-label="강의 가격"
+                        style="width: 100%;"
+                      />
+                      <span style="color:red" th:if="${#fields.hasErrors('lecturePrice')}" th:errors="*{lecturePrice}"></span>
+                    </td>
+                  </tr>
+                  <tr>
+					  <td class="tableset-dark">강의 설명</td>
+					  <td class="tableset-dark">
+					    <textarea
+					      th:value="${lectureCommand.lectureDescription}"
+					      name="lectureDescription"
+					      class="tedu-input lightmode"
+					      placeholder="강의 설명을 입력해주세요."
+					      aria-label="강의 설명"
+					      style="width: 100%; height: 200px; overflow-y: scroll; white-space: pre-wrap;"
+					    >[[${lectureCommand.lectureDescription}]]</textarea>
+					  </td>
+					</tr>
+                  <tr>
+                    <td class="tableset-dark">강의 등록 사원</td>
+                    <td class="tableset-dark">
+                      <input
+                      	th:value="${lectureCommand.empNum}"
+                        type="text"
+                        name="empNum"
+                        class="tedu-input lightmode"
+                        placeholder="강의 등록 사원"
+                        aria-label="강의 등록 사원"
+                        style="width: 100%;"
+                        readonly="readonly"
+                      />
+                    </td>
+                  </tr>
+                  
+                  <tr>
+				    <td class="tableset-dark">강의 메인이미지</td>
+				    <td class="tableset-dark">
+				        <span id="mainFile"></span>
+				        <span id="main" th:text="${lectureCommand.lectureMainImage}"></span>
+				        <button type="button"  class="btnset-tableList-del"
+				            th:attr="onclick=|javascript:fileDel(this,
+				                        '${lectureCommand.lectureMainImage}',
+				                        '${lectureCommand.lectureMainStoreImage}', 'main');|">
+				            삭제
+				        </button>
+				    </td>
+				</tr>
+				
+<tr>
+    <td class="tableset-dark">강의 상세이미지</td>
+    <td class="tableset-dark">
+        <th:block th:each="image, idx : ${#strings.arraySplit(lectureCommand.lectureDetailImage,'[`/]')}">
+            <div>
+                <span th:text="${image}"></span>
+                <button type="button" class="btnset-tableList-del"
+                    th:attr="onclick=|javascript:fileDel(this,
+                        '${image}',
+                        '${#strings.arraySplit(lectureCommand.lectureDetailStoreImage,'[`/]')[idx.index]}');|">
+                    삭제
+                </button>
+            </div>
+        </th:block>
+        <input type="file" name="lectureDetailImage" id="lectureDetailImage" multiple="multiple" class="tedu-input lightmode" />
+        <!-- 에러 메시지 -->
+        <div style="height: 20px;">
+            <small id="detailImageError" style="color: red; display: none; height: 20px; line-height: 20px;">
+                <!-- 에러 메시지가 여기에 표시됩니다 -->
+            </small>
+        </div>
+    </td>
+</tr>
+
+
+
+
+
+
+              
+              
+              
+
+                </tbody>
+              </table>
+            </div>
+            <div class="input_standard-btn-box form-footer">
+              <a class="tedu-btn tedu-btn-light btn-mono" href="javascript:history.back()">취소</a>
+              <input class="tedu-btn tedu-btn-light btn-link" type="submit" value="수정하기" />
+            </div>
+            <br><br><br>
+          </form>
+        </div>
+      </section>
+    </div>
+  </div>
+  </div>
+</main>
+
+
+<!-- [S]tedu-N17 -->
+    <div class="tedu-N17" data-bid="fLM3zgHIUl">
+        <div class="footer-container">
+            <div class="footer-top">
+                <div class="inner">
+                    <div class="footer-menu">
+                        <th:block th:if="${session.auth == null or session.auth.grade == 'emp'}">
+                            <a th:href="@{/employee/empWrite}">직원가입</a>
+                        </th:block>
+                        <th:block th:if="${session.auth == null or session.auth.grade != 'emp'}">
+                            <a href="javascript:void(0);" id="inquireLink">1:1 문의</a>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-area">
+                <div class="inner">
+                    <dif class="footer-info-wrap">
+                        <div class="footer-logo">
+                            <a href="javascript:void(0)">
+                                <img src="/images/pickers_logo_footer.png" alt="로고">
+                            </a>
+                        </div>
+                        <div class="footer-info">
+                            <span>경기도 안양시 만안구 성결대학로 53 성결관 301호</span>
+                            <span>T. 010-1234-5678</span>
+                            <span>E. pickers@official.co.kr</span>
+                            <span class="copy">2022 BY TEMPLATEHOUSE. ALL RIGHTS RESEVED</span>
+                        </div>
+                    </dif>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- [E]tedu-N17 -->
+      <script src="/js/setting.js"></script>
+  <script src="/js/plugin.js"></script>
+  <script src="/js/template.js"></script>
+  <script src="/js/common.js"></script>
+  <script src="/js/script.js"></script>
+</body>
+</html>
