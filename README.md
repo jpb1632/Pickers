@@ -4,6 +4,7 @@
 개인 투자자 증가 추세에 맞춰 초보 투자자가 실전 투자 전 체계적으로 학습할 수 있도록 만들었습니다.
 
 **개발 기간:** 2024.12.05 ~ 2025.01.23 (3인 팀 프로젝트)  
+**담당:** Kafka+WebSocket 파이프라인, 주문/결제(PG), 장바구니/찜, 주식·용어·게시판  
 **수상:** 디지털 핵심 실무인재 양성 최우수상 (2025.01.23)
 
 ---
@@ -23,7 +24,7 @@
   - Graceful Shutdown (isRunning flag)
   - Kafka 없이도 동작하는 시뮬레이션 모드
   - Kafka Producer 신뢰성 옵션 (acks=all, retries=3, idempotence=true)
-  
+
 - Controller/Service 로깅 시스템 개선
   - Logger 클래스 추가 (9개 파일)
   - System.out/err 제거 (48건 → 0건)
@@ -34,7 +35,7 @@
   - LIKE_MEMBERS 테이블 분리 (VARCHAR2 콤마 저장 → 정규화)
   - PRIMARY KEY로 동시성 제어
   - 조회 성능 대폭 개선 (문자열 스캔 제거)
-  
+
 - 결제 시스템 보안 강화
   - 이니시스 샘플 코드 Spring Boot 전환
   - 중복 결제 방지 (3중 방어: 애플리케이션 + DB + PG)
@@ -333,21 +334,6 @@ kafka.enabled=false
 - System.out/err 제거 (48건 → 0건)
 - printStackTrace() 제거: 3건 → 0건
 - 운영 모니터링 준비: 로그 레벨 제어 가능
-
-개선된 파일 목록:
-
-Controller (3개):
-- BoardController.java
-- WordController.java
-- OrdersController.java
-
-Service (6개):
-- INIstdpayPcReturn.java
-- BoardDetailService.java
-- BoardDeleteService.java
-- LectureOrderService.java
-- WordDetailService.java
-- AutoNumService.java
 
 #### 3. 게시판 좋아요 기능 정규화
 - LIKE_MEMBERS 테이블 분리: VARCHAR2 콤마 저장 → 정규화
@@ -721,7 +707,7 @@ CREATE TABLE LIKE_MEMBERS (
 
 박다영
 - 회원 등록 및 관리
-- 직원 등록 및 관리 
+- 직원 등록 및 관리
 - 로그인/로그아웃 및 세션 관리
 - 아이디/비밀번호 찾기
 - 자동 로그인 구현
