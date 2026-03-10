@@ -3,8 +3,9 @@
 <meta charset="UTF-8">
 <title>Insert title here</title>
 <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.1.min.js"></script>
-<script>
-ws = new WebSocket("ws://localhost:9000");  // WebSocket 서버 주소 
+<script th:inline="javascript">
+const wsUrl = /*[[${@environment.getProperty('realtime.browser-ws-url')}]]*/ "";
+ws = new WebSocket(wsUrl);  // WebSocket 서버 주소 
 ws.onopen = onOpen;
 ws.onmessage = onMessage;
 ws.onclose = onClose;

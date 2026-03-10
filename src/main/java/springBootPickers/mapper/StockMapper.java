@@ -21,6 +21,9 @@ public interface StockMapper {
 
 	public void stockUpdate(StockDTO dto);
 
+	public void updateRealtimeCurrentPrice(@Param("stockNum") String stockNum,
+			@Param("currentPrice") Long currentPrice);
+
 	public void stockDelete(String stockNum);
 
 	public void stocksDelete(List<String> stockNumList);

@@ -1,270 +1,457 @@
 package springBootPickers.realData;
 
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PreDestroy;
+import springBootPickers.domain.StockDTO;
+import springBootPickers.mapper.StockMapper;
 
-import java.net.InetSocketAddress;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-/**
- * Spring Boot 시작 시 실시간 주식 데이터 서비스 자동 시작
- * 
- * 아키텍처:
- * 한국투자증권 API → KISWebSocketClient → Kafka → KafkaWebSocketServer → 프론트엔드
- * 
- * Kafka 장애 시 WebSocket 직접 전송으로 우회
- * Health Check (30초 간격) + 자동 복구
- */
 @Component
 public class RealTimeStockServiceWithKafka implements CommandLineRunner {
 
-	private static final Logger log = LoggerFactory.getLogger(RealTimeStockServiceWithKafka.class);
-    
+    private static final Logger log = LoggerFactory.getLogger(RealTimeStockServiceWithKafka.class);
+
+    private static final String DEFAULT_STOCK_CODE = "005930";
+    private static final long DEFAULT_SEED_PRICE = 100000L;
+    private static final String DEFAULT_KAFKA_HOST = "localhost";
+    private static final int DEFAULT_KAFKA_PORT = 9092;
+    private static final int REALTIME_SYMBOL_LIMIT = 10;
+    private static final int LIVE_RECOVERY_CONNECT_TIMEOUT_SECONDS = 5;
+
     @Value("${kis.app-key:YOUR_APP_KEY}")
     private String appKey;
-    
+
     @Value("${kis.app-secret:YOUR_APP_SECRET}")
     private String appSecret;
-    
+
     @Value("${kis.websocket.url:ws://ops.koreainvestment.com:21000}")
     private String websocketUrl;
-    
+
+    @Value("${kis.realtime.symbols:}")
+    private String configuredRealtimeSymbols;
+
     @Value("${kis.realtime.enabled:false}")
     private boolean realtimeEnabled;
-    
+
     @Value("${kafka.enabled:false}")
     private boolean kafkaEnabled;
-    
+
+    @Value("${kafka.bootstrap-servers:localhost:9092}")
+    private String kafkaBootstrapServers;
+
+    @Value("${realtime.internal-ws.host:localhost}")
+    private String internalWsHost;
+
+    @Value("${realtime.internal-ws.port:9000}")
+    private int internalWsPort;
+
     private final KISApiService apiService;
-    
+    private final StockMapper stockMapper;
+
     private KISWebSocketClientWithKafka kisClient;
-    
-    // WebSocket 서버 참조 (공유)
     private KafkaWebSocketServer wsServer;
-    
-    public RealTimeStockServiceWithKafka(KISApiService apiService) {
+    private volatile boolean liveRecoveryInProgress;
+
+    private List<String> realtimeSymbols = List.of(DEFAULT_STOCK_CODE);
+    private Map<String, Long> seedPrices = Map.of(DEFAULT_STOCK_CODE, DEFAULT_SEED_PRICE);
+
+    public RealTimeStockServiceWithKafka(KISApiService apiService, StockMapper stockMapper) {
         this.apiService = apiService;
+        this.stockMapper = stockMapper;
     }
-    
+
     @Override
-    public void run(String... args) throws Exception {
-        
+    public void run(String... args) {
         if (!realtimeEnabled) {
-            log.debug("-------------------------------------------");
-            log.warn("실시간 데이터 서비스가 비활성화되어 있습니다.");
-            log.debug("-------------------------------------------");
-            log.debug("활성화 설정 (application.properties):");
-            log.debug("kis.realtime.enabled=true");
-            log.debug("kafka.enabled=true");
-            log.debug("설정 후 재시작하면 적용됩니다.");
-            log.debug("-------------------------------------------");
+            log.warn("실시간 주식 서비스가 비활성화되어 있습니다.");
             return;
         }
-        
-        log.debug("\n");
-        log.info("===========================================");
-        log.info("실시간 주식 서비스 시작");
-        log.info("연동: 한국투자증권 WebSocket + Kafka");
-        log.info("내부 WebSocket 서버: localhost:9000");
-        log.info("===========================================");
-        log.info("-------------------------------------------");
-        
-        // 1. WebSocket 서버 시작 (포트 9000)
-        InetSocketAddress address = new InetSocketAddress("localhost", 9000);
-        wsServer = new KafkaWebSocketServer(address);
-        wsServer.start();
-        
-        log.debug("-------------------------------------------");
-        log.info("WebSocket 서버 시작 (포트: 9000)");
-        log.debug("-------------------------------------------");
-        
-        // Kafka 활성화 확인
+
+        logStartup();
+        startInternalWebSocketServer();
+        loadRealtimeSymbols();
+
         if (!kafkaEnabled) {
-            log.warn("Kafka 비활성화 - 시뮬레이션 모드로 실행");
-            log.debug("실제 API 연동 방법:");
-            log.debug("1. Zookeeper 실행:");
-            log.debug("cd c:\\src\\kafka_2.13-3.8.0\\bin\\windows");
-            log.debug("zookeeper-server-start.bat ..\\..\\config\\zookeeper.properties");
-            log.debug("2. Kafka 실행:");
-            log.debug("kafka-server-start.bat ..\\..\\config\\server.properties");
-            log.debug("3. application.properties 설정:");
-            log.debug("kafka.enabled=true");
-            log.debug("-------------------------------------------");
-            
-            startSimulationWithHealthCheck();  // 시뮬레이션 모드(health check 포함)
-            printAccessInfo();
+            startSimulationOnly("Kafka가 비활성화되어 있습니다.");
             return;
         }
-        
-        // 2. Kafka 연결 테스트
-        if (!testKafkaConnection()) {
-            log.error("Kafka 연결 실패");
-            log.error("Zookeeper와 Kafka가 실행 중인지 확인하세요:");
-            log.error("1. Zookeeper: localhost:2181");
-            log.error("2. Kafka: localhost:9092");
-            log.warn("시뮬레이션 모드로 전환합니다.");
-            startSimulationWithHealthCheck();  // 시뮬레이션 모드(health check 포함)
-            printAccessInfo();
+
+        if (!isApiCredentialConfigured()) {
+            startSimulationOnly("KIS API 인증 정보가 설정되지 않았습니다.");
             return;
         }
-        
-        log.info("Kafka 연결 성공 (localhost:9092)");
-        
-        // 3. Kafka Consumer 시작
-        wsServer.startKafkaConsumer();
-        
-        // 4. API 키 확인
-        if ("YOUR_APP_KEY".equals(appKey) || "YOUR_APP_SECRET".equals(appSecret)) {
-            log.error("API 키 미설정 - 시뮬레이션 모드");
-            log.error("실제 데이터 연동 방법:");
-            log.error("1. https://apiportal.koreainvestment.com");
-            log.error("2. 모의투자 신청 후 APP KEY 발급");
-            log.error("3. application.properties에 추가");
-            log.error("-------------------------------------------");
-            
-            startSimulationWithHealthCheck();  // 시뮬레이션 모드(health check 포함)
-            printAccessInfo();
-            return;
-        }
-        
-        // 5. 접속키 발급
-        log.debug("한국투자증권 API 인증 중...");
+
         String approvalKey = apiService.getApprovalKey(appKey, appSecret);
-        
         if (approvalKey == null) {
-            log.error("접속키 발급 실패");
-            log.warn("시뮬레이션 모드로 전환합니다.");
-            startSimulationWithHealthCheck();  // 시뮬레이션 모드(health check 포함)
-            printAccessInfo();
+            startSimulationOnly("KIS approval key 발급에 실패했습니다.");
             return;
         }
-        
-        log.info("접속키 발급 완료");
-        
-        // 6. 한국투자증권 WebSocket → Kafka Producer
-        log.debug("한국투자증권 WebSocket 연결 중");
-        log.debug("WebSocket URL: {}", websocketUrl);
-        
+
+        if (!testKafkaConnection()) {
+            startRecoverableSimulation("Kafka(" + kafkaBootstrapServers + ")에 연결할 수 없습니다.");
+            return;
+        }
+
+        wsServer.startKafkaConsumer();
+        connectRealtimeClient(approvalKey);
+    }
+
+    private void logStartup() {
+        log.info("실시간 주식 서비스 시작");
+        log.info("Kafka bootstrap servers: {}", kafkaBootstrapServers);
+        log.info("내부 WebSocket 서버: {}:{}", internalWsHost, internalWsPort);
+    }
+
+    private void startInternalWebSocketServer() {
+        wsServer = new KafkaWebSocketServer(
+                new InetSocketAddress(internalWsHost, internalWsPort),
+                kafkaBootstrapServers
+        );
+        wsServer.start();
+        log.info("내부 WebSocket 서버 시작 완료");
+    }
+
+    private void connectRealtimeClient(String approvalKey) {
+        shutdownCurrentClient();
+
         try {
-        	kisClient = new KISWebSocketClientWithKafka(websocketUrl, approvalKey);
-            
-            // WebSocket 서버 참조 전달 (Kafka 장애 시 직접 전송용)
+            kisClient = new KISWebSocketClientWithKafka(
+                    websocketUrl,
+                    approvalKey,
+                    realtimeSymbols,
+                    seedPrices,
+                    kafkaBootstrapServers,
+                    stockMapper
+            );
             kisClient.setWebSocketServer(wsServer);
-            
             kisClient.connect();
-            
-            log.info("한국투자증권 연결 완료");
-            log.info("-------------------------------------------");
-            log.info("실시간 데이터 수신 시작");
-            log.info("데이터 흐름: 한국투자증권 → Kafka → 프론트엔드");
-            log.info("Kafka 장애 시: WebSocket 직접 전송으로 우회");
-            log.info("장 종료/미수신 시: 시뮬레이션 자동 전환");
-            log.info("차트 URL: http://localhost:8080/chart/detail?stockNum=000001");
-            log.info("-------------------------------------------");
-            log.debug("");
-            log.debug("참고: 장 마감 이후에는 실시간 데이터가 없을 수 있습니다.");
-            log.debug("");
-            log.info("-------------------------------------------");
-            printAccessInfo();
-            
+
+            log.info("KIS WebSocket 연결 시작");
+            log.info("실시간 구독 종목 {}개: {}", realtimeSymbols.size(), String.join(", ", realtimeSymbols));
+            log.info("차트 URL: http://localhost:8080/chart/detail?stockNum={}", getSampleStockNum());
         } catch (Exception e) {
-            log.error("WebSocket 연결 실패: {}", e.getMessage());
-            log.warn("시뮬레이션 모드로 전환합니다.");
-            startSimulationWithHealthCheck();  // 시뮬레이션 모드(health check 포함)
-            printAccessInfo();
+            startSimulationOnly("KIS WebSocket 연결에 실패했습니다: " + e.getMessage());
         }
     }
-    
-    /**
-     * Kafka 연결 테스트
-     */
+
+    private void startSimulationOnly(String reason) {
+        startSimulationMode(reason, false);
+    }
+
+    private void startRecoverableSimulation(String reason) {
+        startSimulationMode(reason, true);
+    }
+
+    private void startSimulationMode(String reason, boolean recoverable) {
+        log.warn("{} 시뮬레이션 모드로 전환합니다.", reason);
+        shutdownCurrentClient();
+
+        try {
+            KISWebSocketClientWithKafka simulationClient = new KISWebSocketClientWithKafka(
+                    websocketUrl,
+                    recoverable ? "SIMULATION_WITH_HEALTHCHECK" : "SIMULATION_MODE",
+                    realtimeSymbols,
+                    seedPrices,
+                    kafkaBootstrapServers,
+                    stockMapper
+            );
+            simulationClient.setWebSocketServer(wsServer);
+
+            if (recoverable) {
+                simulationClient.setKafkaRecoveryHandler(() -> recoverLiveClient(simulationClient));
+                simulationClient.startLocalSimulation();
+                log.info("Kafka health check 복구가 가능한 시뮬레이션을 시작합니다.");
+            } else {
+                log.info("자동 복구 없는 시뮬레이션을 시작합니다.");
+            }
+
+            kisClient = simulationClient;
+        } catch (Exception e) {
+            log.error("시뮬레이션 클라이언트 시작 실패", e);
+            wsServer.startSimulationMode(realtimeSymbols, seedPrices);
+        }
+
+        printAccessInfo();
+    }
+
+    private void recoverLiveClient(KISWebSocketClientWithKafka simulationClient) {
+        synchronized (this) {
+            if (liveRecoveryInProgress || kisClient != simulationClient) {
+                return;
+            }
+            liveRecoveryInProgress = true;
+        }
+
+        KISWebSocketClientWithKafka liveClient = null;
+        boolean recovered = false;
+
+        try {
+            if (!isApiCredentialConfigured()) {
+                log.warn("KIS 인증 정보가 없어 live 복구를 건너뜁니다.");
+                return;
+            }
+
+            String approvalKey = apiService.getApprovalKey(appKey, appSecret);
+            if (approvalKey == null) {
+                log.warn("KIS approval key 재발급에 실패해 live 복구를 건너뜁니다.");
+                return;
+            }
+
+            liveClient = new KISWebSocketClientWithKafka(
+                    websocketUrl,
+                    approvalKey,
+                    realtimeSymbols,
+                    seedPrices,
+                    kafkaBootstrapServers,
+                    stockMapper
+            );
+            liveClient.setWebSocketServer(wsServer);
+
+            log.info("Kafka 복구 감지 - KIS live 스트림 재연결을 시도합니다.");
+            boolean connected = liveClient.connectBlocking(LIVE_RECOVERY_CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            if (!connected || !liveClient.isOpen()) {
+                log.warn("live 복구에 실패해 시뮬레이션 모드를 유지합니다.");
+                return;
+            }
+
+            kisClient = liveClient;
+            recovered = true;
+            log.info("KIS live 스트림 복구에 성공했습니다.");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("live 복구가 중단되었습니다.");
+        } catch (Exception e) {
+            log.warn("live 복구에 실패했습니다: {}", e.getMessage());
+        } finally {
+            if (recovered) {
+                simulationClient.completeRecoveryAttempt(true);
+                simulationClient.shutdown();
+            } else {
+                if (liveClient != null) {
+                    liveClient.shutdown();
+                }
+                simulationClient.completeRecoveryAttempt(false);
+            }
+
+            liveRecoveryInProgress = false;
+        }
+    }
+
     private boolean testKafkaConnection() {
-        try (java.net.Socket socket = new java.net.Socket()) {
-            socket.connect(new java.net.InetSocketAddress("localhost", 9092), 1000);
-            log.debug("Kafka 포트(9092) 연결 확인");
+        InetSocketAddress probeAddress = resolveKafkaProbeAddress();
+
+        try (Socket socket = new Socket()) {
+            socket.connect(probeAddress, 1000);
             return true;
         } catch (Exception e) {
-            log.debug("Kafka 포트(9092) 연결 실패: {}", e.getMessage());
+            log.debug(
+                    "Kafka 연결 확인 실패 ({}:{}): {}",
+                    probeAddress.getHostString(),
+                    probeAddress.getPort(),
+                    e.getMessage()
+            );
             return false;
         }
     }
-    
-    /**
-     * Health Check와 함께 시뮬레이션 시작
-     * Kafka 없이 시작해도 Health Check가 작동하여 자동 복구 가능
-     */
-    private void startSimulationWithHealthCheck() {
-        log.info("시뮬레이션 모드로 시작합니다. (health check 활성)");
-        log.info("Kafka가 복구되면 자동으로 Kafka 모드로 전환됩니다.");
-        
+
+    private InetSocketAddress resolveKafkaProbeAddress() {
+        if (kafkaBootstrapServers == null || kafkaBootstrapServers.isBlank()) {
+            return new InetSocketAddress(DEFAULT_KAFKA_HOST, DEFAULT_KAFKA_PORT);
+        }
+
+        String firstBroker = kafkaBootstrapServers.split(",")[0].trim();
+        int separatorIndex = firstBroker.lastIndexOf(':');
+
+        if (separatorIndex <= 0 || separatorIndex == firstBroker.length() - 1) {
+            return new InetSocketAddress(firstBroker, DEFAULT_KAFKA_PORT);
+        }
+
+        String host = firstBroker.substring(0, separatorIndex);
+        String portValue = firstBroker.substring(separatorIndex + 1);
+
         try {
-            // 시뮬레이션 모드지만 health check는 활성화
-            kisClient = new KISWebSocketClientWithKafka(
-                websocketUrl, 
-                "SIMULATION_WITH_HEALTHCHECK"  // 시뮬레이션 + health check 모드
-            );
-            
-            // WebSocket 서버 참조 전달
-            kisClient.setWebSocketServer(wsServer);
-            
-            // 시뮬레이션 시작
-            kisClient.startLocalSimulation();
-            
-            log.info("시뮬레이션 클라이언트 생성 완료");
-            log.info("Health check 스케줄러 시작 (30초 간격)");
-            log.info("Kafka 복구 감지 시 자동 전환");
-            
-        } catch (Exception e) {
-            log.error("시뮬레이션 시작 실패", e);
-            log.warn("Fallback: WebSocket 서버 시뮬레이션으로 전환");
-            
-            // Fallback: KafkaWebSocketServer의 시뮬레이션 사용
-            wsServer.startSimulationMode();
+            return new InetSocketAddress(host, Integer.parseInt(portValue));
+        } catch (NumberFormatException e) {
+            log.warn("Kafka 포트 파싱 실패 - 기본 포트 {} 사용: {}", DEFAULT_KAFKA_PORT, firstBroker);
+            return new InetSocketAddress(host, DEFAULT_KAFKA_PORT);
         }
     }
-    
-    /**
-     * 접속 정보 출력
-     */
-    private void printAccessInfo() {
-        log.debug("===========================================");
-        log.debug("차트 페이지 접속:");
-        log.debug("http://localhost:8080/chart/detail?stockNum=000001");
-        log.debug("또는 메인 페이지에서");
-        log.debug("교육 → 삼성전자 클릭");
-        log.debug("===========================================");
+
+    private void loadRealtimeSymbols() {
+        try {
+            LinkedHashMap<String, Long> loadedSeedPrices = loadConfiguredSeedPrices();
+            if (loadedSeedPrices.isEmpty()) {
+                loadedSeedPrices = loadSeedPricesFromDatabase();
+            }
+
+            if (loadedSeedPrices.isEmpty()) {
+                applyDefaultRealtimeSymbol();
+                return;
+            }
+
+            refreshSeedPricesFromRest(loadedSeedPrices);
+            realtimeSymbols = List.copyOf(loadedSeedPrices.keySet());
+            seedPrices = Map.copyOf(loadedSeedPrices);
+
+            log.info("실시간 대상 {}개 종목 로드: {}", realtimeSymbols.size(), String.join(", ", realtimeSymbols));
+        } catch (Exception e) {
+            log.warn("실시간 종목 로드 실패 - 기본값으로 전환", e);
+            applyDefaultRealtimeSymbol();
+        }
     }
-    
-    /**
-     * Spring Boot 종료 시 자동으로 호출됨
-     */
+
+    private LinkedHashMap<String, Long> loadConfiguredSeedPrices() {
+        LinkedHashMap<String, Long> loadedSeedPrices = new LinkedHashMap<>();
+        if (configuredRealtimeSymbols == null || configuredRealtimeSymbols.isBlank()) {
+            return loadedSeedPrices;
+        }
+
+        for (String rawSymbol : configuredRealtimeSymbols.split(",")) {
+            String stockNum = rawSymbol.trim();
+            if (stockNum.isEmpty()) {
+                continue;
+            }
+
+            StockDTO stock = stockMapper.stockSelectOne(stockNum);
+            if (stock == null) {
+                log.warn("설정 종목이 DB에 없습니다. 종목코드={}", stockNum);
+                continue;
+            }
+
+            loadedSeedPrices.put(stockNum, resolveCurrentPrice(stock));
+        }
+
+        return loadedSeedPrices;
+    }
+
+    private LinkedHashMap<String, Long> loadSeedPricesFromDatabase() {
+        LinkedHashMap<String, Long> loadedSeedPrices = new LinkedHashMap<>();
+        List<StockDTO> stocks = stockMapper.stockSelectForChart(0, REALTIME_SYMBOL_LIMIT, "currentPrice", "desc");
+
+        for (StockDTO stock : stocks) {
+            if (stock == null || stock.getStockNum() == null || stock.getStockNum().isBlank()) {
+                continue;
+            }
+
+            loadedSeedPrices.put(stock.getStockNum(), resolveCurrentPrice(stock));
+        }
+
+        return loadedSeedPrices;
+    }
+
+    private void refreshSeedPricesFromRest(LinkedHashMap<String, Long> loadedSeedPrices) {
+        if (loadedSeedPrices.isEmpty() || !isApiCredentialConfigured()) {
+            return;
+        }
+
+        String accessToken = apiService.getAccessToken(appKey, appSecret);
+        if (accessToken == null || accessToken.isBlank()) {
+            log.warn("REST 기준가 조회에 실패해 DB current_price를 사용합니다.");
+            return;
+        }
+
+        int refreshedCount = 0;
+
+        for (Map.Entry<String, Long> entry : loadedSeedPrices.entrySet()) {
+            String stockNum = entry.getKey();
+            Long restPrice = apiService.getDomesticCurrentPrice(accessToken, appKey, appSecret, stockNum);
+            if (restPrice == null || restPrice <= 0) {
+                continue;
+            }
+
+            entry.setValue(restPrice);
+            refreshedCount++;
+
+            try {
+                stockMapper.updateRealtimeCurrentPrice(stockNum, restPrice);
+            } catch (Exception e) {
+                log.warn("REST 기준가 DB 반영 실패 - 종목 {}: {}", stockNum, e.getMessage());
+            }
+        }
+
+        if (refreshedCount > 0) {
+            log.info("REST 기준가 {}개 종목 갱신", refreshedCount);
+        } else {
+            log.warn("REST 기준가를 가져오지 못해 DB current_price를 그대로 사용합니다.");
+        }
+    }
+
+    private void applyDefaultRealtimeSymbol() {
+        realtimeSymbols = List.of(DEFAULT_STOCK_CODE);
+        seedPrices = Map.of(DEFAULT_STOCK_CODE, DEFAULT_SEED_PRICE);
+        log.warn("실시간 종목을 찾지 못해 기본값 {}을 사용합니다.", DEFAULT_STOCK_CODE);
+    }
+
+    private long resolveCurrentPrice(StockDTO stock) {
+        return stock.getCurrentPrice() != null ? stock.getCurrentPrice() : DEFAULT_SEED_PRICE;
+    }
+
+    private boolean isApiCredentialConfigured() {
+        return appKey != null
+                && appSecret != null
+                && !appKey.isBlank()
+                && !appSecret.isBlank()
+                && !"YOUR_APP_KEY".equals(appKey)
+                && !"YOUR_APP_SECRET".equals(appSecret);
+    }
+
+    private String getSampleStockNum() {
+        if (realtimeSymbols.isEmpty()) {
+            return DEFAULT_STOCK_CODE;
+        }
+
+        return realtimeSymbols.contains(DEFAULT_STOCK_CODE)
+                ? DEFAULT_STOCK_CODE
+                : realtimeSymbols.get(0);
+    }
+
+    private void printAccessInfo() {
+        log.info("차트 URL: http://localhost:8080/chart/detail?stockNum={}", getSampleStockNum());
+    }
+
+    private void shutdownCurrentClient() {
+        if (kisClient == null) {
+            return;
+        }
+
+        try {
+            kisClient.shutdown();
+        } catch (Exception e) {
+            log.warn("기존 실시간 클라이언트 종료 실패: {}", e.getMessage());
+        } finally {
+            kisClient = null;
+        }
+    }
+
     @PreDestroy
     public void cleanup() {
-        log.info("Spring Boot 종료 감지 - 리소스 정리 시작");
-        
+        log.info("실시간 리소스 정리 시작");
+
         try {
-            if (kisClient != null) {
-                log.info("KIS WebSocket Client 종료 중...");
-                kisClient.shutdown();
-            }
+            shutdownCurrentClient();
         } catch (Exception e) {
-            log.error("KIS Client 종료 실패", e);
+            log.error("KIS 실시간 클라이언트 종료 실패", e);
         }
-        
+
         try {
             if (wsServer != null) {
-                log.info("WebSocket Server 종료 중...");
                 wsServer.shutdown();
             }
         } catch (Exception e) {
-            log.error("WebSocket Server 종료 실패", e);
+            log.error("내부 WebSocket 서버 종료 실패", e);
         }
-        
-        log.info("리소스 정리 완료");
+
+        log.info("실시간 리소스 정리 완료");
     }
 }

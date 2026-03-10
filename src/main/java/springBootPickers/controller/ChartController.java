@@ -3,6 +3,7 @@ package springBootPickers.controller;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +19,9 @@ public class ChartController {
 
     @Autowired
     private ChartService chartService;
+
+    @Value("${realtime.browser-ws-url:}")
+    private String realtimeWsUrl;
 
     @GetMapping("list")
     public String chartList(
@@ -53,6 +57,7 @@ public class ChartController {
     public String chartDetail(@RequestParam("stockNum") String stockNum, Model model) {
         StockDTO stock = chartService.getChartDetail(stockNum);
         model.addAttribute("stock", stock);
+        model.addAttribute("realtimeWsUrl", realtimeWsUrl);
         return "thymeleaf/chart/chartDetail"; // HTML 파일 경로
     }
 }

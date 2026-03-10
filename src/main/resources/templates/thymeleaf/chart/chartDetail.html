@@ -240,16 +240,18 @@
                 </ul>
             </div>
             </div>
-      <div class="basic-N22" id="QnM5MjbkF8">
+      <div class="basic-N22" id="QnM5MjbkF8" th:attr="data-stock-num=${stock != null ? stock.stockNum : ''},data-ws-url=${realtimeWsUrl}">
         <div class="contents-container container-full">
           <div class="company-info" style="display: flex; align-items: center;">
-              <h4 class="h4 contents-title stock-name-hoverable-area" style="margin-right: 10px; font-size: 20px;" onclick="showStockNameExplanation(event)">삼성전자</h4>
-              <p class="p1 cardset-desc stock-code-hoverable-area" style="margin-left: -12px; font-size: 15px; color: #8a8a8a;" onclick="showStockCodeExplanation(event)">005930</p>
+              <h4 class="h4 contents-title stock-name-hoverable-area" style="margin-right: 10px; font-size: 20px;" onclick="showStockNameExplanation(event)" th:text="${stock != null and stock.companyName != null ? stock.companyName : '-'}">삼성전자</h4>
+              <p class="p1 cardset-desc stock-code-hoverable-area" style="margin-left: -12px; font-size: 15px; color: #8a8a8a;" onclick="showStockCodeExplanation(event)" th:text="${stock != null and stock.stockNum != null ? stock.stockNum : '-'}">005930</p>
             </div>
 <div class="stock-price-container">
   <h4 class="contents-title h5 stock-price-hoverable-area" 
+      id="currentStockPrice"
       onclick="showStockPriceExplanation(event)" 
-      style="text-align: left; font-size: 24px;">109,500원</h4>
+      style="text-align: left; font-size: 24px;"
+      th:text="${stock != null and stock.currentPrice != null ? #numbers.formatInteger(stock.currentPrice, 0, 'COMMA') + '원' : '-'}">109,500원</h4>
 </div>
 
          <div class="button-container">
@@ -298,8 +300,8 @@
   <div class="cardset-cont" style="padding: 10px;">
     <h2 class="cardset-tit" style="margin-right: 30px; font-size: 16px;">차트</h2>
     <div class="chart-container">
-  <canvas id="realTimeChart"></canvas>
-</div>
+      <canvas id="realTimeChart"></canvas>
+    </div>
 
   </div>
 </div>
@@ -324,7 +326,7 @@
 		</th>
 
         <th>
-		    <span class="volume-hoverable-area" onclick="showVolumeExplanation(event)">거래량 (주)</span>
+		    <span class="volume-hoverable-area" onclick="showVolumeExplanation(event)">누적거래량 (주)</span>
 		</th>
 
         <th>
@@ -396,7 +398,7 @@
     </div>
 
 <div class="price-input-group price-hoverable-area" onclick="showPriceExplanation(event)" style="display: flex; justify-content: space-between; gap: 5px;">
-  <input type="text" class="price-input" value="109,500원" style="width: 160px; height: 45px; border: 1px solid #ddd; border-radius: 5px;" readonly="readonly" />
+  <input type="text" class="price-input" data-role="current-price-input" th:value="${stock != null and stock.currentPrice != null ? #numbers.formatInteger(stock.currentPrice, 0, 'COMMA') + '원' : '-'}" style="width: 160px; height: 45px; border: 1px solid #ddd; border-radius: 5px;" readonly="readonly" />
   <button class="button-minus" style="width: 20px; height: 45px; border: 1px solid #ddd; border-radius: 5px; background-color: white; color: black;">-</button>
   <button class="button-plus" style="width: 20px; height: 45px; border: 1px solid #ddd; border-radius: 5px; background-color: white; color: black;">+</button>
 </div>
@@ -427,7 +429,7 @@
                 </div>
                 <div class="form-group stock-average-hoverable-area" style="display: flex; align-items: center; margin-bottom: 15px;" onclick="showStockAverageExplanation(event)">
 				    <label style="flex: 1;">내 주식 평균</label>
-				    <span style="flex: 2;">109,300원</span>
+				    <span style="flex: 2;">-</span>
 				</div>
 
                 <div class="form-group purchase-estimate-hoverable-area" style="display: flex; align-items: center; margin-bottom: 15px;" onclick="showPurchaseEstimateExplanation(event)">
@@ -491,7 +493,7 @@
 
     
                         <div class="price-input-group price-hoverable-area" onclick="showPriceExplanation(event)" style="display: flex; justify-content: space-between; gap: 5px;">
-                            <input type="text" class="price-input" value="109,500원" style="width: 160px; height: 45px; border: 1px solid #ddd; border-radius: 5px;" readonly="readonly">
+                            <input type="text" class="price-input" data-role="current-price-input" th:value="${stock != null and stock.currentPrice != null ? #numbers.formatInteger(stock.currentPrice, 0, 'COMMA') + '원' : '-'}" style="width: 160px; height: 45px; border: 1px solid #ddd; border-radius: 5px;" readonly="readonly">
                             <button class="button-minus" style="width: 20px; height: 45px; border: 1px solid #ddd; border-radius: 5px;">-</button>
                             <button class="button-plus" style="width: 20px; height: 45px; border: 1px solid #ddd; border-radius: 5px;">+</button>
                         </div>
@@ -521,7 +523,7 @@
 				</div>
                 <div class="form-group sell-profit-amount-hoverable-area" onclick="showSellProfitAmountExplanation(event)" style="display: flex; align-items: center; margin-bottom: 15px;">
 				    <label style="flex: 1;">예상 손익</label>
-				    <span style="flex: 2; font-weight: bold; color: #007bff;">-1,200원</span>
+				    <span style="flex: 2; font-weight: bold; color: #007bff;">-</span>
 				</div>
                 <div class="form-group sell-total-price-hoverable-area" onclick="showSellTotalPriceExplanation(event)" style="display: flex; align-items: center; border-top: 1px solid #ddd; margin-top: 15px; margin-bottom: 15px; padding-top: 15px;">
 				    <label for="sell-total-price" style="flex: 1;">총 금액</label>
@@ -545,7 +547,7 @@
 		<div class="stock-row profit-hoverable-area" onclick="showProfitExplanation(event)">
 		  <span class="stock-label">
 		    총 수익
-		    <span class="profit-amount" style="color: #007bff; font-weight: bold;">-1,200원 (2.1%)</span>
+		    <span class="profit-amount" style="color: #007bff; font-weight: bold;">-</span>
 		  </span>
 		  <label class="checkbox-container">
 		    <input type="checkbox" class="checkbox" />
@@ -556,17 +558,17 @@
           <!-- 2. 총 금액 -->
       <div class="stock-row total-amount-hoverable-area" onclick="showTotalAmountExplanation(event)">
 	    <span class="stock-label">총 금액</span>
-	    <span class="stock-value">96,500원</span>
+	    <span class="stock-value">-</span>
 	</div>
       <!-- 3. 수량 -->
       <div class="stock-row myquantity-hoverable-area" onclick="showMyQuantityExplanation(event)">
 		  <span class="stock-label">수량</span>
-		  <span class="stock-value">1주</span>
+		  <span class="stock-value">-</span>
 		</div>
       <!-- 4. 1주 평균 금액 -->
       <div class="stock-row average-price-hoverable-area" onclick="showAveragePriceExplanation(event)">
 		    <span class="stock-label">1주 평균 금액</span>
-		    <span class="stock-value">97,700원</span>
+		    <span class="stock-value">-</span>
 	  </div>
     </div>
   </div>
@@ -912,8 +914,8 @@
 </div>
 <!-- 거래량 설명창 -->
 <div id="volumeExplanation" class="explanation">
-  <h3>거래량 (주) 설명</h3>
-  <p>거래량은 특정 시간 동안 주식이 매매된 총 수량을 나타냅니다. 거래량은 시장의 활동성과 주식의 유동성을 판단하는 데 유용합니다.</p>
+  <h3>누적거래량 (주) 설명</h3>
+  <p>누적거래량은 장 시작 이후 현재 시점까지 누적된 전체 거래 수량을 의미합니다.</p>
   <button onclick="closeVolumeExplanation()">X</button>
 </div>
 <!-- 시간 설명창 -->
