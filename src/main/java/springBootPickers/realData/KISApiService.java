@@ -6,6 +6,12 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -21,6 +27,13 @@ public class KISApiService {
     private static final String JSON_CONTENT_TYPE = "application/json; charset=UTF-8";
     private static final String CLIENT_CREDENTIALS = "client_credentials";
     private static final String CURRENT_PRICE_TR_ID = "FHKST01010100";
+    private static final String ACCESS_TOKEN_EXPIRY_FIELD = "access_token_token_expired";
+    private static final String ACCESS_TOKEN_EXPIRES_IN_FIELD = "expires_in";
+    private static final Duration ACCESS_TOKEN_REFRESH_BUFFER = Duration.ofMinutes(5);
+    private static final DateTimeFormatter ACCESS_TOKEN_EXPIRY_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    private volatile AccessTokenCache accessTokenCache;
 
     public String getApprovalKey(String appKey, String appSecret) {
         JSONObject requestBody = createCredentialBody(appKey, appSecret, "secretkey");
@@ -28,8 +41,24 @@ public class KISApiService {
     }
 
     public String getAccessToken(String appKey, String appSecret) {
-        JSONObject requestBody = createCredentialBody(appKey, appSecret, "appsecret");
-        return requestToken("/oauth2/tokenP", requestBody, "access_token", "액세스 토큰");
+        if (isBlank(appKey) || isBlank(appSecret)) {
+            return null;
+        }
+
+        AccessTokenCache cached = accessTokenCache;
+        if (isUsableAccessToken(cached, appKey, appSecret)) {
+            return cached.accessToken();
+        }
+
+        synchronized (this) {
+            cached = accessTokenCache;
+            if (isUsableAccessToken(cached, appKey, appSecret)) {
+                return cached.accessToken();
+            }
+
+            JSONObject requestBody = createCredentialBody(appKey, appSecret, "appsecret");
+            return requestAccessToken(requestBody, appKey, appSecret);
+        }
     }
 
     public Long getDomesticCurrentPrice(String accessToken, String appKey, String appSecret, String stockCode) {
@@ -38,10 +67,7 @@ public class KISApiService {
         }
 
         try {
-            HttpURLConnection connection = openConnection(
-                    buildCurrentPriceUrl(stockCode),
-                    "GET"
-            );
+            HttpURLConnection connection = openConnection(buildCurrentPriceUrl(stockCode), "GET");
             connection.setRequestProperty("authorization", "Bearer " + accessToken);
             connection.setRequestProperty("appkey", appKey);
             connection.setRequestProperty("appsecret", appSecret);
@@ -92,6 +118,69 @@ public class KISApiService {
             log.error("{} 발급 중 오류", label, e);
             return null;
         }
+    }
+
+    private String requestAccessToken(JSONObject requestBody, String appKey, String appSecret) {
+        try {
+            HttpURLConnection connection = openConnection(BASE_URL + "/oauth2/tokenP", "POST");
+            connection.setDoOutput(true);
+            writeJsonBody(connection, requestBody);
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode != HttpURLConnection.HTTP_OK) {
+                log.error("액세스 토큰 발급 실패 (HTTP {})", responseCode);
+                return null;
+            }
+
+            JSONObject response = readJsonResponse(connection);
+            String accessToken = response.optString("access_token", "");
+            if (accessToken.isBlank()) {
+                log.error("액세스 토큰 응답에 access_token 값이 없습니다.");
+                return null;
+            }
+
+            accessTokenCache = new AccessTokenCache(
+                    appKey,
+                    appSecret,
+                    accessToken,
+                    resolveAccessTokenExpiry(response)
+            );
+
+            log.info("액세스 토큰 발급 완료");
+            return accessToken;
+        } catch (Exception e) {
+            log.error("액세스 토큰 발급 중 오류", e);
+            return null;
+        }
+    }
+
+    private boolean isUsableAccessToken(AccessTokenCache cached, String appKey, String appSecret) {
+        if (cached == null || !cached.matches(appKey, appSecret)) {
+            return false;
+        }
+
+        Instant refreshCutoff = Instant.now().plus(ACCESS_TOKEN_REFRESH_BUFFER);
+        return refreshCutoff.isBefore(cached.expiresAt());
+    }
+
+    private Instant resolveAccessTokenExpiry(JSONObject response) {
+        String expiresAtValue = response.optString(ACCESS_TOKEN_EXPIRY_FIELD, "");
+        if (!expiresAtValue.isBlank()) {
+            try {
+                return LocalDateTime.parse(expiresAtValue, ACCESS_TOKEN_EXPIRY_FORMATTER)
+                        .atZone(ZoneId.systemDefault())
+                        .toInstant();
+            } catch (DateTimeParseException e) {
+                log.warn("액세스 토큰 만료 시각 파싱 실패: {}", expiresAtValue);
+            }
+        }
+
+        long expiresIn = response.optLong(ACCESS_TOKEN_EXPIRES_IN_FIELD, 0L);
+        if (expiresIn > 0) {
+            return Instant.now().plusSeconds(expiresIn);
+        }
+
+        return Instant.now();
     }
 
     private JSONObject createCredentialBody(String appKey, String appSecret, String secretFieldName) {
@@ -155,5 +244,16 @@ public class KISApiService {
 
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
+    }
+
+    private record AccessTokenCache(
+            String appKey,
+            String appSecret,
+            String accessToken,
+            Instant expiresAt
+    ) {
+        private boolean matches(String appKey, String appSecret) {
+            return this.appKey.equals(appKey) && this.appSecret.equals(appSecret);
+        }
     }
 }
