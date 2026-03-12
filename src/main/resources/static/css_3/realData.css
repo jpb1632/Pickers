@@ -1,9 +1,9 @@
 .real-time-table-container {
   position: relative;
-  width: 100%; /* 부모 컨테이너에 맞춤 */
-  max-width: 1200px; /* 테이블의 최대 너비 */
-  height: 352px; /* 고정된 높이 */
-  overflow-y: auto; /* 스크롤 활성화 */
+  width: 100%;
+  max-width: 1200px;
+  height: 352px;
+  overflow-y: auto;
   border: 1px solid #ddd;
   background-color: #fff;
   padding: 10px;
@@ -11,15 +11,15 @@
 }
 
 .real-time-table {
-  width: 100%; /* 컨테이너에 맞춤 */
-  border-collapse: collapse; /* 셀 경계 제거 */
+  width: 100%;
+  border-collapse: collapse;
 }
 
 .real-time-table th,
 .real-time-table td {
   padding: 10px;
   text-align: center;
-  white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+  white-space: nowrap;
 }
 
 .real-time-table-empty {
@@ -28,27 +28,37 @@
   color: #888;
   padding: 20px;
 }
+
 .chart-container {
-    position: relative;
-    width: 100%;
-    height: 600px; /* 적절한 세로 길이 설정 */
-    margin-bottom: 20px;
-    border: 1px solid #ddd;
-    box-sizing: border-box; /* 패딩 포함 크기 계산 */
+  position: relative;
+  width: 100%;
+  height: 420px;
+  margin-bottom: 20px;
+  padding: 12px;
+  border: 1px solid #dfe4ea;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  box-sizing: border-box;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 #realTimeChart {
-    display: block;
-    width: 100%;
-    height: 100%;
-    box-sizing: border-box;
+  display: block;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
 }
+
 .cardset.cardset-hover.cardset-border.cardset-round {
-    height: auto; /* 높이를 자동으로 확장 */
-    flex-grow: 1; /* 여유 공간을 차지 */
-    display: flex;
-    flex-direction: column;
+  height: auto;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
 }
 
-
-
+@media (max-width: 768px) {
+  .chart-container {
+    height: 320px;
+    padding: 10px;
+  }
+}

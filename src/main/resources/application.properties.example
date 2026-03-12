@@ -63,15 +63,21 @@ server.error.include-message=always
 server.error.include-binding-errors=always
 
 
-# Log4jdbc SQL 로깅 활성화
+# Log4jdbc SQL 로깅 설정
 logging.level.springBootPickers=DEBUG
-logging.level.jdbc.sqltiming=DEBUG
-logging.level.jdbc.resultsettable=DEBUG
-logging.level.jdbc.connection=DEBUG
+logging.level.springBootPickers.realData=INFO
+logging.level.jdbc.sqltiming=WARN
+logging.level.jdbc.resultsettable=WARN
+logging.level.jdbc.connection=WARN
 
 # 한국투자증권 API 설정
 kis.app-key=YOUR_KIS_APP_KEY
 kis.app-secret=YOUR_KIS_APP_SECRET
 kis.websocket.url=ws://ops.koreainvestment.com:21000
+kis.realtime.symbols=005930,000660,373220,207940,005380,000270,035420,012450,329180,105560
 kis.realtime.enabled=true
+kafka.bootstrap-servers=localhost:9092
 kafka.enabled=true
+realtime.internal-ws.host=localhost
+realtime.internal-ws.port=9000
+realtime.browser-ws-url=ws://${realtime.internal-ws.host}:${realtime.internal-ws.port}

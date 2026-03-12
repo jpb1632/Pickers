@@ -136,5 +136,11 @@
     OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
 </select>
 
+<update id="updateRealtimeCurrentPrice">
+    UPDATE stock
+    SET current_price = #{currentPrice}
+    WHERE stock_num = #{stockNum}
+</update>
+
 	
 </mapper>

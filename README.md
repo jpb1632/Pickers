@@ -9,40 +9,6 @@
 
 ---
 
-## Git 히스토리 관련
-
-이 프로젝트는 학교 이메일로 가입한 GitHub 계정에서 작업했는데 
-졸업 후 학교 계정이 삭제되면서 해당 GitHub 계정에 접근할 수 없게 되었습니다.
-
-현재 상태:
-- 최종 코드만 개인 계정으로 이관
-- 프로젝트 완료 후 리팩토링한 최종 버전이 현재 저장소의 코드입니다
-
-주요 리팩토링:
-- realData 패키지 전면 개선
-  - SLF4J Logger 도입 (System.out 135건 제거)
-  - Graceful Shutdown (isRunning flag)
-  - Kafka 없이도 동작하는 시뮬레이션 모드
-  - Kafka Producer 신뢰성 옵션 (acks=all, retries=3, idempotence=true)
-
-- Controller/Service 로깅 시스템 개선
-  - Logger 클래스 추가 (9개 파일)
-  - System.out/err 제거 (48건 → 0건)
-  - printStackTrace() 제거 (3건 → 0건)
-  - 로그 레벨 제어 가능
-
-- 게시판 좋아요 기능 정규화
-  - LIKE_MEMBERS 테이블 분리 (VARCHAR2 콤마 저장 → 정규화)
-  - PRIMARY KEY로 동시성 제어
-  - 조회 성능 대폭 개선 (문자열 스캔 제거)
-
-- 결제 시스템 보안 강화
-  - 이니시스 샘플 코드 Spring Boot 전환
-  - 중복 결제 방지 (3중 방어: 애플리케이션 + DB + PG)
-  - 금액 검증, 트랜잭션 및 동시성 제어
-
----
-
 ## 왜 만들었나
 
 2024년 들어 개인 투자자 수가 급증하면서 주식 시장 진입 장벽이 낮아졌습니다.  
@@ -73,7 +39,12 @@
 - 한국투자증권 WebSocket API 연동
 - Kafka로 메시지 버퍼링
 - WebSocket으로 브라우저에 실시간 전송
-- Chart.js로 실시간 차트 렌더링
+- Chart.js로 실시간 차트 렌더링 (MA12/MA30 이동평균선 포함)
+- `kis.realtime.symbols` 설정 기반 다중 종목 구독
+- 설정 없을 경우 DB currentPrice 상위 종목 자동 로딩
+- 서비스 시작 시 REST API로 시드 가격 보정 — 장외 최초 진입 시 KIS REST 현재가를 1회 조회해 기준가를 보정한 뒤, 실시간 체결이 없으면 시뮬레이션 데이터로 이어지도록 구성
+- 실시간 체결가를 DB `current_price`에 5초 주기로 반영
+- 차트·테이블 모두 현재 페이지 종목 기준으로 데이터 필터링
 
 ### 2. 주식 교육 시스템
 - 용어 사전: 주식 용어 검색 및 학습
@@ -98,16 +69,21 @@
 
 ### 5. Fallback 처리
 
-기동 단계 Fallback:
-- Kafka 비활성화(`kafka.enabled=false`) 또는 연결 실패 시
-→ 시뮬레이션 모드로 전환
-→ 개발 환경에서 Kafka 없이도 실행 가능
+**기동 단계 Fallback:**
 
-런타임 단계 Fallback:
-- Kafka 전송 실패 3회 누적 시
-→ Kafka 우회하여 WebSocket 직접 브로드캐스트
-→ API 실시간 데이터 유지하면서 장애 격리
-- Health Check(30초 간격)로 Kafka 복구 시 자동 전환
+`kafka.enabled=false` / KIS API 키 미설정 / approval_key 발급 실패 / KIS WebSocket 연결 실패
+→ 복구 시도 없는 순수 시뮬레이션으로 전환합니다.
+
+`kafka.enabled=true`인데 시작 시 Kafka가 다운된 경우
+→ 복구 가능한 시뮬레이션으로 전환합니다. Health Check(30초 간격)로 Kafka 복구를 감지하면 fresh approval_key를 재발급받아 KIS WebSocket을 새로 연결하고, 연결 성공 시 기존 시뮬레이션을 내립니다. 이후 30초 이상 실거래 데이터가 없으면 다시 시뮬레이션으로 전환합니다.
+
+**런타임 단계 Fallback:**
+- Kafka 전송 3회 연속 실패 시 → Kafka를 우회하여 WebSocket으로 직접 브로드캐스트
+- 실거래 데이터는 유지한 채 장애를 격리합니다
+- Health Check(30초 간격)로 Kafka 복구를 감지해 Consumer를 자동 재시작합니다
+
+**장마감 대응:**
+- 실시간 데이터가 30초 이상 수신되지 않으면 시뮬레이션 모드로 전환 (장마감 포함)
 
 ### 실행 화면
 
@@ -122,7 +98,6 @@ Backend
 - Spring Boot 3.3.6
 - MyBatis 3.0.3
 - Oracle 21c
-- Spring Security
 
 Messaging
 - Apache Kafka 3.7.0
@@ -151,7 +126,7 @@ Testing
 핵심 특징:
 - Producer-Consumer 분리: API 수신과 브로드캐스트 로직 독립
 - 비동기 메시지 큐: Kafka로 Producer-Consumer 분리 및 메시지 버퍼링
-- Health Check 기반 Fallback: Kafka/API 장애 시 자동 전환
+- Health Check 기반 Fallback: 런타임 Kafka 장애 시 direct fallback으로 서비스 연속성을 유지하고, 기동 시 Kafka 다운이면 복구 가능한 시뮬레이션으로 시작
 
 ---
 
@@ -167,7 +142,7 @@ Pickers/
 │   └── mapper/                # MyBatis Mapper
 ├── docs/                      # 기술 문서 및 테스트 결과
 │   ├── images/                # README 이미지
-│   └── WebSocket_동시_접속_테스트.pdf
+│   └── WebSocket_동시접속_테스트.pdf
 └── src/main/resources/
     ├── application.properties.example
     └── templates/             # Thymeleaf 템플릿
@@ -185,8 +160,8 @@ Pickers/
 #### 1. 설정 파일 생성
 
 ```bash
-# application.properties.example을 복사
-cp src/main/resources/application.properties.example src/main/resources/application.properties
+# 1. 예제 설정 파일을 실행용 설정 파일로 복사
+Copy-Item src/main/resources/application.properties.example src/main/resources/application.properties
 ```
 
 #### 2. 필수 설정 값 입력
@@ -208,6 +183,14 @@ newsapi.key=YOUR_NEWSAPI_KEY
 # 한국투자증권 API 키 (https://apiportal.koreainvestment.com 에서 발급)
 kis.app-key=YOUR_KIS_APP_KEY
 kis.app-secret=YOUR_KIS_APP_SECRET
+
+# Kafka / 내부 WebSocket 서버 (기본값 그대로 사용 가능, 환경이 다를 경우만 수정)
+kafka.bootstrap-servers=localhost:9092
+realtime.internal-ws.host=localhost
+realtime.internal-ws.port=9000
+
+# 실시간 구독 종목 (쉼표 구분, 생략 시 DB currentPrice 상위 종목 자동 로딩)
+# kis.realtime.symbols=005930,000660,373220
 ```
 
 #### 3. 외부 라이브러리
@@ -238,11 +221,11 @@ kis.realtime.enabled=true
 kafka.enabled=true
 
 # 4. Spring Boot 실행
-./mvnw spring-boot:run
+.\mvnw.cmd spring-boot:run
 ```
 
 접속:
-- http://localhost:8080/chart/detail?stockNum=000001
+- http://localhost:8080/chart/detail?stockNum=005930
 
 ---
 
@@ -260,7 +243,8 @@ kafka.enabled=false
 ./mvnw spring-boot:run
 ```
 
-랜덤 주가 데이터가 1초마다 생성되면서 실시간으로 차트에 표시됩니다.
+랜덤 주가 데이터가 1초마다 생성되면서 실시간으로 차트에 표시됩니다.  
+이 모드는 복구 시도 없는 순수 시뮬레이션입니다. 실거래 데이터가 필요하다면 Kafka를 실행한 뒤 `kafka.enabled=true`로 설정하세요.
 
 ---
 
@@ -268,35 +252,36 @@ kafka.enabled=false
 
 ### WebSocket 동시 접속 테스트
 
-목적: 메모리 누수 검증 및 확장성 확인  
+목적: 리팩토링 후 메모리 안정성 및 스레드 동작 검증  
 도구: VisualVM 2.1.10  
-테스트 방법:
-- Chrome 브라우저에서 JavaScript WebSocket API로 동시 접속
-- VisualVM으로 JVM Heap 메모리 실시간 모니터링
+조건: Health Check 스케줄러, 다중 종목 시뮬레이션 브로드캐스팅(1초 간격)
+테스트 페이지: test_websocket_v2.html (수신 카운터 + 동시 종료 기능)
 
-| 접속자 수 | Used Heap | 증가량 | 접속자당 메모리 |
-|----------|-----------|--------|----------------|
-| 기본 (0명) | 38 MB | - | - |
-| 10명 | 45 MB | +7 MB | 0.7 MB/명 |
-| 50명 | 57 MB | +19 MB | 0.38 MB/명 |
-| 100명 | 74 MB | +36 MB | 0.36 MB/명 |
-| GC 후 | 38 MB | -36 MB | - |
+| 시점 | Used Heap | CPU % | Live Threads | 수신 메시지 |
+|------|-----------|-------|-------------|------------|
+| 기본 (0명) | 44 MB | 0.9% | 57 | - |
+| 10명 | 38 MB | 0.2% | 56 | 3,000건 |
+| 50명 | 44 MB | 1.0% | 55 | 18,800건 |
+| 100명 | 53 MB | 1.0% | 55 | 45,300건 |
+| 100명 5분 유지 | 41 MB | 1.0% | 55 | 372,900건 |
+| 전체 종료 직후 | 39 MB | - | 55 | - |
+| GC 후 (5분 대기) | 37 MB | 0.8% | 55 | - |
 
-![VisualVM 메모리 테스트 - GC 후 복구](docs/images/visualvm_gc_test.png)
-*100명 접속 후 GC 동작 시 Base Heap 38MB로 복구*
+![VisualVM 메모리 테스트 - 100명 5분 유지 GC 톱니 패턴](docs/images/visualvm_gc_test.png)
+*100명이 5분간 372,900건을 수신하는 동안 Heap이 무한 우상향하지 않고 GC 톱니 패턴으로 안정적으로 유지됨*
 
 결과:
-- 100명 동시 접속 시 74MB로 안정적 유지
-- GC 후 Base Heap 38MB 복구 → 테스트 범위 내 메모리 누수 없음
-- 접속자당 평균 0.36MB 소비 (효율적)
-- 메모리 기반 추정: 수천 명 규모까지 확장 가능
+- 100명 동시 접속 + 5분 지속 수신에도 Heap 무한 증가 없음 (GC 톱니 패턴 확인)
+- 전체 종료 후 GC를 거쳐 37MB로 수렴 — 메모리 누수 없음
+- 접속자 수가 늘어도 Live Threads 55~57개 유지 (NIO 기반, 스레드 고갈 위험 없음)
+- 100명 브로드캐스팅에도 CPU 1% 이하 유지
 
 기술적 검증:
 - `ConcurrentHashMap`으로 스레드 안전한 연결 관리
-- `onClose()` 시 자동 `remove()` 동작 확인
-- GC를 통한 메모리 회수 정상 작동
+- `onClose()` 시 자동 `remove()` → 100명 동시 종료 후 GC 회수 정상 동작 확인
+- NIO 기반 처리로 접속자 증가에도 스레드 수 거의 변동 없음
 
-상세 테스트 결과: [docs/WebSocket_동시_접속_테스트.pdf](docs/WebSocket_동시_접속_테스트.pdf)
+상세 테스트 결과: [docs/WebSocket_동시접속_테스트.pdf](docs/WebSocket_동시접속_테스트.pdf)
 
 ---
 
@@ -318,12 +303,16 @@ kafka.enabled=false
 
 **TO-BE (리팩토링 후):**
 - Logger 도입 (SLF4J): System.out 135건 제거
-- Graceful Shutdown: isRunning flag로 안전한 종료
+- Graceful Shutdown: running flag로 안전한 종료
+- 체결 등락 부호 파싱 보정: parseSignedDouble() + applyChangeSign() 분리로 음수 처리 정확도 개선
 - 시뮬레이션 모드 추가: Kafka 없이도 동작
 - Kafka Producer 신뢰성 옵션: acks=all, retries=3, idempotence=true
-- Health Check 자동 복구 (30초 간격)
+- Health Check(30초 간격): 런타임 Kafka 장애 복구, 기동 시 Kafka 다운이면 복구 가능한 시뮬레이션 → Kafka 복구 시 KIS WebSocket 재연결
 - 한국투자증권 API 전환: 어디서든 실행 가능
-- 코드 한 줄로 다양한 주식 종목 추가 가능
+- 다중 종목 지원: `kis.realtime.symbols` 설정 또는 DB 상위 종목 자동 로딩
+- 서비스 시작 시 REST API로 시드 가격 보정
+- 실시간 체결가 DB 반영: `current_price` 5초 주기 갱신
+- 서버 주소 외부화: kafka.bootstrap-servers, realtime.internal-ws.host/port, 프론트 WebSocket 연결 URL도 템플릿 data 속성 기반으로 분리 (하드코딩 제거)
 - 신규 클래스 3개 추가:
   - `KISApiService.java` (한국투자증권 API 연동)
   - `KISWebSocketClientWithKafka.java` (Kafka Producer)
@@ -367,10 +356,11 @@ kafka.enabled=false
 
 #### 5. 설정 파일 개선 (application.properties)
 
-하드코딩되어 있던 보안 정보를 properties 파일로 외부화했습니다.
+하드코딩되어 있던 보안 정보와 서버 주소를 properties 파일로 외부화했습니다.
 
 - PG 설정: inicis.mid, inicis.signkey (IniPayReqService.java에서 @Value 주입)
-- 한국투자증권 API: kis.app-key, kis.app-secret 등 4개 설정
+- 한국투자증권 API: kis.app-key, kis.app-secret 등
+- 실시간 인프라: kafka.bootstrap-servers, realtime.internal-ws.host/port
 - 트랜잭션 설정: auto-commit=false
 
 **개선 효과:**
@@ -394,12 +384,15 @@ kafka.enabled=false
 | Graceful Shutdown | 구현 완료 |
 | 시뮬레이션 모드 | 구현 완료 |
 | Kafka Producer 신뢰성 | acks=all, retries=3, idempotence 적용 |
+| 실시간 구독 종목 | 1개(하드코딩) → 최대 10개(설정/DB 기반 동적 구성) |
+| 실시간 DB 반영 | current_price 5초 주기 갱신 |
+| 서버 주소 외부화 | kafka.bootstrap-servers, ws.host/port @Value 주입 |
 | 데이터 정규화 | LIKE_MEMBERS 테이블 분리 |
 | 조회 성능 | 인덱스 기반 조회로 대폭 개선 |
 | 결제 트랜잭션 | @Transactional 적용 |
 | 동시성 제어 | Sequence 기반 주문번호 |
 | 결제 보안 검증 | 중복 결제, 금액, 상태 검증 추가 |
-| 설정 파일 개선 | 9개 설정 추가 (PG, KIS API, 트랜잭션, 로깅) |
+| 설정 파일 개선 | 9개 이상 설정 추가 (PG, KIS API, 인프라, 트랜잭션, 로깅) |
 
 ---
 
@@ -426,39 +419,51 @@ kafka.enabled=false
 2) 데이터 소스 변경: 내부 UDP 서버에서 한국투자증권 API로 변경하여
    어디서든 개발 가능하도록 개선
    
-3) 종목 확장성: 전 UDP 서버는 삼성전자 1개만 고정되어 있어
-   다른 종목을 추가할 수 없었습니다.
-   
-   한국투자증권 API는 subscribeStockPrice() 메서드를
-   한 줄 추가하는 것만으로 원하는 종목을 자유롭게 구독할 수 있습니다.
-```java
-// OLD: 삼성전자 1개만 고정
-// UDP 서버가 보내주는 대로만 수신
+3) 종목 확장성: 기존 UDP 서버는 삼성전자 1개만 고정이었습니다.  
+   리팩토링 후에는 `kis.realtime.symbols`에 종목코드를 쉼표로 나열하면  
+   서비스 시작 시 해당 종목들을 자동으로 구독합니다.  
+   설정을 비워두면 DB의 currentPrice 상위 종목을 자동으로 불러옵니다.
 
-// NEW: 코드 한 줄 추가로 확장 가능
-subscribeStockPrice("005930"); // 삼성전자
-subscribeStockPrice("000660"); // SK하이닉스 추가
-subscribeStockPrice("035720"); // 카카오 추가
+```java
+// application.properties
+# 직접 지정하는 경우
+kis.realtime.symbols=005930,000660,373220
+
+# 비워두면 DB currentPrice 상위 종목 자동 로딩
+# kis.realtime.symbols=
 ```
+
 ```java
 @Component
 public class RealTimeStockServiceWithKafka implements CommandLineRunner {
     @Override
     public void run(String... args) {
-        // Kafka 연결 확인
-        if (!kafkaEnabled || !testKafkaConnection()) {
-            wsServer.startSimulationMode();
+        startInternalWebSocketServer();
+        loadRealtimeSymbols(); // 설정 또는 DB에서 종목 로딩
+
+        if (!kafkaEnabled) {
+            startSimulationOnly("Kafka가 비활성화되어 있습니다.");  // 복구 없는 순수 시뮬레이션
             return;
         }
-        
-        // 한국투자증권 API 연결
+
+        if (!isApiCredentialConfigured()) {
+            startSimulationOnly("KIS API 인증 정보가 설정되지 않았습니다.");
+            return;
+        }
+
         String approvalKey = apiService.getApprovalKey(appKey, appSecret);
-        KISWebSocketClientWithKafka kisClient = 
-            new KISWebSocketClientWithKafka(websocketUrl, approvalKey);
-        kisClient.connect();
-        
-        // Kafka Consumer 시작
+        if (approvalKey == null) {
+            startSimulationOnly("KIS approval key 발급에 실패했습니다.");
+            return;
+        }
+
+        if (!testKafkaConnection()) {
+            startRecoverableSimulation("Kafka(" + kafkaBootstrapServers + ")에 연결할 수 없습니다.");  // 복구 가능한 시뮬레이션
+            return;
+        }
+
         wsServer.startKafkaConsumer();
+        connectRealtimeClient(approvalKey); // 전체 종목 구독 시작
     }
 }
 ```
@@ -468,7 +473,7 @@ public class RealTimeStockServiceWithKafka implements CommandLineRunner {
 - Java 실행 통합: 3개 → 1개 (67% 감소)
 - 코드 복사: 4개 파일 → 0개
 - 장소 제약 제거: 특정 네트워크 의존 → 어디서든 실행 가능
-- 종목 확장: 삼성전자 1개 고정 → 코드 한 줄 추가로 여러 종목 확장
+- 종목 확장: 삼성전자 1개 고정 → 설정 또는 DB 기반 다중 종목 구독
 - 시뮬레이션 모드로 Kafka 없이도 테스트 가능
 
 ---
@@ -503,10 +508,10 @@ setConnectionLostTimeout(60);  // 60초 무응답 시 자동 해제
 ```
 
 결과:  
-- 접속자당 평균 0.36MB 소비 (효율적)
-- GC 후 Base Heap 38MB 복구 → 테스트 범위 내 메모리 누수 없음 검증
+- 100명이 5분간 372,900건을 수신하는 동안 Heap 무한 증가 없음 (GC 톱니 패턴 확인)
+- 전체 종료 후 GC를 거쳐 37MB 수렴 → 메모리 누수 없음 검증
+- 접속자 수가 늘어도 Live Threads 55~57개 유지, CPU 1% 이하 (NIO 기반)
 - 60초 무응답 연결 자동 해제로 좀비 세션 방지
-- `ConcurrentHashMap.newKeySet()`이 스레드 안전하게 관리
 
 ---
 
@@ -568,7 +573,7 @@ if (expectedPrice != paidPrice) {
 ### 1. 실시간 메시징 아키텍처 학습
 
 한국투자증권 API 데이터를 WebSocket으로 바로 브로드캐스트하는 방식도 가능했지만,
-수신과 전송을 분리해 단계별로 개발·테스트·교체가 가능하도록 Kafka를 적용했습니다.
+수신과 전송을 분리해 단계별로 개발·교체가 가능하도록 Kafka를 적용했습니다.
 규모 대비 오버헤드는 있으나, Producer-Consumer 패턴을 직접 학습하고 싶었습니다.
 
 배운 점:
@@ -577,31 +582,29 @@ if (expectedPrice != paidPrice) {
 - 메시지 버퍼링으로 시스템 안정성을 확보하는 메커니즘
 
 특히 실감한 부분:
-- Producer/Consumer를 독립적으로 개발·테스트할 수 있어 개발/검증이 쉬워짐
-- 한 부분의 문제가 전체 시스템에 전파되지 않는 구조를 체감함
+- Kafka 없이도 시뮬레이션 모드로 개발할 수 있어 개발 편의성 향상
+- Kafka 장애 시에도 Fallback으로 서비스가 유지되는 구조를 체감함
 
-리팩토링하면서 Kafka 없이도 동작하도록 Fallback을 추가하여,
-데이터 소스(실데이터/시뮬레이션)를 유연하게 전환할 수 있게 개선했습니다.
+리팩토링하면서 시뮬레이션 모드와 Fallback을 추가하여,
+외부 API 장애나 Kafka 장애 상황에서도 서비스를 유지할 수 있게 개선했습니다.
 
 ---
 
 ### 2. 성능 측정의 중요성
 
-처음에는 "100명이 동시 접속했을 때 안정적으로 잘 운영될까?" 궁금해서
-VisualVM으로 측정해보니 예상과 다른 패턴이 나왔습니다.
+100명 동시 접속 시 메모리가 얼마나 늘어날지, 연결이 쌓이면 스레드가 함께 늘어나는지가 궁금했습니다.  
+VisualVM으로 측정해보니 예상과 다른 결과가 나왔습니다.
 
-| 접속자 | 메모리/명 | 분석 |
-|--------|----------|------|
-| 10명 | 0.7MB | JVM 초기 오버헤드가 큼 |
-| 100명 | 0.36MB | 오버헤드가 분산되면서 효율 증가 |
+| 측정 항목 | 예상 | 실측 |
+|----------|------|------|
+| Used Heap (100명) | 선형 증가 | 53MB (기본 44MB 대비 +9MB) |
+| Live Threads (100명) | 접속 수만큼 증가 | 55개 (0명일 때와 동일) |
+| 5분 지속 수신 | Heap 우상향 우려 | GC 톱니 패턴, 무한 증가 없음 |
 
-왜 이런 결과가 나왔는지 찾아봤더니:
-- `ConcurrentHashMap` 같은 자료구조는 초기 용량 할당 비용이 큼
-- 사용자가 많아질수록 1인당 고정 비용이 분산됨
-- JVM 워밍업 이후 최적화 효과도 있음
+스레드가 늘지 않는 이유를 찾아보니 Java-WebSocket이 NIO(Non-blocking I/O) 기반으로 동작해서, 연결마다 스레드를 생성하지 않고 소수의 스레드가 다수의 연결을 이벤트 방식으로 처리하기 때문이었습니다.  
+"접속자가 늘면 스레드도 늘어날 것"이라는 기본 전제 자체가 틀렸다는 걸 실측으로 확인했습니다.
 
-단순히 "선형 증가"를 예상했는데, 실측으로 다른 패턴을 발견하고  
-그 이유까지 파악하는 과정에서 많이 배웠습니다.
+단순히 숫자를 확인하는 것에 그치지 않고, 왜 그런 결과가 나왔는지 파고든 과정에서 많이 배웠습니다.
 
 ---
 
@@ -616,17 +619,17 @@ Spring Boot가 꺼질 때 WebSocket 연결과 Kafka Consumer를
 ```java
 @PreDestroy
 public void cleanup() {
-    log.info("Spring Boot 종료 감지 - 리소스 정리 시작");
+    log.info("실시간 리소스 정리 시작");
     
     if (kisClient != null) {
-        kisClient.shutdown();  // isRunning = false 설정
+        kisClient.shutdown();  // running = false 설정
     }
     
     if (wsServer != null) {
         wsServer.shutdown();  // Kafka Consumer close()
     }
     
-    log.info("리소스 정리 완료");
+    log.info("실시간 리소스 정리 완료");
 }
 ```
 
@@ -726,6 +729,17 @@ CREATE TABLE LIKE_MEMBERS (
 
 ---
 
+## Git 히스토리 관련
+
+이 프로젝트는 학교 이메일로 가입한 GitHub 계정에서 작업했는데  
+졸업 후 학교 계정이 삭제되면서 해당 GitHub 계정에 접근할 수 없게 되었습니다.
+
+현재 상태:
+- 최종 코드만 개인 계정으로 이관
+- 프로젝트 완료 후 리팩토링한 최종 버전이 현재 저장소의 코드입니다
+
+---
+
 ## 라이선스
 
 이 프로젝트는 학습 목적으로 제작되었습니다.
@@ -734,5 +748,5 @@ CREATE TABLE LIKE_MEMBERS (
 
 ## 연락처
 
-이메일: jpb1632@gmail.com
+이메일: jpb1632@gmail.com  
 GitHub: https://github.com/jpb1632
