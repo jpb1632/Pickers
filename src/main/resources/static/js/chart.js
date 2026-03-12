@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const MAX_POINTS = 300;
     const VIEW_WINDOW_MS = 3 * 60 * 1000;
+    const VIEW_WINDOW_BUFFER_MS = 10 * 1000;
     const MIN_RENDER_INTERVAL_MS = 180;
     const SHORT_MA_PERIOD = 12;
     const LONG_MA_PERIOD = 30;
@@ -89,10 +90,23 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    function trimPoints() {
+    function trimPoints(latestTime) {
+        while (
+            points.length > 0 &&
+            latestTime - points[0].x.getTime() > VIEW_WINDOW_MS + VIEW_WINDOW_BUFFER_MS
+        ) {
+            points.shift();
+        }
+
         while (points.length > MAX_POINTS) {
             points.shift();
         }
+    }
+
+    function normalizePointTime(date) {
+        const normalized = new Date(date);
+        normalized.setMilliseconds(0);
+        return normalized;
     }
 
     function buildMovingAverage(period) {
@@ -366,12 +380,19 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        points.push({
-            x: parseTimestamp(data?.timestamp),
-            y: price,
-        });
+        const pointTime = normalizePointTime(parseTimestamp(data?.timestamp));
+        const lastPoint = points[points.length - 1];
 
-        trimPoints();
+        if (lastPoint && lastPoint.x.getTime() === pointTime.getTime()) {
+            lastPoint.y = price;
+        } else {
+            points.push({
+                x: pointTime,
+                y: price,
+            });
+        }
+
+        trimPoints(pointTime.getTime());
         updateCurrentPriceDisplay(price);
         scheduleRender();
     }
