@@ -4,13 +4,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.ui.Model;
 
 import jakarta.servlet.http.HttpSession;
@@ -23,7 +18,7 @@ import springBootPickers.mapper.MemberMapper;
 import springBootPickers.repository.OrderRepository;
 
 @Service
-@Transactional(isolation = Isolation.SERIALIZABLE) 
+@Transactional
 @RequiredArgsConstructor
 public class LectureOrderService {
  
@@ -39,7 +34,7 @@ public class LectureOrderService {
      
      String memNum = memberMapper.memberNumSelect(auth.getUserId());
      
-     // 주문번호 채번 (동시성 이슈 있지만 격리수준으로 해결)
+     // 주문번호는 Oracle sequence로 발급한다.
      String orderNum = orderRepository.selectOrderNum();
      
      OrdersDTO dto = new OrdersDTO();
