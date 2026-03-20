@@ -1,6 +1,7 @@
 package springBootPickers.service.item;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import jakarta.servlet.http.HttpSession;
@@ -27,7 +28,6 @@ public class CartInsertService {
         if (memNum == null) {
             return "900"; // 관리자 계정
         }
-        
 
         // 장바구니 중복 확인
         int count = cartMapper.isLectureInCart(memNum, cartCommand.getLectureNum());
@@ -41,8 +41,16 @@ public class CartInsertService {
         dto.setCartQty(cartCommand.getQty());
         dto.setLectureNum(cartCommand.getLectureNum());
         dto.setMemNum(memNum);
-        cartMapper.cartInsert(dto);
 
-        return "200"; // 성공
+        try {
+            cartMapper.cartInsert(dto);
+            return "200"; // 성공
+        } catch (DataIntegrityViolationException ex) {
+            int duplicated = cartMapper.isLectureInCart(memNum, cartCommand.getLectureNum());
+            if (duplicated > 0) {
+                return "EXISTS-" + cartCommand.getLectureNum();
+            }
+            throw ex;
+        }
     }
 }

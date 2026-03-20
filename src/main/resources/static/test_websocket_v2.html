@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket 동시 접속 테스트 v2</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #eee; }
+        .controls { margin-bottom: 20px; }
+        button { padding: 10px 20px; margin: 5px; font-size: 14px; cursor: pointer; border: none; border-radius: 4px; }
+        .btn-connect { background: #0f3460; color: white; }
+        .btn-disconnect { background: #e94560; color: white; }
+        .btn-reset { background: #533483; color: white; }
+        #status { padding: 15px; background: #16213e; border-radius: 8px; margin-bottom: 15px; }
+        #log { height: 300px; overflow-y: auto; background: #0f0f23; padding: 10px; border-radius: 8px; font-size: 12px; }
+        .log-entry { margin: 2px 0; }
+        .log-connect { color: #4ecca3; }
+        .log-message { color: #7ec8e3; }
+        .log-close { color: #e94560; }
+        .log-error { color: #ff6b6b; }
+        table { border-collapse: collapse; margin: 15px 0; }
+        th, td { border: 1px solid #333; padding: 8px 15px; text-align: center; }
+        th { background: #0f3460; }
+    </style>
+</head>
+<body>
+    <h1>WebSocket 동시 접속 테스트 v2</h1>
+
+    <div id="status">
+        <strong>현재 상태</strong><br>
+        활성 연결: <span id="activeCount">0</span>개 |
+        수신 메시지: <span id="msgCount">0</span>개 |
+        마지막 수신: <span id="lastMsg">없음</span>
+    </div>
+
+    <div class="controls">
+        <button class="btn-connect" onclick="connectClients(10)">10명 접속</button>
+        <button class="btn-connect" onclick="connectClients(50)">50명 접속</button>
+        <button class="btn-connect" onclick="connectClients(100)">100명 접속</button>
+        <button class="btn-disconnect" onclick="disconnectAll()">전체 종료</button>
+        <button class="btn-reset" onclick="resetMessages()">메시지 리셋</button>
+    </div>
+
+    <h3>측정 기록</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>시점</th>
+                <th>활성 연결</th>
+                <th>총 수신 메시지</th>
+                <th>메모 (VisualVM 수치 기록용)</th>
+            </tr>
+        </thead>
+        <tbody id="recordTable"></tbody>
+    </table>
+    <button onclick="addRecord()" style="padding:8px 16px; margin-bottom:20px; background:#0f3460; color:white; border:none; border-radius:4px; cursor:pointer;">📌 현재 상태 기록</button>
+
+    <h3>로그</h3>
+    <div id="log"></div>
+
+    <script>
+        const WS_URL = `ws://${location.hostname}:9000`;
+        let sockets = [];
+        let totalMessages = 0;
+        let activeConnections = 0;
+        let recordIndex = 0;
+
+        function log(msg, cls = "") {
+            const logEl = document.getElementById("log");
+            const time = new Date().toLocaleTimeString();
+            logEl.innerHTML += `<div class="log-entry ${cls}">[${time}] ${msg}</div>`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function updateStatus() {
+            document.getElementById("activeCount").textContent = activeConnections;
+            document.getElementById("msgCount").textContent = totalMessages;
+        }
+
+        function connectClients(count) {
+            log(`--- ${count}명 접속 시작 ---`, "log-connect");
+            let connected = 0;
+
+            for (let i = 0; i < count; i++) {
+                const ws = new WebSocket(WS_URL);
+                let opened = false;
+
+                ws.onopen = function () {
+                    if (!opened) {
+                        opened = true;
+                        activeConnections++;
+                        connected++;
+                        updateStatus();
+                        if (connected % 10 === 0 || connected === count) {
+                            log(`접속 완료: ${connected}/${count}`, "log-connect");
+                        }
+                    }
+                };
+
+                ws.onmessage = function () {
+                    totalMessages++;
+                    document.getElementById("lastMsg").textContent =
+                        new Date().toLocaleTimeString();
+                    if (totalMessages % 100 === 0) updateStatus();
+                };
+
+                ws.onclose = function () {
+                    if (opened) {
+                        opened = false;
+                        activeConnections = Math.max(0, activeConnections - 1);
+                        updateStatus();
+                    }
+                };
+
+                ws.onerror = function () {
+                    log("접속 오류", "log-error");
+                };
+
+                sockets.push(ws);
+            }
+        }
+
+        function disconnectAll() {
+            const count = sockets.length;
+            log(`--- ${count}개 연결 동시 종료 시작 ---`, "log-close");
+
+            const startTime = Date.now();
+            sockets.forEach(ws => {
+                if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+                    ws.close();
+                }
+            });
+            sockets = [];
+
+            setTimeout(() => {
+                const elapsed = Date.now() - startTime;
+                log(`전체 종료 완료 - 활성: ${activeConnections}개, 소요: ${elapsed}ms`, "log-close");
+                updateStatus();
+            }, 1000);
+        }
+
+        function resetMessages() {
+            totalMessages = 0;
+            document.getElementById("lastMsg").textContent = "없음";
+            updateStatus();
+            log("메시지 카운터 리셋", "log-connect");
+        }
+
+        function addRecord() {
+            recordIndex++;
+            const table = document.getElementById("recordTable");
+            const row = table.insertRow();
+            row.innerHTML = `
+                <td>${recordIndex}. ${new Date().toLocaleTimeString()}</td>
+                <td>${activeConnections}</td>
+                <td>${totalMessages}</td>
+                <td contenteditable="true" style="background:#16213e; min-width:200px;">여기에 입력</td>
+            `;
+        }
+    </script>
+</body>
+</html>

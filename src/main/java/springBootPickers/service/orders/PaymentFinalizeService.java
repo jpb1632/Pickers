@@ -18,6 +18,8 @@ public class PaymentFinalizeService {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentFinalizeService.class);
 
+    private static final String ORDER_STATUS_PENDING = "입금대기중";
+
     private final OrderRepository orderRepository;
 
     @Transactional
@@ -27,22 +29,32 @@ public class PaymentFinalizeService {
         PaymentDTO existingPayment = orderRepository.getPayment(orderNum);
         if (existingPayment != null) {
             log.warn("중복 결제 시도 감지: {}", orderNum);
-            throw new RuntimeException("이미 결제 완료된 주문입니다");
+            throw PaymentFinalizeException.nonCompensatable(
+                    "이미 결제 완료된 주문입니다: " + orderNum
+            );
         }
 
         OrdersDTO order = orderRepository.orderSelectOne(orderNum);
         if (order == null) {
-            log.error("존재하지 않는 주문: {}", orderNum);
-            throw new RuntimeException("주문을 찾을 수 없습니다");
+            log.error("결제 저장 중 주문을 찾을 수 없습니다: {}", orderNum);
+            throw PaymentFinalizeException.compensatable(
+                    "승인된 결제에 해당하는 주문이 없습니다: " + orderNum
+            );
         }
 
-        if (!"입금대기중".equals(order.getPayStatus())) {
-            log.warn("잘못된 주문 상태: {}, status: {}", orderNum, order.getPayStatus());
-            throw new RuntimeException("결제 가능한 상태가 아닙니다");
+        if (!ORDER_STATUS_PENDING.equals(order.getPayStatus())) {
+            log.warn(
+                    "결제 가능한 주문 상태가 아닙니다. 주문번호: {}, 현재 상태: {}",
+                    orderNum,
+                    order.getPayStatus()
+            );
+            throw PaymentFinalizeException.nonCompensatable(
+                    "결제 가능한 상태가 아닙니다: " + orderNum
+            );
         }
 
         int expectedPrice = order.getOrderPrice();
-        int paidPrice = Integer.parseInt(resultMap.get("TotPrice"));
+        int paidPrice = parsePaidPrice(resultMap.get("TotPrice"), orderNum);
 
         if (expectedPrice != paidPrice) {
             log.error(
@@ -51,9 +63,53 @@ public class PaymentFinalizeService {
                     expectedPrice,
                     paidPrice
             );
-            throw new RuntimeException("결제 금액이 일치하지 않습니다");
+            throw PaymentFinalizeException.compensatable(
+                    "결제 금액이 주문 금액과 일치하지 않습니다: " + orderNum
+            );
         }
 
+        PaymentDTO dto = buildPaymentDto(orderNum, resultMap);
+
+        try {
+            int insertResult = orderRepository.paymentInsert(dto);
+            if (insertResult == 0) {
+                throw PaymentFinalizeException.compensatable(
+                        "결제 저장 결과가 비정상입니다: " + orderNum
+                );
+            }
+
+            int updateResult = orderRepository.updatePayStatus(orderNum);
+            if (updateResult == 0) {
+                throw PaymentFinalizeException.compensatable(
+                        "주문 상태 업데이트에 실패했습니다: " + orderNum
+                );
+            }
+        } catch (PaymentFinalizeException e) {
+            throw e;
+        } catch (RuntimeException e) {
+            log.error("승인된 결제 저장 중 오류가 발생했습니다. 주문번호: {}", orderNum, e);
+            throw PaymentFinalizeException.compensatable(
+                    "승인된 결제 저장에 실패했습니다: " + orderNum,
+                    e
+            );
+        }
+
+        log.info("결제 완료 처리 성공. 주문번호: {}, 금액: {}", orderNum, paidPrice);
+    }
+
+    private int parsePaidPrice(String totalPrice, String orderNum) {
+        try {
+            return Integer.parseInt(totalPrice);
+        } catch (NumberFormatException e) {
+            log.error("결제 금액 파싱 실패. 주문번호: {}, totalPrice={}", orderNum, totalPrice, e);
+            throw PaymentFinalizeException.compensatable(
+                    "결제 금액 파싱에 실패했습니다: " + orderNum,
+                    e
+            );
+        }
+    }
+
+    private PaymentDTO buildPaymentDto(String orderNum, Map<String, String> resultMap) {
         PaymentDTO dto = new PaymentDTO();
         dto.setOrderNum(orderNum);
         dto.setApplDate(resultMap.get("applDate"));
@@ -64,17 +120,6 @@ public class PaymentFinalizeService {
         dto.setTid(resultMap.get("tid"));
         dto.setTotalPrice(resultMap.get("TotPrice"));
         dto.setResultMessage(resultMap.get("resultMsg"));
-
-        log.debug("결제 데이터 저장: {}", dto);
-
-        orderRepository.paymentInsert(dto);
-
-        int updateResult = orderRepository.updatePayStatus(orderNum);
-        if (updateResult == 0) {
-            log.error("주문 상태 업데이트 실패: {}", orderNum);
-            throw new RuntimeException("주문 상태 업데이트 실패");
-        }
-
-        log.info("결제 완료: {}, 금액: {}", orderNum, paidPrice);
+        return dto;
     }
 }

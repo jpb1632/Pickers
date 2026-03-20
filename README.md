@@ -11,7 +11,7 @@
 
 ## 왜 만들었나
 
-2024년 들어 개인 투자자 수가 급증하면서 주식 시장 진입 장벽이 낮아졌습니다.  
+최근 들어 개인 투자자 수가 급증하면서 주식 시장 진입 장벽이 낮아졌습니다.  
 하지만 초보 투자자들은 기초적인 투자 지식과 실전 경험 부족으로 큰 손실을 보는 경우가 많았습니다.
 
 이런 문제를 해결하기 위해 초보자들이 실전 투자 전에 체계적으로 학습하고,  
@@ -326,16 +326,17 @@ kafka.enabled=false
 
 #### 3. 게시판 좋아요 기능 정규화
 - LIKE_MEMBERS 테이블 분리: VARCHAR2 콤마 저장 → 정규화
-- PRIMARY KEY로 동시성 제어: 애플리케이션 레벨 체크 불필요
+- PRIMARY KEY로 DB 레벨 중복 최종 차단: 동시 요청 시에도 PK가 자동 방어
 - 조회 성능 최적화: INSTR 전체 스캔 → PK 인덱스 기반 조회
 - 무제한 확장: VARCHAR2(4000) 제한 제거
+- CART/ORDER_LIST/WISH: UNIQUE·PK 제약, LIKE_MEMBERS: 회원 FK 추가로 DB 레벨 무결성 보강
 
 #### 4. 결제 시스템 보안 강화
 
 이니시스 PG 샘플 코드를 Spring Boot로 전환하고 보안 취약점을 개선했습니다.
 
 **트랜잭션 및 동시성 제어:**
-- @Transactional 적용: 주문 생성, 결제 콜백, 결제 취소
+- @Transactional 적용: 주문 생성, 결제 콜백, 주문 취소
 - Sequence 기반 주문번호 생성: 동시 주문 Race Condition 방지
 
 **보안 검증 추가 (샘플 코드에 없던 부분):**
@@ -348,11 +349,14 @@ kafka.enabled=false
 - IniPayReqService.java (보안 설정 분리)
 - LectureOrderService.java (트랜잭션 적용)
 - OrdersController.java (RESTful 준수, 예외 처리)
+- PaymentFinalizeService.java (결제 저장 원자성 + 망취소 분기)
+- PaymentFinalizeException.java (망취소 필요 여부 구분)
 
 **개선 효과:**
-- 데이터 정합성 보장 (에러 시 자동 롤백)
+- 결제 저장 원자성 확보 + 승인 성공 후 내부 저장 실패 시 망취소 처리
 - 중복 결제, 금액 변조 방지
 - RESTful 원칙 준수 (POST 방식 데이터 삭제)
+- 관리자 결제 취소: DB 상태 변경 처리 (실제 PG 환불 API는 미연동)
 
 #### 5. 설정 파일 개선 (application.properties)
 
@@ -555,7 +559,7 @@ if (expectedPrice != paidPrice) {
 ```
 
 추가 개선:
-- @Transactional로 데이터 정합성 보장
+- @Transactional로 결제 저장 원자성 확보 + 승인 성공 후 내부 저장 실패 시 망취소 처리
 - Sequence 기반 주문번호 생성 (동시성 제어)
 - 보안 설정 분리 (@Value)
 - RESTful 원칙 준수 (POST 방식 삭제)
@@ -563,8 +567,8 @@ if (expectedPrice != paidPrice) {
 결과:  
 - 중복 결제 완전 차단 (3중 방어)
 - 금액 변조 방지
-- @Transactional로 데이터 정합성 보장
-- 주문 생성부터 결제 완료까지 트랜잭션 일관성 확보
+- @Transactional로 결제 저장 원자성 확보
+- 승인 성공 후 내부 저장 실패 시 망취소로 PG-DB 정합성 강화
 
 ---
 
@@ -662,11 +666,11 @@ Kafka 설정도 처음엔 기본값만 썼는데,
 
 문제:  
 VARCHAR2 컬럼에 콤마로 회원번호를 저장하니  
-약 200명까지만 좋아요가 가능했고, 동시 요청 시 중복 위험이 있었습니다.
+VARCHAR2(4000) 용량 한계로 확장이 불가능했고, 동시 요청 시 중복 위험이 있었습니다.
 
 ```
 기존: BOARD.LIKE_MEMBERS = ",mem001,mem003,"
-제한: VARCHAR2(4000) ≈ 200명
+제한: VARCHAR2(4000) 용량 한계
 조회: INSTR 함수로 문자열 전체 스캔
 ```
 
@@ -681,13 +685,15 @@ CREATE TABLE LIKE_MEMBERS (
     LIKED_DATE DATE DEFAULT SYSDATE,
     CONSTRAINT PK_LIKE_MEMBERS PRIMARY KEY (BOARD_NUM, MEM_NUM),
     CONSTRAINT FK_LIKE_BOARD FOREIGN KEY (BOARD_NUM) 
-        REFERENCES BOARD(BOARD_NUM) ON DELETE CASCADE
+        REFERENCES BOARD(BOARD_NUM) ON DELETE CASCADE,
+    CONSTRAINT FK_LIKE_MEMBER FOREIGN KEY (MEM_NUM)
+        REFERENCES MEMBER(MEM_NUM) ON DELETE CASCADE
 );
 ```
 
 배운 점:  
 - 정규화로 확장성과 성능을 동시에 확보
-- DB 제약조건으로 애플리케이션 레벨 체크 불필요
+- DB 제약조건으로 애플리케이션 레벨 중복 체크 부담 감소
 - PRIMARY KEY 인덱스로 빠른 조회 성능 (문자열 스캔 제거)
 - 동시 요청 시 PK가 자동으로 중복 차단
 
