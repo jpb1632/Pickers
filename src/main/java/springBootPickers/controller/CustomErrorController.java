@@ -5,6 +5,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
 
 @Controller
@@ -12,10 +13,8 @@ public class CustomErrorController implements ErrorController {
 
     @RequestMapping("/error")
     public String handleError(HttpServletRequest request, Model model) {
-        // 에러 상태 코드 가져오기
-        Integer statusCode = (Integer) request.getAttribute("javax.servlet.error.status_code");
+        Integer statusCode = (Integer) request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
 
-        // 상태 코드와 메시지 추가
         model.addAttribute("statusCode", statusCode);
         if (statusCode != null) {
             switch (statusCode) {
@@ -30,7 +29,6 @@ public class CustomErrorController implements ErrorController {
             }
         }
 
-        // "error.html"로 이동
         return "thymeleaf/error";
     }
 }

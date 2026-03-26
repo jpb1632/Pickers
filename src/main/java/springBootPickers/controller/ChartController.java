@@ -25,9 +25,9 @@ public class ChartController {
 
     @GetMapping("list")
     public String chartList(
-        @RequestParam(defaultValue = "1") int page,
-        @RequestParam(defaultValue = "currentPrice") String sortField,
-        @RequestParam(defaultValue = "desc") String sortOrder,
+        @RequestParam(value = "page", defaultValue = "1") int page,
+        @RequestParam(value = "sortField", defaultValue = "currentPrice") String sortField,
+        @RequestParam(value = "sortOrder", defaultValue = "desc") String sortOrder,
         Model model
     ) {
         int pageSize = 10;
