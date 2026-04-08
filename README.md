@@ -4,32 +4,30 @@
 개인 투자자 증가 추세에 맞춰 초보 투자자가 실전 투자 전 체계적으로 학습할 수 있도록 만들었습니다.
 
 **개발 기간:** 2024.12.05 ~ 2025.01.23 (3인 팀 프로젝트)  
-**담당:** Kafka+WebSocket 파이프라인, 주문/결제(PG), 장바구니/찜, 주식·용어·게시판  
+**담당:** Kafka+WebSocket 파이프라인, 주문/결제(PG), 장바구니/찜, 주식·용어사전·커뮤니티  
 **수상:** 디지털 핵심 실무인재 양성 최우수상 (2025.01.23)
 
 ---
 
 ## 왜 만들었나
 
-최근 들어 개인 투자자 수가 급증하면서 주식 시장 진입 장벽이 낮아졌습니다.  
-하지만 초보 투자자들은 기초적인 투자 지식과 실전 경험 부족으로 큰 손실을 보는 경우가 많았습니다.
+최근 개인 투자자 수가 늘어나면서 주식에 처음 입문하는 사람들도 많아졌습니다.
+하지만 실제 주식 거래 화면을 들어가보면 낯선 용어와 숫자들이 가득해 입문 자체가 부담스럽게 느껴지는 경우가 많습니다.
 
-이런 문제를 해결하기 위해 초보자들이 실전 투자 전에 체계적으로 학습하고,  
-실시간 데이터를 보면서 시장 흐름을 파악할 수 있는 주식 교육 플랫폼을 기획했습니다.
+이런 문제를 해소하기 위해 실제 거래 화면과 유사한 환경에서 모르는 용어를 바로 확인할 수 있는 교육 페이지를 구현했고, 
+한국투자증권 실시간 데이터를 연동해 학습 몰입도를 높였습니다. 강의, 뉴스, 용어사전, 커뮤니티 등도 함께 제공해 
+주식 입문자가 필요한 정보를 한곳에서 접할 수 있도록 했습니다.
 
-목표:
+이를 위해 아래 기능들을 구현했습니다.
 
-1. 주식 학습 접근성 향상  
-   초보 투자자도 쉽게 접근할 수 있는 기초 교육 제공
-   
-2. 체계적인 교육 콘텐츠  
-   이론 학습, 데이터 분석, 실전 연습을 통해 체계적으로 투자 지식 학습
-
-3. 실시간 데이터 제공  
-   실시간 시세 차트로 실제 시장 데이터 체험
-
-4. 사용하기 쉬운 인터페이스  
-   주식에 대한 경험이 없는 사용자도 쉽게 이해하고 활용
+- **교육 페이지**: 실제 주식 거래 화면과 유사하게 구현, 모르는 용어 클릭 시 설명 팝업 제공
+- **실시간 차트**: 한국투자증권 API 연동으로 실제 주식 데이터를 실시간으로 표시
+- **기업 정보**: 기업별 주식 정보, 관리자 기업 정보 등록/수정
+- **강의**: 주식 교육 강의 제공, 장바구니/찜, INIpay 실결제, 수강 후기, Q&A
+- **용어사전**: 주식 용어 검색 및 학습
+- **뉴스**: 주식 관련 뉴스 제공
+- **커뮤니티**: 게시판(자유/수익인증/팁/질문), 댓글/좋아요
+- **1:1 문의**: 사용자 문의 처리
 
 ---
 
@@ -41,24 +39,23 @@
 - WebSocket으로 브라우저에 실시간 전송
 - Chart.js로 실시간 차트 렌더링 (MA12/MA30 이동평균선 포함)
 - `kis.realtime.symbols` 설정 기반 다중 종목 구독
-- 설정 없을 경우 DB currentPrice 상위 종목 자동 로딩
-- 서비스 시작 시 REST API로 시드 가격 보정 — 장외 최초 진입 시 KIS REST 현재가를 1회 조회해 기준가를 보정한 뒤, 실시간 체결이 없으면 시뮬레이션 데이터로 이어지도록 구성
+- 설정 없을 경우 DB current_price 기준 상위 종목 자동 로딩
+- 서비스 시작 시 REST API로 시드 가격 보정 — KIS REST 현재가를 1회 조회해 초기 시세를 보정한 뒤, 실시간 체결이 없으면 시뮬레이션 데이터로 이어지도록 구성
 - 실시간 체결가를 DB `current_price`에 5초 주기로 반영
 - 차트·테이블 모두 현재 페이지 종목 기준으로 데이터 필터링
 
 ### 2. 주식 교육 시스템
 - 용어 사전: 주식 용어 검색 및 학습
 - 뉴스: 주식 관련 뉴스 제공
-- 강좌 시스템: 
-  - 초보자를 위한 주식 교육 강좌
-  - 강좌 등록/수정/삭제 (관리자)
+- 강의 시스템:
+  - 초보자를 위한 주식 교육 강의
+  - 강의 등록/수정/삭제 (관리자)
   - 장바구니/찜 기능
   - INIpay PG 연동 실결제
   - 수강 후기 작성
 
 ### 3. 기업 정보 관리
 - 기업별 주식 정보 조회
-- 실시간 시세 차트 연동
 - 관리자 기업 정보 등록/수정
 
 ### 4. 커뮤니티
@@ -75,7 +72,7 @@
 → 복구 시도 없는 순수 시뮬레이션으로 전환합니다.
 
 `kafka.enabled=true`인데 시작 시 Kafka가 다운된 경우
-→ 복구 가능한 시뮬레이션으로 전환합니다. Health Check(30초 간격)로 Kafka 복구를 감지하면 fresh approval_key를 재발급받아 KIS WebSocket을 새로 연결하고, 연결 성공 시 기존 시뮬레이션을 내립니다. 이후 30초 이상 실거래 데이터가 없으면 다시 시뮬레이션으로 전환합니다.
+→ 복구 가능한 시뮬레이션으로 전환합니다. Health Check(30초 간격)로 Kafka 복구를 감지하면 approval_key를 새로 발급받아 KIS WebSocket을 새로 연결하고, 연결 성공 시 기존 시뮬레이션을 내립니다. 이후 30초 이상 실거래 데이터가 없으면 다시 시뮬레이션으로 전환합니다.
 
 **런타임 단계 Fallback:**
 - Kafka 전송 3회 연속 실패 시 → Kafka를 우회하여 WebSocket으로 직접 브로드캐스트
@@ -97,7 +94,7 @@
 Backend
 - Spring Boot 3.3.6
 - MyBatis 3.0.3
-- Oracle 21c
+- Oracle XE 21c
 
 Messaging
 - Apache Kafka 3.7.0
@@ -121,12 +118,12 @@ Testing
 
 ### 실시간 데이터 파이프라인
 
-![Pickers 시스템 아키텍처](docs/images/architecture.png)
+![Pickers 시스템 아키텍처](docs/images/pickers_architecture.png)
 
 핵심 특징:
 - Producer-Consumer 분리: API 수신과 브로드캐스트 로직 독립
 - 비동기 메시지 큐: Kafka로 Producer-Consumer 분리 및 메시지 버퍼링
-- Health Check 기반 Fallback: 런타임 Kafka 장애 시 direct fallback으로 서비스 연속성을 유지하고, 기동 시 Kafka 다운이면 복구 가능한 시뮬레이션으로 시작
+- Fallback & Recovery: 런타임 Kafka 장애 시 direct fallback으로 서비스 연속성을 유지하고, Health Check(30초)로 Kafka 복구를 감지해 자동 재연결
 
 ---
 
@@ -136,7 +133,7 @@ Testing
 Pickers/
 ├── src/main/java/springBootPickers/
 │   ├── realData/              # Kafka + WebSocket 실시간 파이프라인 (리팩토링 완료)
-│   ├── controller/            # REST Controller (로깅 시스템 개선 완료)
+│   ├── controller/            # Controller (로깅 시스템 개선 완료)
 │   ├── service/               # 비즈니스 로직 (로깅 시스템 개선 완료)
 │   ├── domain/                # DTO
 │   └── mapper/                # MyBatis Mapper
@@ -173,13 +170,6 @@ Copy-Item src/main/resources/application.properties.example src/main/resources/a
 spring.datasource.username=YOUR_DB_USERNAME
 spring.datasource.password=YOUR_DB_PASSWORD
 
-# 이메일 설정 (Gmail 앱 비밀번호)
-spring.mail.username=YOUR_EMAIL@gmail.com
-spring.mail.password=YOUR_EMAIL_APP_PASSWORD
-
-# NewsAPI 키 (https://newsapi.org 에서 발급)
-newsapi.key=YOUR_NEWSAPI_KEY
-
 # 한국투자증권 API 키 (https://apiportal.koreainvestment.com 에서 발급)
 kis.app-key=YOUR_KIS_APP_KEY
 kis.app-secret=YOUR_KIS_APP_SECRET
@@ -189,7 +179,7 @@ kafka.bootstrap-servers=localhost:9092
 realtime.internal-ws.host=localhost
 realtime.internal-ws.port=9000
 
-# 실시간 구독 종목 (쉼표 구분, 생략 시 DB currentPrice 상위 종목 자동 로딩)
+# 실시간 구독 종목 (쉼표 구분, 생략 시 DB current_price 기준 상위 종목 자동 로딩)
 # kis.realtime.symbols=005930,000660,373220
 ```
 
@@ -236,14 +226,14 @@ Kafka 설치 없이 개발 환경에서 바로 테스트 가능합니다.
 실행:
 ```bash
 # application.properties 설정
-kis.realtime.enabled=true
-kafka.enabled=false
+kis.realtime.enabled=true   # KIS API 연동 활성화 (kafka 비활성 시 시뮬레이션으로 동작)
+kafka.enabled=false          # Kafka 비활성화 → 복구 없는 순수 시뮬레이션으로 전환
 
 # Spring Boot 실행
-./mvnw spring-boot:run
+.\mvnw.cmd spring-boot:run
 ```
 
-랜덤 주가 데이터가 1초마다 생성되면서 실시간으로 차트에 표시됩니다.  
+실제 현재가 기반으로 ±0.5% 범위 안에서 1초마다 변동하는 시뮬레이션 데이터가 차트에 표시됩니다.  
 이 모드는 복구 시도 없는 순수 시뮬레이션입니다. 실거래 데이터가 필요하다면 Kafka를 실행한 뒤 `kafka.enabled=true`로 설정하세요.
 
 ---
@@ -272,7 +262,7 @@ kafka.enabled=false
 
 결과:
 - 100명 동시 접속 + 5분 지속 수신에도 Heap 무한 증가 없음 (GC 톱니 패턴 확인)
-- 전체 종료 후 GC를 거쳐 37MB로 수렴 — 메모리 누수 없음
+- 전체 종료 후 GC를 거쳐 37MB로 수렴 — 현재 테스트 범위에서 누수 징후 없음
 - 접속자 수가 늘어도 Live Threads 55~57개 유지 (NIO 기반, 스레드 고갈 위험 없음)
 - 100명 브로드캐스팅에도 CPU 1% 이하 유지
 
@@ -297,16 +287,16 @@ kafka.enabled=false
 - MultiThreadedUDPServer 사용 (UDP 서버 의존)
 - System.out/printStackTrace로 로깅 (135건)
 - Graceful Shutdown 없음 (강제 종료만 가능)
-- 내부 UDP 서버 의존 (172.16.110.46, 특정 네트워크에서만 실행)
+- 내부 UDP 서버 의존 (국비 교육장 내부 네트워크, 특정 네트워크에서만 실행)
 - Kafka 필수 (Kafka 없으면 실행 불가)
-- 삼성전자 1종목 고정
+- 국비 교육장 서버에서 삼성전자 데이터만 전송 (단일 종목 제한)
 
 **TO-BE (리팩토링 후):**
 - Logger 도입 (SLF4J): System.out 135건 제거
 - Graceful Shutdown: running flag로 안전한 종료
 - 체결 등락 부호 파싱 보정: parseSignedDouble() + applyChangeSign() 분리로 음수 처리 정확도 개선
 - 시뮬레이션 모드 추가: Kafka 없이도 동작
-- Kafka Producer 신뢰성 옵션: acks=all, retries=3, idempotence=true
+- Kafka Producer 신뢰성 옵션: idempotence=true, retries=3
 - Health Check(30초 간격): 런타임 Kafka 장애 복구, 기동 시 Kafka 다운이면 복구 가능한 시뮬레이션 → Kafka 복구 시 KIS WebSocket 재연결
 - 한국투자증권 API 전환: 어디서든 실행 가능
 - 다중 종목 지원: `kis.realtime.symbols` 설정 또는 DB 상위 종목 자동 로딩
@@ -315,7 +305,7 @@ kafka.enabled=false
 - 서버 주소 외부화: kafka.bootstrap-servers, realtime.internal-ws.host/port, 프론트 WebSocket 연결 URL도 템플릿 data 속성 기반으로 분리 (하드코딩 제거)
 - 신규 클래스 3개 추가:
   - `KISApiService.java` (한국투자증권 API 연동)
-  - `KISWebSocketClientWithKafka.java` (Kafka Producer)
+  - `KISWebSocketClientWithKafka.java` (KIS WebSocket 수신 + Kafka 전송 + Fallback 처리)
   - `RealTimeStockServiceWithKafka.java` (통합 실행 관리)
 
 #### 2. Controller/Service 로깅 시스템 개선
@@ -348,14 +338,13 @@ kafka.enabled=false
 - INIstdpayPcReturn.java (결제 콜백 처리)
 - IniPayReqService.java (보안 설정 분리)
 - LectureOrderService.java (트랜잭션 적용)
-- OrdersController.java (RESTful 준수, 예외 처리)
+- OrdersController.java (예외 처리 보강)
 - PaymentFinalizeService.java (결제 저장 원자성 + 망취소 분기)
 - PaymentFinalizeException.java (망취소 필요 여부 구분)
 
 **개선 효과:**
 - 결제 저장 원자성 확보 + 승인 성공 후 내부 저장 실패 시 망취소 처리
 - 중복 결제, 금액 변조 방지
-- RESTful 원칙 준수 (POST 방식 데이터 삭제)
 - 관리자 결제 취소: DB 상태 변경 처리 (실제 PG 환불 API는 미연동)
 
 #### 5. 설정 파일 개선 (application.properties)
@@ -375,7 +364,6 @@ kafka.enabled=false
 #### 6. 실행 편의성 향상
 - Java 실행 통합: 3개 → 1개 (67% 감소)
 - 총 프로그램: 5개 → 1-3개 (40-80% 감소)
-- 코드 복사: 4개 파일 → 0개
 - Kafka 의존성: 필수 → 선택 가능 (시뮬레이션 모드)
 
 ### 정량적 개선
@@ -387,8 +375,8 @@ kafka.enabled=false
 | printStackTrace() 제거 | 3건 |
 | Graceful Shutdown | 구현 완료 |
 | 시뮬레이션 모드 | 구현 완료 |
-| Kafka Producer 신뢰성 | acks=all, retries=3, idempotence 적용 |
-| 실시간 구독 종목 | 1개(하드코딩) → 최대 10개(설정/DB 기반 동적 구성) |
+| Kafka Producer 신뢰성 | idempotence=true, retries=3 적용 |
+| 실시간 구독 종목 | 교육장 서버 삼성전자 단일 종목 → 설정/DB 기반 다중 종목 구성 |
 | 실시간 DB 반영 | current_price 5초 주기 갱신 |
 | 서버 주소 외부화 | kafka.bootstrap-servers, ws.host/port @Value 주입 |
 | 데이터 정규화 | LIKE_MEMBERS 테이블 분리 |
@@ -405,14 +393,14 @@ kafka.enabled=false
 ### 1. 실행 통합 및 자동화
 
 문제:  
-처음엔 실시간 파이프라인이 3개 프로그램으로 분리되어 있었습니다.
-- MultiThreadedUDPServer (UDP → Kafka Producer)
-- KafkaWebSocketServer (Kafka Consumer → WebSocket)
-- Spring Boot (메인 애플리케이션)
+처음엔 실시간 파이프라인이 별도 프로세스 3개로 분리되어 있었습니다.
 
-매번 3개를 따로 실행해야 했고, 외부 프로젝트(C:\src\multithread)에서  
-코드를 복사해야 했으며, 내부 UDP 서버(172.16.110.46)에 의존해서  
-특정 네트워크에서만 개발이 가능했습니다.
+- MultiThreadedUDPServer (UDP 수신 → Kafka Producer)
+- KafkaWebSocketServer (Kafka Consumer → WebSocket 브로드캐스트)
+- Spring Boot (메인 웹 애플리케이션)
+
+여기에 Zookeeper, Kafka까지 합쳐 총 5단계를 순서대로 수동으로 실행해야 했고,
+국비 교육장 내부 UDP 서버에 의존해서 특정 네트워크에서만 개발이 가능했습니다.
 
 해결:  
 개발 효율과 환경 독립성을 위해 세 가지를 진행했습니다.
@@ -423,17 +411,17 @@ kafka.enabled=false
 2) 데이터 소스 변경: 내부 UDP 서버에서 한국투자증권 API로 변경하여
    어디서든 개발 가능하도록 개선
    
-3) 종목 확장성: 기존 UDP 서버는 삼성전자 1개만 고정이었습니다.  
+3) 종목 확장성: 국비 교육장 서버에서 삼성전자 데이터만 전송해줬기 때문에 삼성전자 한 종목만 받을 수 있었습니다.  
    리팩토링 후에는 `kis.realtime.symbols`에 종목코드를 쉼표로 나열하면  
    서비스 시작 시 해당 종목들을 자동으로 구독합니다.  
-   설정을 비워두면 DB의 currentPrice 상위 종목을 자동으로 불러옵니다.
+   설정을 비워두면 DB의 current_price 기준 상위 종목을 자동으로 불러옵니다.
 
 ```java
 // application.properties
 # 직접 지정하는 경우
 kis.realtime.symbols=005930,000660,373220
 
-# 비워두면 DB currentPrice 상위 종목 자동 로딩
+# 비워두면 DB current_price 기준 상위 종목 자동 로딩
 # kis.realtime.symbols=
 ```
 
@@ -475,9 +463,8 @@ public class RealTimeStockServiceWithKafka implements CommandLineRunner {
 결과:  
 - 실행 프로그램: 5개 (Zookeeper, Kafka, 3개 Java) → 3개 또는 1개
 - Java 실행 통합: 3개 → 1개 (67% 감소)
-- 코드 복사: 4개 파일 → 0개
 - 장소 제약 제거: 특정 네트워크 의존 → 어디서든 실행 가능
-- 종목 확장: 삼성전자 1개 고정 → 설정 또는 DB 기반 다중 종목 구독
+- 종목 확장: 교육장 서버 삼성전자 단일 종목 → 설정 또는 DB 기반 다중 종목 구독
 - 시뮬레이션 모드로 Kafka 없이도 테스트 가능
 
 ---
@@ -513,7 +500,7 @@ setConnectionLostTimeout(60);  // 60초 무응답 시 자동 해제
 
 결과:  
 - 100명이 5분간 372,900건을 수신하는 동안 Heap 무한 증가 없음 (GC 톱니 패턴 확인)
-- 전체 종료 후 GC를 거쳐 37MB 수렴 → 메모리 누수 없음 검증
+- 전체 종료 후 GC를 거쳐 37MB 수렴 → 현재 테스트 범위에서 누수 징후 없음 확인
 - 접속자 수가 늘어도 Live Threads 55~57개 유지, CPU 1% 이하 (NIO 기반)
 - 60초 무응답 연결 자동 해제로 좀비 세션 방지
 
@@ -562,10 +549,9 @@ if (expectedPrice != paidPrice) {
 - @Transactional로 결제 저장 원자성 확보 + 승인 성공 후 내부 저장 실패 시 망취소 처리
 - Sequence 기반 주문번호 생성 (동시성 제어)
 - 보안 설정 분리 (@Value)
-- RESTful 원칙 준수 (POST 방식 삭제)
 
 결과:  
-- 중복 결제 완전 차단 (3중 방어)
+- 중복 결제 차단 및 정합성 리스크 감소 (3중 방어)
 - 금액 변조 방지
 - @Transactional로 결제 저장 원자성 확보
 - 승인 성공 후 내부 저장 실패 시 망취소로 PG-DB 정합성 강화
@@ -651,7 +637,7 @@ public void cleanup() {
 realData 패키지 전체를 SLF4J로 바꾸면서 Logger의 필요성을 체감했습니다.
 
 Kafka 설정도 처음엔 기본값만 썼는데,  
-`acks=all`, `idempotence=true` 같은 옵션들이 왜 필요한지  
+`idempotence=true`, `retries=3` 같은 옵션들이 왜 필요한지  
 하나씩 찾아보면서 메시지 신뢰성 개념을 이해하게 됐습니다.
 
 구현할 때는 "돌아가게" 만드는 데 급급했다면,  
